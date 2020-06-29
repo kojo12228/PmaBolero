@@ -55,7 +55,7 @@ let update remote message model =
 type SignInPage = Template<"wwwroot/signin.html">
 
 let view model dispatch =
-    SignInPage()
+    SignInPage.SignIn()
         .Username(model.Username, fun un -> dispatch (SetUsername un))
         .Password(model.Password, fun pw -> dispatch (SetPassword pw))
         .SignIn(fun _ -> dispatch SendSignIn)
@@ -63,11 +63,10 @@ let view model dispatch =
             cond model.SignInFailed <| function
             | false -> empty
             | true ->
-                // SignInPage
-                //     .ErrorNotification()
-                //     .HideClass("is-hidden")
-                //     .Text("Sign in failed. Use any username and the password \"password\".")
-                //     .Elt()
-                empty
+                SignInPage
+                    .ErrorNotification()
+                    .HideClass("is-hidden")
+                    .Text("Sign in failed.")
+                    .Elt()
         )
         .Elt()
