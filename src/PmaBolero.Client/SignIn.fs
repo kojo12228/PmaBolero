@@ -1,0 +1,73 @@
+module PmaBolero.Client.SignIn
+
+open System
+open Elmish
+open Bolero
+open Bolero.Html
+open Bolero.Json
+open Bolero.Remoting
+open Bolero.Remoting.Client
+open Bolero.Templating.Client
+
+open PmaBolero.Client.Models.Auth
+
+type Model =
+    {
+        Username: string
+        Password: string
+        SignInFailed: bool
+        Error: string option
+    }
+
+let initModel =
+    {
+        Username = ""
+        Password = ""
+        SignInFailed = false
+        Error = None
+    }
+
+type Message =
+    | SetUsername of string
+    | SetPassword of string
+    | SendSignIn
+    | RecvSignIn of option<string>
+    | Error of exn
+    | ClearError
+
+let update remote message model =
+    match message with
+    | SetUsername un ->
+        { model with Username = un }, Cmd.none
+    | SetPassword pw ->
+        { model with Password = pw }, Cmd.none
+    | SendSignIn ->
+        model, Cmd.ofAsync remote.signIn (model.Username, model.Password) RecvSignIn Error
+    | RecvSignIn _ ->
+        model, Cmd.none
+    | Error RemoteUnauthorizedException ->
+        { model with Error = Some "You have been logged out." }, Cmd.none
+    | Error exn ->
+        { model with Error = Some exn.Message }, Cmd.none
+    | ClearError ->
+        { model with Error = None }, Cmd.none
+
+type SignInPage = Template<"wwwroot/signin.html">
+
+let view model dispatch =
+    SignInPage()
+        .Username(model.Username, fun un -> dispatch (SetUsername un))
+        .Password(model.Password, fun pw -> dispatch (SetPassword pw))
+        .SignIn(fun _ -> dispatch SendSignIn)
+        .ErrorNotification(
+            cond model.SignInFailed <| function
+            | false -> empty
+            | true ->
+                // SignInPage
+                //     .ErrorNotification()
+                //     .HideClass("is-hidden")
+                //     .Text("Sign in failed. Use any username and the password \"password\".")
+                //     .Elt()
+                empty
+        )
+        .Elt()

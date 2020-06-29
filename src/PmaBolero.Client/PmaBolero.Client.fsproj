@@ -5,6 +5,8 @@
     <RazorLangVersion>3.0</RazorLangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Models/Auth.fs" />
+    <Compile Include="SignIn.fs" />
     <Compile Include="Main.fs" />
     <Compile Include="Startup.fs" />
   </ItemGroup>

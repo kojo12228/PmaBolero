@@ -1,16 +1,46 @@
+<nav class="navbar is-primary" role="navigation" aria-label="main navigation">
+  ${NavMenu}
+  
+  <template id="Navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="/">
+        <h1 class="title has-text-white">OJO PMA</h1>
+      </a>
+
+      <a role="button" onclick="${ToggleBurger}" class="${BurgerActive}" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+
+    <div id="navbarBasicExample" class="${NavMenuActive}">
+      <div class="navbar-start">
+        <a class="navbar-item">
+          Projects
+        </a>
+        <a class="navbar-item">
+          Employees
+        </a>
+        <a class="navbar-item">
+          Departments
+        </a>
+      <div class="navbar-end">
+        <div class="navbar-item">
+          <div class="buttons">
+            <a class="button is-dark">
+              <strong>Sign up</strong>
+            </a>
+            <a class="button is-light" href="/login">
+              Log in
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+</nav>
 <div class="columns">
-  <aside class="column sidebar is-narrow">
-    <section class="section">
-      <nav class="menu">
-        <ul class="menu-list">
-          ${Menu}
-          <template id="MenuItem">
-            <li><a class="${Active}" href="${Url}">${Text}</a></li>
-          </template>
-        </ul>
-      </nav>
-    </section>
-  </aside>
   <div class="column">
     <section class="section">
       ${Body}
@@ -44,77 +74,6 @@
           <p>Enjoy writing awesome apps!</p>
         </div>
       </template>
-
-      <template id="Counter">
-        <h1 class="title">A simple counter</h1>
-        <p>
-          <button onclick="${Decrement}" class="button">-</button>
-          <input type="number" id="counter" class="input" bind="${Value}">
-          <button onclick="${Increment}" class="button">+</button>
-        </p>
-        <p>
-          The counter's value is: ${Value}
-        </p>
-      </template>
-
-      <template id="Data">
-        <h1 class="title">
-          Download data
-          <button class="button" onclick="${Reload}">Reload</button>
-        </h1>
-        <p>
-          Signed in as ${Username}.
-          <button class="button" onclick="${SignOut}">Sign out</button>
-        </p>
-        <table class="table is-fullwidth">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Author</th>
-              <th>Published</th>
-              <th>ISBN</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${Rows}
-            <template id="EmptyData">
-              <tr><td colspan="4">Downloading book list...</td></tr>
-            </template>
-          </tbody>
-        </table>
-      </template>
-
-      <template id="SignIn">
-        <h1 class="title">Sign in</h1>
-        <form onsubmit="${SignIn}">
-          <div class="field">
-            <label class="label">Username</label>
-            <div class="control">
-              <input class="input" bind="${Username}" />
-            </div>
-          </div>
-          <div class="field">
-            <label class="label">Password</label>
-            <div class="control">
-              <input class="input" type="password" bind="${Password}" />
-            </div>
-          </div>
-          <div class="field">
-            <div class="control">
-              <input type="submit" value="Sign in" />
-            </div>
-          </div>
-          ${ErrorNotification}
-        </form>
-      </template>
-
-      <template id="ErrorNotification">
-        <div class="notification is-warning">
-          <button class="delete ${HideClass}" onclick="${Hide}"></button>
-          ${Text}
-        </div>
-      </template>
-
     </section>
   </div>
 </div>
