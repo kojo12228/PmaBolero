@@ -18,6 +18,10 @@ type Page =
     | [<EndPoint "/">] Home
     | [<EndPoint "/login">] SignIn
 
+let authenticatedPages =
+    [ Home ]
+    |> Set.ofList
+
 /// The Elmish application's model.
 type Model =
     {
@@ -54,14 +58,20 @@ type Message =
 let update remote js message model =
     match message with
     | SetPage page ->
-        { model with Page = page; NavMenuOpen = false; SignInModel = SignIn.initModel }, Cmd.none
+        let cmd =
+            if
+                Option.isNone model.IsSignedInAs &&
+                authenticatedPages |> Set.contains page
+            then Cmd.ofMsg (JSRedirect "/login")
+            else Cmd.none
+        { model with Page = page; NavMenuOpen = false; SignInModel = SignIn.initModel }, cmd
     | ToggleBurgerMenu ->
         { model with NavMenuOpen = not model.NavMenuOpen }, Cmd.none
 
     | SendSignOut ->
         model, Cmd.ofAsync remote.signOut () (fun () -> RecvSignOut) Error
     | RecvSignOut ->
-        { model with IsSignedInAs = None; IsSignedInRole = None }, Cmd.none
+        { model with IsSignedInAs = None; IsSignedInRole = None }, Cmd.ofMsg (JSRedirect "/login")
 
     | JSRedirect url ->
         let cmd = Cmd.ofJS js "location.replace" [| url |] JSRedirectSuccess Error
@@ -107,9 +117,7 @@ let navMenu model dispatch =
                     .SignOutClick(fun _ -> dispatch SendSignOut)
                     .Elt()
             | None ->
-                Main.SignInButtons()
-                    .JSTest(fun _ -> dispatch (JSRedirect "/login"))
-                    .Elt()
+                Main.SignInButtons().Elt()
         )
         .Elt()
 
@@ -123,8 +131,7 @@ let view model dispatch =
         .Body(
             cond model.Page <| function
             | Home -> homePage model dispatch
-            | SignIn ->
-                SignIn.view model.SignInModel (mapDispatch SignInMessage) 
+            | SignIn -> SignIn.view model.SignInModel (mapDispatch SignInMessage) 
         )
         .Error(
             cond model.Error <| function
