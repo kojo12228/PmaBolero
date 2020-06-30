@@ -7,14 +7,14 @@
         <h1 class="title has-text-white">OJO PMA</h1>
       </a>
 
-      <a role="button" onclick="${ToggleBurger}" class="${BurgerActive}" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+      <a role="button" onclick="${ToggleBurger}" class="navbar-burger burger ${NavMenuActive}" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
         <span aria-hidden="true"></span>
         <span aria-hidden="true"></span>
         <span aria-hidden="true"></span>
       </a>
     </div>
 
-    <div id="navbarBasicExample" class="${NavMenuActive}">
+    <div id="navbarBasicExample" class="navbar-menu ${NavMenuActive}">
       <div class="navbar-start">
         <a class="navbar-item">
           Projects
@@ -25,15 +25,24 @@
         <a class="navbar-item">
           Departments
         </a>
+      </div>
       <div class="navbar-end">
         <div class="navbar-item">
           <div class="buttons">
-            <a class="button is-dark">
-              <strong>Sign up</strong>
-            </a>
-            <a class="button is-light" href="/login">
-              Log in
-            </a>
+            ${SignInSection}
+            <template id="SignInButtons">
+              <a class="button is-dark">
+                <strong>Sign up</strong>
+              </a>
+              <a class="button is-light" href="/login">
+                Log in
+              </a>
+            </template>
+            <template id="SignOutButton">
+            <a class="button is-light" onclick="${SignOutClick}">
+                Log Out
+              </a>
+            </template>
           </div>
         </div>
       </div>
@@ -72,6 +81,13 @@
             </li>
           </ul>
           <p>Enjoy writing awesome apps!</p>
+        </div>
+      </template>
+
+      <template id="ErrorNotification">
+        <div class="notification is-warning">
+          <button class="delete ${HideClass}" onclick="${Hide}"></button>
+          ${Text}
         </div>
       </template>
     </section>

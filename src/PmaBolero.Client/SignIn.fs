@@ -34,6 +34,8 @@ type Message =
     | RecvSignIn of option<string>
     | Error of exn
     | ClearError
+    /// Handled within Main and causes no change in model
+    | SignInSuccess of string
 
 let update remote message model =
     match message with
@@ -41,16 +43,22 @@ let update remote message model =
         { model with Username = un }, Cmd.none
     | SetPassword pw ->
         { model with Password = pw }, Cmd.none
+
     | SendSignIn ->
         model, Cmd.ofAsync remote.signIn (model.Username, model.Password) RecvSignIn Error
-    | RecvSignIn _ ->
-        model, Cmd.none
+    | RecvSignIn None ->
+        { model with Error = Some "Sign in failed." }, Cmd.none
+    | RecvSignIn (Some username) ->
+        model, Cmd.ofMsg (SignInSuccess username)
+
     | Error RemoteUnauthorizedException ->
         { model with Error = Some "You have been logged out." }, Cmd.none
     | Error exn ->
         { model with Error = Some exn.Message }, Cmd.none
     | ClearError ->
         { model with Error = None }, Cmd.none
+    | _ ->
+        model, Cmd.none
 
 type SignInPage = Template<"wwwroot/signin.html">
 
@@ -60,13 +68,13 @@ let view model dispatch =
         .Password(model.Password, fun pw -> dispatch (SetPassword pw))
         .SignIn(fun _ -> dispatch SendSignIn)
         .ErrorNotification(
-            cond model.SignInFailed <| function
-            | false -> empty
-            | true ->
+            cond model.Error <| function
+            | None -> empty
+            | Some msg ->
                 SignInPage
                     .ErrorNotification()
-                    .HideClass("is-hidden")
-                    .Text("Sign in failed.")
+                    .Text(msg)
+                    .Hide(fun _ -> dispatch ClearError)
                     .Elt()
         )
         .Elt()
