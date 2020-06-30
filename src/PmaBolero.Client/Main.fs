@@ -8,6 +8,7 @@ open Bolero.Json
 open Bolero.Remoting
 open Bolero.Remoting.Client
 open Bolero.Templating.Client
+open Microsoft.JSInterop
 
 open PmaBolero.Client.SignIn
 open PmaBolero.Client.Models.Auth
@@ -46,12 +47,14 @@ type Message =
     | RecvSignOut
     | Error of exn
     | ClearError
+    | JSRedirect of string
+    | JSRedirectSuccess of obj
     | SignInMessage of SignIn.Message
 
-let update remote message model =
+let update remote js message model =
     match message with
     | SetPage page ->
-        { model with Page = page; NavMenuOpen = false }, Cmd.none
+        { model with Page = page; NavMenuOpen = false; SignInModel = SignIn.initModel }, Cmd.none
     | ToggleBurgerMenu ->
         { model with NavMenuOpen = not model.NavMenuOpen }, Cmd.none
 
@@ -59,6 +62,12 @@ let update remote message model =
         model, Cmd.ofAsync remote.signOut () (fun () -> RecvSignOut) Error
     | RecvSignOut ->
         { model with IsSignedInAs = None; IsSignedInRole = None }, Cmd.none
+
+    | JSRedirect url ->
+        let cmd = Cmd.ofJS js "location.replace" [| url |] JSRedirectSuccess Error
+        model, cmd
+    | JSRedirectSuccess _ ->
+        model, Cmd.none
 
     | Error RemoteUnauthorizedException ->
         {
@@ -98,7 +107,9 @@ let navMenu model dispatch =
                     .SignOutClick(fun _ -> dispatch SendSignOut)
                     .Elt()
             | None ->
-                Main.SignInButtons().Elt()
+                Main.SignInButtons()
+                    .JSTest(fun _ -> dispatch (JSRedirect "/login"))
+                    .Elt()
         )
         .Elt()
 
@@ -131,7 +142,7 @@ type MyApp() =
 
     override this.Program =
         let signInService = this.Remote<Models.Auth.AuthService>()
-        let update = update signInService
+        let update = update signInService this.JSRuntime
         Program.mkProgram (fun _ -> initModel, Cmd.none) update view
         |> Program.withRouter router
 #if DEBUG
