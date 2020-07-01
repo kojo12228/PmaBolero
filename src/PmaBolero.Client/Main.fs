@@ -11,12 +11,14 @@ open Bolero.Templating.Client
 open Microsoft.JSInterop
 
 open PmaBolero.Client.SignIn
+open PmaBolero.Client.SignUp
 open PmaBolero.Client.Models.Auth
 
 /// Routing endpoints definition.
 type Page =
     | [<EndPoint "/">] Home
     | [<EndPoint "/login">] SignIn
+    | [<EndPoint "/signup">] SignUp
 
 let authenticatedPages =
     [ Home ]
@@ -31,6 +33,7 @@ type Model =
         IsSignedInRole: Role option
         Error: string option
         SignInModel: SignIn.Model
+        SignUpModel: SignUp.Model
     }
 
 let initModel =
@@ -41,6 +44,7 @@ let initModel =
         IsSignedInRole = None
         Error = None
         SignInModel = SignIn.initModel
+        SignUpModel = SignUp.initModel
     }
 
 /// The Elmish application's update messages.
@@ -54,6 +58,7 @@ type Message =
     | JSRedirect of string
     | JSRedirectSuccess of obj
     | SignInMessage of SignIn.Message
+    | SignUpMessage of SignUp.Message
 
 let update remote js message model =
     match message with
@@ -98,6 +103,10 @@ let update remote js message model =
         let signInModel, cmd = SignIn.update remote msg model.SignInModel
         { model with SignInModel = signInModel}, Cmd.map SignInMessage cmd
 
+    | SignUpMessage msg ->
+        let signUpModel, cmd = SignUp.update remote msg model.SignUpModel
+        { model with SignUpModel = signUpModel }, Cmd.map SignUpMessage cmd
+
 /// Connects the routing system to the Elmish application.
 let router = Router.infer SetPage (fun model -> model.Page)
 
@@ -131,7 +140,8 @@ let view model dispatch =
         .Body(
             cond model.Page <| function
             | Home -> homePage model dispatch
-            | SignIn -> SignIn.view model.SignInModel (mapDispatch SignInMessage) 
+            | SignIn -> SignIn.view model.SignInModel (mapDispatch SignInMessage)
+            | SignUp -> SignUp.view model.SignUpModel (mapDispatch SignUpMessage) 
         )
         .Error(
             cond model.Error <| function

@@ -1,4 +1,4 @@
-module PmaBolero.Client.SignIn
+module PmaBolero.Client.SignUp
 
 open System
 open Elmish
@@ -16,7 +16,7 @@ type Model =
     {
         Username: string
         Password: string
-        SignInFailed: bool
+        PasswordRepeat: string
         Error: string option
     }
 
@@ -24,19 +24,20 @@ let initModel =
     {
         Username = ""
         Password = ""
-        SignInFailed = false
+        PasswordRepeat = ""
         Error = None
     }
 
 type Message =
     | SetUsername of string
     | SetPassword of string
-    | SendSignIn
-    | RecvSignIn of option<string>
+    | SetPasswordRepeat of string
+    | SendSignUp
+    | RecvSignUp of unit option
     | Error of exn
     | ClearError
-    /// Handled within Main and causes no change in model
-    | SignInSuccess of string
+    /// Handled within Main and causes no change in this model
+    | SignUpSuccess
 
 let update remote message model =
     match message with
@@ -44,13 +45,15 @@ let update remote message model =
         { model with Username = un }, Cmd.none
     | SetPassword pw ->
         { model with Password = pw }, Cmd.none
+    | SetPasswordRepeat pwr ->
+        { model with PasswordRepeat = pwr }, Cmd.none
 
-    | SendSignIn ->
-        model, Cmd.ofAsync remote.signIn (model.Username, model.Password) RecvSignIn Error
-    | RecvSignIn None ->
-        { model with Error = Some "Sign in failed." }, Cmd.none
-    | RecvSignIn (Some username) ->
-        model, Cmd.ofMsg (SignInSuccess username)
+    | SendSignUp ->
+        model, Cmd.ofAsync remote.addUser (model.Username, model.Password) RecvSignUp Error
+    | RecvSignUp None ->
+        { model with Error = Some "Username already exists." }, Cmd.none
+    | RecvSignUp (Some ()) ->
+        { model with Error = None }, Cmd.none
 
     | Error RemoteUnauthorizedException ->
         { model with Error = Some "You have been logged out." }, Cmd.none
@@ -61,13 +64,18 @@ let update remote message model =
     | _ ->
         model, Cmd.none
 
-type SignInPage = Template<"wwwroot/signin.html">
+type SignUpPage = Template<"wwwroot/signup.html">
 
 let view model dispatch =
-    SignInPage.SignIn()
+    SignUpPage.SignUp()
         .Username(model.Username, fun un -> dispatch (SetUsername un))
         .Password(model.Password, fun pw -> dispatch (SetPassword pw))
-        .SignIn(fun _ -> dispatch SendSignIn)
+        .ConfirmPassword(model.PasswordRepeat, fun pw -> dispatch (SetPasswordRepeat pw))
+        .SignUp(fun _ -> dispatch SendSignUp)
+        .SubmitDisabled(
+            model.Password.Length > 8 &&
+            model.Password <> model.PasswordRepeat
+        )
         .ErrorNotification(
             cond model.Error <| function
             | None -> empty

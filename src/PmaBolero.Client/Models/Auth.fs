@@ -13,6 +13,7 @@ type AuthService =
         signIn: string * string -> Async<option<string>>
         getUsername: unit -> Async<option<string>>
         getRole: unit -> Async<option<Role>>
+        addUser: string * string -> Async<option<unit>>
         signOut: unit -> Async<unit>
     }
     interface IRemoteService with
