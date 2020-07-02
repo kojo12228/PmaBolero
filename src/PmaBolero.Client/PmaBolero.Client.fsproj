@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Models/Auth.fs" />
+    <Compile Include="Models/EmployeeData.fs" />
     <Compile Include="Helpers/ErrorNotification.fs" />
     <Compile Include="SignIn.fs" />
     <Compile Include="SignUp.fs" />
