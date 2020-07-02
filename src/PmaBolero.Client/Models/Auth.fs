@@ -8,6 +8,19 @@ type Role =
     | ProjectManager
     | Developer
 
+let roleToStringMap =
+    [
+        (Admin, "admin")
+        (ProjectManager, "pm")
+        (Developer, "dev")
+    ] |> Map.ofList
+
+let stringToRoleMap =
+    roleToStringMap
+    |> Map.toSeq
+    |> Seq.map (fun (x, y) -> y, x)
+    |> Map.ofSeq
+
 type AuthService =
     {
         signIn: string * string -> Async<option<string * Role>>

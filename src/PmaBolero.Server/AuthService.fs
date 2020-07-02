@@ -11,6 +11,7 @@ open PmaBolero
 open PmaBolero.Server.Models
 open PmaBolero.Client.Models
 open PmaBolero.Server.Repositories.Mock
+open System.Security.Claims
 
 type AuthService(ctx: IRemoteContext, env: IWebHostEnvironment) =
     inherit RemoteHandler<Auth.AuthService>()
@@ -28,7 +29,9 @@ type AuthService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                         )
                 match matchedUser with
                 | Some user ->
-                    do! ctx.HttpContext.AsyncSignIn(user.Username, TimeSpan.FromDays(365.))
+                    let roleStr = Map.find user.Role Auth.roleToStringMap
+                    let claims = [Claim(ClaimTypes.Role, roleStr)]
+                    do! ctx.HttpContext.AsyncSignIn(user.Username, TimeSpan.FromDays(365.), claims = claims)
                     return Some (user.Username, user.Role)
                 | None ->
                     return None
