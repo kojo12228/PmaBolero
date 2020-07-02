@@ -20,28 +20,36 @@ type AuthService(ctx: IRemoteContext, env: IWebHostEnvironment) =
     override this.Handler =
         {
             signIn = fun (username, password) -> async {
-                if
+                let matchedUser =
                     users
-                    |> Array.exists (fun u ->
+                    |> Array.tryFind (fun u ->
                             u.Username = username &&
                             u.Password = password
                         )
-                then
-                    do! ctx.HttpContext.AsyncSignIn(username, TimeSpan.FromDays(365.))
-                    return Some username
-                else
+                match matchedUser with
+                | Some user ->
+                    do! ctx.HttpContext.AsyncSignIn(user.Username, TimeSpan.FromDays(365.))
+                    return Some (user.Username, user.Role)
+                | None ->
                     return None
             }
 
+            getUser = ctx.Authorize <| fun () -> async {
+                let user =
+                    users
+                    |> Array.find (fun u -> u.Username = ctx.HttpContext.User.Identity.Name)
+                return (user.Username, user.Role)
+            }
+
             getUsername = ctx.Authorize <| fun () -> async {
-                return Some ctx.HttpContext.User.Identity.Name
+                return ctx.HttpContext.User.Identity.Name
             }
 
             getRole = ctx.Authorize <| fun () -> async {
                 let user =
                     users
                     |> Array.find (fun u -> u.Username = ctx.HttpContext.User.Identity.Name)
-                return Some user.Role
+                return user.Role
             }
 
             addUser = fun (username, password) -> async {

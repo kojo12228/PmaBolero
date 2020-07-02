@@ -10,9 +10,10 @@ type Role =
 
 type AuthService =
     {
-        signIn: string * string -> Async<option<string>>
-        getUsername: unit -> Async<option<string>>
-        getRole: unit -> Async<option<Role>>
+        signIn: string * string -> Async<option<string * Role>>
+        getUsername: unit -> Async<string>
+        getRole: unit -> Async<Role>
+        getUser: unit -> Async<string * Role>
         addUser: string * string -> Async<option<unit>>
         signOut: unit -> Async<unit>
     }

@@ -53,7 +53,7 @@ let update remote message model =
     | RecvSignUp None ->
         { model with Error = Some "Username already exists." }, Cmd.none
     | RecvSignUp (Some ()) ->
-        { model with Error = None }, Cmd.none
+        { model with Error = None }, Cmd.ofMsg SignUpSuccess
 
     | Error RemoteUnauthorizedException ->
         { model with Error = Some "You have been logged out." }, Cmd.none

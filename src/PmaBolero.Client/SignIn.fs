@@ -32,11 +32,11 @@ type Message =
     | SetUsername of string
     | SetPassword of string
     | SendSignIn
-    | RecvSignIn of option<string>
+    | RecvSignIn of option<string * Role>
     | Error of exn
     | ClearError
     /// Handled within Main and causes no change in model
-    | SignInSuccess of string
+    | SignInSuccess of string * Role
 
 let update remote message model =
     match message with
@@ -71,6 +71,6 @@ let view model dispatch =
         .ErrorNotification(
             cond model.Error <| function
             | None -> empty
-            | Some msg -> errorNotifWarning msg (fun m -> dispatch ClearError)
+            | Some msg -> errorNotifWarning msg (fun _ -> dispatch ClearError)
         )
         .Elt()
