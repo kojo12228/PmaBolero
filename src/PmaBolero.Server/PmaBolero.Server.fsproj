@@ -5,7 +5,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Models/User.fs" />
+    <Compile Include="Models/EmployeeData.fs" />
     <Compile Include="Repositories/Mock/Users.fs" />
+    <Compile Include="Repositories/Mock/Backend.fs" />
     <Compile Include="AuthService.fs" />
     <Compile Include="Startup.fs" />
   </ItemGroup>

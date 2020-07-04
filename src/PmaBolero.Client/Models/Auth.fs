@@ -31,4 +31,4 @@ type AuthService =
         signOut: unit -> Async<unit>
     }
     interface IRemoteService with
-        member this.BasePath = "/auth"
+        member this.BasePath = "/api/auth"
