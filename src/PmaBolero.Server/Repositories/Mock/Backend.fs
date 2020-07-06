@@ -3,7 +3,7 @@ module PmaBolero.Server.Repositories.Mock.Backend
 open PmaBolero.Server.Models.EmployeeDataInternal
 open PmaBolero.Client.Models
 
-let employees: Employee[] =
+let mutable employees: Map<int, Employee> =
     [|
         {
             Id = 0
@@ -34,8 +34,17 @@ let employees: Employee[] =
             Skills = [| "C#" |]
         }
     |]
+    |> Array.zip [| 0 .. 3 |]
+    |> Map.ofArray
 
-let projects: Project[] =
+let getNextEmployeeId() =
+    employees
+    |> Map.toSeq
+    |> Seq.maxBy (fst)
+    |> fst
+    |> ((+) 1)
+
+let mutable projects: Map<int, Project> =
     [|
         {
             Id = 0
@@ -52,8 +61,10 @@ let projects: Project[] =
             SkillRequirements = [| "C#" |]
         }
     |]
+    |> Array.zip [| 0; 1 |]
+    |> Map.ofArray
 
-let departments: Department[] =
+let mutable departments: Map<int, Department> =
     [|
         {
             Id = 0
@@ -76,8 +87,10 @@ let departments: Department[] =
             Name = "Storage"
         }
     |]
+    |> Array.zip [| 0 .. 4 |]
+    |> Map.ofArray
 
-let departmentEmployees: Map<int, int Set> =
+let mutable departmentEmployees: Map<int, int Set> =
     [|
         0, [ 0 ] |> Set.ofList
         1, [ 1; 2; 3 ] |> Set.ofList
@@ -86,7 +99,7 @@ let departmentEmployees: Map<int, int Set> =
         4, [] |> Set.ofList
     |] |> Map.ofArray
 
-let departmentProjects: Map<int, int Set> =
+let mutable departmentProjects: Map<int, int Set> =
     [|
         0, [] |> Set.ofList
         1, [ 0; 1 ] |> Set.ofList
@@ -95,15 +108,47 @@ let departmentProjects: Map<int, int Set> =
         4, [] |> Set.ofList
     |] |> Map.ofArray
 
-let projectDevs: Map<int, int Set> =
+let mutable projectDevs: Map<int, int Set> =
     [|
         0, [ 1 ] |> Set.ofList
         1, [ 1 ] |> Set.ofList
     |] |> Map.ofArray
 
-let projectPM: Map<int, int> =
+let mutable projectPM: Map<int, int> =
     [|
         0, 2
         1, 3
     |] |> Map.ofArray
+
+let toClientEmployee (employee: Employee): EmployeeData.Employee =
+    let department =
+        departmentEmployees
+        |> Map.toList
+        |> List.find (fun (dept, empls) -> Set.contains employee.Id empls)
+        |> fst
+
+    let projects =
+        match employee.Role with
+        | Auth.Developer ->
+            projectDevs
+            |> Map.toArray
+            |> Array.filter (fun (proj, empls) -> Set.contains employee.Id empls)
+            |> Array.map fst
+        | Auth.ProjectManager ->
+            projectPM
+            |> Map.toArray
+            |> Array.filter (fun (proj, pm) -> employee.Id = pm)
+            |> Array.map fst
+        | Auth.Admin ->
+            [||]
+
+    {
+        Id = employee.Id
+        Email = employee.Email
+        FullName = employee.FullName
+        DepartmentID = department
+        Role = employee.Role
+        ProjectIds = projects
+        Skills = employee.Skills
+    }
 

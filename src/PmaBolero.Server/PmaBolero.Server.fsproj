@@ -9,6 +9,9 @@
     <Compile Include="Repositories/Mock/Users.fs" />
     <Compile Include="Repositories/Mock/Backend.fs" />
     <Compile Include="AuthService.fs" />
+    <Compile Include="EmployeeService.fs" />
+    <Compile Include="ProjectService.fs" />
+    <Compile Include="DepartmentService.fs" />
     <Compile Include="Startup.fs" />
   </ItemGroup>
   <ItemGroup>

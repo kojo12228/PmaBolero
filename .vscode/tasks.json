@@ -17,6 +17,37 @@
                 "reveal": "always"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "build server",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "src/PmaBolero.Server"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "build client",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "src/PmaBolero.Client"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": []
         }
     ]
 }
