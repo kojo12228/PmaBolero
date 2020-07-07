@@ -37,13 +37,6 @@ let mutable employees: Map<int, Employee> =
     |> Array.zip [| 0 .. 3 |]
     |> Map.ofArray
 
-let getNextEmployeeId() =
-    employees
-    |> Map.toSeq
-    |> Seq.maxBy (fst)
-    |> fst
-    |> ((+) 1)
-
 let mutable projects: Map<int, Project> =
     [|
         {
@@ -63,6 +56,19 @@ let mutable projects: Map<int, Project> =
     |]
     |> Array.zip [| 0; 1 |]
     |> Map.ofArray
+
+let private getNextId dataMap =
+    dataMap
+    |> Map.toSeq
+    |> Seq.maxBy (fst)
+    |> fst
+    |> ((+) 1)
+
+let getNextEmployeeId() =
+    getNextId employees
+
+let getNextProjectId() =
+    getNextId projects
 
 let mutable departments: Map<int, Department> =
     [|
@@ -114,10 +120,10 @@ let mutable projectDevs: Map<int, int Set> =
         1, [ 1 ] |> Set.ofList
     |] |> Map.ofArray
 
-let mutable projectPM: Map<int, int> =
+let mutable projectPM: Map<int, int option> =
     [|
-        0, 2
-        1, 3
+        0, Some 2
+        1, Some 3
     |] |> Map.ofArray
 
 let toClientEmployee (employee: Employee): EmployeeData.Employee =
@@ -137,7 +143,7 @@ let toClientEmployee (employee: Employee): EmployeeData.Employee =
         | Auth.ProjectManager ->
             projectPM
             |> Map.toArray
-            |> Array.filter (fun (proj, pm) -> employee.Id = pm)
+            |> Array.filter (fun (proj, pm) -> employee.Id = pm.Value)
             |> Array.map fst
         | Auth.Admin ->
             [||]
@@ -152,3 +158,43 @@ let toClientEmployee (employee: Employee): EmployeeData.Employee =
         Skills = employee.Skills
     }
 
+let toClientProject (project: Project): EmployeeData.Project =
+    let department =
+        departmentProjects
+        |> Map.findKey (fun _ projIds -> Set.contains project.Id projIds)
+
+    let devs =
+        projectDevs
+        |> Map.find project.Id
+        |> Set.toArray
+
+    let pm = Map.find project.Id projectPM
+
+    {
+        Id = project.Id
+        ProjectName = project.ProjectName
+        DepartmentId = department
+        Description = project.Description
+        Status = project.Status
+        ProjectManagerId = pm
+        DeveloperIds = devs
+        SkillRequirements = project.SkillRequirements
+    }
+
+let toClientDepartment (dept: Department): EmployeeData.Department =
+    let deptEmployees =
+        departmentEmployees
+        |> Map.find dept.Id
+        |> Set.toArray
+
+    let deptProjects =
+        departmentProjects
+        |> Map.find dept.Id
+        |> Set.toArray
+
+    {
+        Id = dept.Id
+        Name = dept.Name
+        EmployeeIds = deptEmployees
+        ProjectIds = deptProjects
+    }

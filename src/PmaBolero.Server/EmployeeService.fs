@@ -84,7 +84,10 @@ type EmployeeService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                         | Auth.ProjectManager, true ->
                             let pmProjects =
                                 Backend.projectPM
-                                |> Map.filter (fun _ pmId -> pmId = employeeId)
+                                |> Map.filter (fun _ pmIdOpt ->
+                                    match pmIdOpt with
+                                    | Some pmId -> pmId = employeeId
+                                    | _ -> false)
                                 |> Map.toSeq
                                 |> Seq.map fst
 
@@ -149,7 +152,11 @@ type EmployeeService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                     | Auth.ProjectManager ->
                         let newProjPms =
                             Backend.projectPM
-                            |> Map.filter (fun _ emplId -> employeeId <> emplId)
+                            |> Map.map (fun _ pmIdOpt ->
+                                match pmIdOpt with
+                                | Some pmId when pmId = employeeId ->
+                                    None
+                                | x -> x)
                         Backend.projectPM <- newProjPms
                     | _ -> ()
 
