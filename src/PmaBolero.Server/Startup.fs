@@ -24,6 +24,9 @@ type Startup() =
                 .AddCookie()
                 .Services
             .AddRemoting<AuthService>()
+            .AddRemoting<EmployeeService>()
+            .AddRemoting<ProjectService>()
+            .AddRemoting<DepartmentService>()
             .AddBoleroHost()
 #if DEBUG
             .AddHotReload(templateDir = __SOURCE_DIRECTORY__ + "/../PmaBolero.Client")
