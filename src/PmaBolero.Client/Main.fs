@@ -13,6 +13,7 @@ open PmaBolero.Client.SignUp
 open PmaBolero.Client.Models.Auth
 open PmaBolero.Client.Helpers.ErrorNotification
 open Microsoft.AspNetCore.Components
+open PmaBolero.Client.Models.EmployeeData
 
 /// Routing endpoints definition.
 type Page =
@@ -26,6 +27,14 @@ type Page =
 let authenticatedPages =
     [ Home; ViewProjects; ViewEmployees; ViewDepartment ]
     |> Set.ofList
+
+type Remotes =
+    {
+        Auth: AuthService
+        Department: DepartmentService
+        Employee: EmployeeService
+        Project: ProjectService
+    }
 
 /// The Elmish application's model.
 type Model =
@@ -75,7 +84,7 @@ type Message =
     | ViewEmployeesMessage of ViewEmployees.Message
     | ViewProjectsMessage of ViewProjects.Message
 
-let update remote (nm: NavigationManager) message model =
+let update remotes (nm: NavigationManager) message model =
     match message with
     | SetPage page ->
         let cmd =
@@ -94,11 +103,11 @@ let update remote (nm: NavigationManager) message model =
         { model with NavMenuOpen = not model.NavMenuOpen }, Cmd.none
 
     | SendSignOut ->
-        model, Cmd.ofAsync remote.signOut () (fun () -> RecvSignOut) Error
+        model, Cmd.ofAsync remotes.Auth.signOut () (fun () -> RecvSignOut) Error
     | RecvSignOut ->
         { model with IsSignedInAs = None}, Cmd.ofMsg (Redirect "/login")
     | GetSignedInAs ->
-        model, Cmd.ofAuthorized remote.getUser () RecvSignedInAs Error
+        model, Cmd.ofAuthorized remotes.Auth.getUser () RecvSignedInAs Error
     | RecvSignedInAs user ->
         { model with IsSignedInAs = user }, Cmd.none
 
@@ -129,7 +138,7 @@ let update remote (nm: NavigationManager) message model =
                 SignInModel = SignIn.initModel // No longer necessary on redirect
         }, Cmd.ofMsg (Redirect "/project/all")
     | SignInMessage msg ->
-        let signInModel, cmd = SignIn.update remote msg model.SignInModel
+        let signInModel, cmd = SignIn.update remotes.Auth msg model.SignInModel
         { model with SignInModel = signInModel}, Cmd.map SignInMessage cmd
 
     | SignUpMessage (SignUpSuccess) ->
@@ -138,19 +147,19 @@ let update remote (nm: NavigationManager) message model =
                 Success = Some "Successfully created account. Please sign in."
         }, Cmd.ofMsg (Redirect "/login")
     | SignUpMessage msg ->
-        let signUpModel, cmd = SignUp.update remote msg model.SignUpModel
+        let signUpModel, cmd = SignUp.update remotes.Auth msg model.SignUpModel
         { model with SignUpModel = signUpModel }, Cmd.map SignUpMessage cmd
 
     | ViewDepartmentsMessage msg ->
-        let viewDeptModel, cmd = ViewDepartments.update remote msg model.ViewDepartmentsModel
+        let viewDeptModel, cmd = ViewDepartments.update remotes.Department msg model.ViewDepartmentsModel
         { model with ViewDepartmentsModel = viewDeptModel }, Cmd.map ViewDepartmentsMessage cmd
 
     | ViewEmployeesMessage msg ->
-        let viewEmplsModel, cmd = ViewEmployees.update remote msg model.ViewEmployeesModel
+        let viewEmplsModel, cmd = ViewEmployees.update remotes.Employee msg model.ViewEmployeesModel
         { model with ViewEmployeesModel = viewEmplsModel }, Cmd.map ViewEmployeesMessage cmd
 
     | ViewProjectsMessage msg ->
-        let viewProjsModel, cmd = ViewProjects.update remote msg model.ViewProjectsModel
+        let viewProjsModel, cmd = ViewProjects.update remotes.Project msg model.ViewProjectsModel
         { model with ViewProjectsModel = viewProjsModel }, Cmd.map ViewProjectsMessage cmd
 
 /// Connects the routing system to the Elmish application.
@@ -209,7 +218,19 @@ type MyApp() =
 
     override this.Program =
         let signInService = this.Remote<Models.Auth.AuthService>()
-        let update = update signInService this.NavigationManager
+        let departmentService = this.Remote<Models.EmployeeData.DepartmentService>()
+        let employeeService = this.Remote<Models.EmployeeData.EmployeeService>()
+        let projectService = this.Remote<Models.EmployeeData.ProjectService>()
+
+        let remotes =
+            {
+                Auth = signInService
+                Department = departmentService
+                Employee = employeeService
+                Project = projectService
+            }
+
+        let update = update remotes this.NavigationManager
         Program.mkProgram (fun _ -> initModel, Cmd.ofMsg GetSignedInAs) update view
         |> Program.withRouter router
 #if DEBUG
