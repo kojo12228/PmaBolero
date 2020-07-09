@@ -127,7 +127,7 @@ let update remote (nm: NavigationManager) message model =
             model with
                 IsSignedInAs = Some (username, role);
                 SignInModel = SignIn.initModel // No longer necessary on redirect
-        }, Cmd.none
+        }, Cmd.ofMsg (Redirect "/project/all")
     | SignInMessage msg ->
         let signInModel, cmd = SignIn.update remote msg model.SignInModel
         { model with SignInModel = signInModel}, Cmd.map SignInMessage cmd
