@@ -10,6 +10,9 @@
     <Compile Include="Helpers/ErrorNotification.fs" />
     <Compile Include="SignIn.fs" />
     <Compile Include="SignUp.fs" />
+    <Compile Include="ViewDepartments.fs" />
+    <Compile Include="ViewEmployees.fs" />
+    <Compile Include="ViewProjects.fs" />
     <Compile Include="Main.fs" />
     <Compile Include="Startup.fs" />
   </ItemGroup>

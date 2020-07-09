@@ -19,9 +19,12 @@ type Page =
     | [<EndPoint "/">] Home
     | [<EndPoint "/login">] SignIn
     | [<EndPoint "/signup">] SignUp
+    | [<EndPoint "/project/all">] ViewProjects
+    | [<EndPoint "/employee/all">] ViewEmployees
+    | [<EndPoint "/department/all">] ViewDepartment
 
 let authenticatedPages =
-    [ Home ]
+    [ Home; ViewProjects; ViewEmployees; ViewDepartment ]
     |> Set.ofList
 
 /// The Elmish application's model.
@@ -34,6 +37,9 @@ type Model =
         Success: string option
         SignInModel: SignIn.Model
         SignUpModel: SignUp.Model
+        ViewDepartmentsModel: ViewDepartments.Model
+        ViewEmployeesModel: ViewEmployees.Model
+        ViewProjectsModel: ViewProjects.Model
     }
 
 let initModel =
@@ -45,6 +51,9 @@ let initModel =
         Success = None
         SignInModel = SignIn.initModel
         SignUpModel = SignUp.initModel
+        ViewDepartmentsModel = ViewDepartments.initModel
+        ViewEmployeesModel = ViewEmployees.initModel
+        ViewProjectsModel = ViewProjects.initModel
     }
 
 /// The Elmish application's update messages.
@@ -62,6 +71,9 @@ type Message =
     | RedirectSuccess of unit
     | SignInMessage of SignIn.Message
     | SignUpMessage of SignUp.Message
+    | ViewDepartmentsMessage of ViewDepartments.Message
+    | ViewEmployeesMessage of ViewEmployees.Message
+    | ViewProjectsMessage of ViewProjects.Message
 
 let update remote (nm: NavigationManager) message model =
     match message with
@@ -129,6 +141,18 @@ let update remote (nm: NavigationManager) message model =
         let signUpModel, cmd = SignUp.update remote msg model.SignUpModel
         { model with SignUpModel = signUpModel }, Cmd.map SignUpMessage cmd
 
+    | ViewDepartmentsMessage msg ->
+        let viewDeptModel, cmd = ViewDepartments.update remote msg model.ViewDepartmentsModel
+        { model with ViewDepartmentsModel = viewDeptModel }, Cmd.map ViewDepartmentsMessage cmd
+
+    | ViewEmployeesMessage msg ->
+        let viewEmplsModel, cmd = ViewEmployees.update remote msg model.ViewEmployeesModel
+        { model with ViewEmployeesModel = viewEmplsModel }, Cmd.map ViewEmployeesMessage cmd
+
+    | ViewProjectsMessage msg ->
+        let viewProjsModel, cmd = ViewProjects.update remote msg model.ViewProjectsModel
+        { model with ViewProjectsModel = viewProjsModel }, Cmd.map ViewProjectsMessage cmd
+
 /// Connects the routing system to the Elmish application.
 let router = Router.infer SetPage (fun model -> model.Page)
 
@@ -163,7 +187,10 @@ let view model dispatch =
             cond model.Page <| function
             | Home -> homePage model dispatch
             | SignIn -> SignIn.view model.SignInModel (mapDispatch SignInMessage)
-            | SignUp -> SignUp.view model.SignUpModel (mapDispatch SignUpMessage) 
+            | SignUp -> SignUp.view model.SignUpModel (mapDispatch SignUpMessage)
+            | ViewDepartment -> ViewDepartments.view model.ViewDepartmentsModel (mapDispatch ViewDepartmentsMessage)
+            | ViewEmployees -> ViewEmployees.view model.ViewEmployeesModel (mapDispatch ViewEmployeesMessage)
+            | ViewProjects -> ViewProjects.view model.ViewProjectsModel (mapDispatch ViewProjectsMessage)
         )
         .MainNotification(
             cond model.Error <| function
