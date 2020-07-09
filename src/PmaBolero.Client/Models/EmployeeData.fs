@@ -39,6 +39,14 @@ type Department =
         ProjectIds: int array
     }
 
+type DepartmentVis =
+    {
+        Id: int
+        Name: string
+        Employees: (int * string) array
+        Projects: (int * string) array
+    }
+
 type EmployeeService =
     {
         createEmployee:
@@ -78,6 +86,7 @@ type ProjectService =
 type DepartmentService =
     {
         getDepartments: unit -> Async<Department[]>
+        getDepartmentsVis: unit -> Async<DepartmentVis[]>
         getDepartment: int -> Async<option<Department>>
     }
     interface IRemoteService with

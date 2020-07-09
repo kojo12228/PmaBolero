@@ -1,3 +1,36 @@
-<h1 class="title">
-  All Departments:
-</h1>
+<template id="ViewDepartments">
+  <h1 class="title">
+    Departments
+  </h1>
+
+  ${Progress}
+  <div class="columns is-multiline">
+    ${DepartmentTiles}
+  </div>
+
+  <template id="DisplayProgress">
+    <progress class="progress is-medium is-dark" max="100">45%</progress>
+  </template>
+
+  <template id="DepartmentTile">
+    <div class="column is-4-desktop is-6-tablet">
+      <div class="box">
+        <p class="subtitle"><strong>${DepartmentName}</strong></p>
+        <div class="columns">
+          <div class="column">
+            <p>Projects:</p>
+            ${ProjectNames}
+          </div>
+          <div class="column">
+            <p>Employees:</p>
+            ${EmployeeNames}
+          </div>
+        </div>
+
+        <template id="DepartmentSublisting">
+          <p>${Name}</p>
+        </template>
+      </div>
+    </div>
+  </template>
+</template>

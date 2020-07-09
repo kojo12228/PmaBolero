@@ -92,7 +92,11 @@ let update remotes (nm: NavigationManager) message model =
                 Option.isNone model.IsSignedInAs &&
                 authenticatedPages |> Set.contains page
             then Cmd.ofMsg (Redirect "/login")
-            else Cmd.none
+            else
+                match page with
+                | ViewDepartment ->
+                    Cmd.ofMsg (ViewDepartmentsMessage ViewDepartments.InitMessage)
+                | _ -> Cmd.none
         {
             model with
                 Page = page
