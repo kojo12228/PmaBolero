@@ -8,9 +8,9 @@ type Employee =
         Id: int
         Email: string
         FullName: string
-        DepartmentID: int
+        DepartmentID: (int * string)
         Role: Auth.Role
-        ProjectIds: int array
+        ProjectIds: (int * string) array
         Skills: string array
     }
 
@@ -22,24 +22,16 @@ type ProjectStatus =
 type Project =
     {
         Id: int
-        ProjectName: string
-        DepartmentId: int
+        Name: string
+        DepartmentId: (int * string)
         Description: string
         Status: ProjectStatus
-        ProjectManagerId: int option
-        DeveloperIds: int array
+        ProjectManagerId: (int * string) option
+        DeveloperIds: (int * string) array
         SkillRequirements: string array
     }
 
 type Department =
-    {
-        Id: int
-        Name: string
-        EmployeeIds: int array
-        ProjectIds: int array
-    }
-
-type DepartmentVis =
     {
         Id: int
         Name: string
@@ -86,7 +78,6 @@ type ProjectService =
 type DepartmentService =
     {
         getDepartments: unit -> Async<Department[]>
-        getDepartmentsVis: unit -> Async<DepartmentVis[]>
         getDepartment: int -> Async<option<Department>>
     }
     interface IRemoteService with

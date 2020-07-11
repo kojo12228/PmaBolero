@@ -131,7 +131,9 @@ let toClientEmployee (employee: Employee): EmployeeData.Employee =
         departmentEmployees
         |> Map.toList
         |> List.find (fun (dept, empls) -> Set.contains employee.Id empls)
-        |> fst
+        |> (fun (deptId, _) -> 
+            let dept = Map.find deptId departments
+            deptId, dept.Name)
 
     let projects =
         match employee.Role with
@@ -139,12 +141,16 @@ let toClientEmployee (employee: Employee): EmployeeData.Employee =
             projectDevs
             |> Map.toArray
             |> Array.filter (fun (proj, empls) -> Set.contains employee.Id empls)
-            |> Array.map fst
+            |> Array.map (fun (projId, _) -> 
+                let proj = Map.find projId projects
+                projId, proj.ProjectName)
         | Auth.ProjectManager ->
             projectPM
             |> Map.toArray
             |> Array.filter (fun (proj, pm) -> employee.Id = pm.Value)
-            |> Array.map fst
+            |> Array.map (fun (projId, _) -> 
+                let proj = Map.find projId projects
+                projId, proj.ProjectName)
         | Auth.Admin ->
             [||]
 
@@ -162,17 +168,28 @@ let toClientProject (project: Project): EmployeeData.Project =
     let department =
         departmentProjects
         |> Map.findKey (fun _ projIds -> Set.contains project.Id projIds)
+        |> (fun deptId ->
+            let dept = Map.find deptId departments
+            deptId, dept.Name)
 
     let devs =
         projectDevs
         |> Map.find project.Id
         |> Set.toArray
+        |> Array.map (fun devId ->
+            let dev = Map.find devId employees
+            devId, dev.FullName)
 
-    let pm = Map.find project.Id projectPM
+    let pm =
+        projectPM
+        |> Map.find project.Id
+        |> Option.map (fun pmId ->
+            let pm = Map.find pmId employees
+            pmId, pm.FullName)
 
     {
         Id = project.Id
-        ProjectName = project.ProjectName
+        Name = project.ProjectName
         DepartmentId = department
         Description = project.Description
         Status = project.Status
@@ -186,15 +203,21 @@ let toClientDepartment (dept: Department): EmployeeData.Department =
         departmentEmployees
         |> Map.find dept.Id
         |> Set.toArray
+        |> Array.map (fun emplId ->
+            let empl = Map.find emplId employees
+            empl.Id, empl.FullName)
 
     let deptProjects =
         departmentProjects
         |> Map.find dept.Id
         |> Set.toArray
+        |> Array.map (fun projId ->
+            let proj = Map.find projId projects
+            proj.Id, proj.ProjectName)
 
     {
         Id = dept.Id
         Name = dept.Name
-        EmployeeIds = deptEmployees
-        ProjectIds = deptProjects
+        Employees = deptEmployees
+        Projects = deptProjects
     }

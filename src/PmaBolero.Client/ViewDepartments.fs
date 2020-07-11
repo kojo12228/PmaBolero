@@ -13,7 +13,7 @@ open PmaBolero.Client.Models.EmployeeData
 type Model =
     {
         IsLoading: bool
-        Departments: DepartmentVis[]
+        Departments: Department[]
         AuthorisationFailure: bool
         Error: string option
     }
@@ -29,7 +29,7 @@ let initModel =
 type Message =
     | InitMessage
     | GetDepartments
-    | RecvDepartments of option<DepartmentVis[]>
+    | RecvDepartments of option<Department[]>
     | Error of exn
 
 let update remote message model =
@@ -37,7 +37,7 @@ let update remote message model =
     | InitMessage ->
         { model with IsLoading = true }, Cmd.ofMsg GetDepartments
     | GetDepartments ->
-        model, Cmd.ofAuthorized remote.getDepartmentsVis () RecvDepartments Error
+        model, Cmd.ofAuthorized remote.getDepartments () RecvDepartments Error
     | RecvDepartments (Some depts) ->
         { model with Departments = depts; IsLoading = false }, Cmd.none
     | RecvDepartments None ->
@@ -73,7 +73,7 @@ let populateEmployees (employees: (int * string) []) =
         )
         .Elt()
 
-let renderDepartments (dept: DepartmentVis) =
+let renderDepartments (dept: Department) =
     ViewDepartmentsPage
         .DepartmentTile()
         .DepartmentName(dept.Name)
