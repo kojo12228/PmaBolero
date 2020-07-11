@@ -16,19 +16,44 @@
     <div class="column is-4-desktop is-6-tablet">
       <div class="box">
         <p class="subtitle"><strong>${DepartmentName}</strong></p>
+        <hr>
         <div class="columns">
           <div class="column">
-            <p>Projects:</p>
-            ${ProjectNames}
+            ${ProjectsList}
           </div>
           <div class="column">
-            <p>Employees:</p>
-            ${EmployeeNames}
+            ${EmployeesList}
           </div>
         </div>
 
+        <template id="PopulateProjects">
+          <p>Projects:</p>
+          <div class="content">
+            <ul>
+              ${ProjectNames}
+            </ul>
+          </div>
+        </template>
+
+        <template id="NoProjects">
+          <p>No projects</p>
+        </template>
+
+        <template id="PopulateEmployees">
+          <p>Employees:</p>
+          <div class="content">
+            <ul>
+              ${EmployeeNames}
+            </ul>
+          </div>
+        </template>
+
+        <template id="NoEmployees">
+          <p>No employees</p>
+        </template>
+
         <template id="DepartmentSublisting">
-          <p>${Name}</p>
+          <li>${Name}</li>
         </template>
       </div>
     </div>

@@ -47,25 +47,53 @@ let update remote message model =
 
 type ViewDepartmentsPage = Template<"wwwroot/viewdepartments.html">
 
-let renderDepartments (dept: DepartmentVis) =
+let populateProjects (projects: (int * string) []) =
     ViewDepartmentsPage
-        .DepartmentTile()
-        .DepartmentName(dept.Name)
+        .PopulateProjects()
         .ProjectNames(
-            forEach dept.Projects (fun (_, projName) ->
+            forEach projects (fun (_, projName) ->
                 ViewDepartmentsPage
                     .DepartmentSublisting()
                     .Name(projName)
                     .Elt()
             )
         )
+        .Elt()
+
+let populateEmployees (employees: (int * string) []) =
+    ViewDepartmentsPage
+        .PopulateEmployees()
         .EmployeeNames(
-            forEach dept.Employees (fun (_, emplName) ->
+            forEach employees (fun (_, emplName) ->
                 ViewDepartmentsPage
                     .DepartmentSublisting()
                     .Name(emplName)
                     .Elt()
             )
+        )
+        .Elt()
+
+let renderDepartments (dept: DepartmentVis) =
+    ViewDepartmentsPage
+        .DepartmentTile()
+        .DepartmentName(dept.Name)
+        .ProjectsList(
+            cond (Array.isEmpty dept.Projects) <| function
+            | false ->
+                populateProjects dept.Projects
+            | true ->
+                ViewDepartmentsPage
+                    .NoProjects()
+                    .Elt()
+        )
+        .EmployeesList(
+            cond (Array.isEmpty dept.Employees) <| function
+            | false ->
+                populateEmployees dept.Employees
+            | true ->
+                ViewDepartmentsPage
+                    .NoEmployees()
+                    .Elt()
         )
         .Elt()
 
