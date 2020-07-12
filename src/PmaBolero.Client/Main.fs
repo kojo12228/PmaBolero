@@ -50,6 +50,7 @@ type Model =
     {
         Page: Page
         NavMenuOpen: bool
+        InitialSignInChecked: bool
         IsSignedInAs: (string * Role) option
         Error: string option
         Success: string option
@@ -64,6 +65,7 @@ let initModel =
     {
         Page = Home
         NavMenuOpen = false
+        InitialSignInChecked = false
         IsSignedInAs = None
         Error = None
         Success = None
@@ -102,8 +104,10 @@ let update remotes (nm: NavigationManager) js message model =
 
     match message with
     | SetPage page ->
+        // TODO: Refactor lengthy logic out of match statement
         let cmd =
             if
+                model.InitialSignInChecked &&
                 Option.isNone model.IsSignedInAs &&
                 authenticatedPages |> Set.contains page
             then Cmd.ofMsg (Redirect "/login")
@@ -114,10 +118,13 @@ let update remotes (nm: NavigationManager) js message model =
                     |> SetTitle
                     |> Cmd.ofMsg
                 let initMessage =
-                    match page with
-                    | ViewDepartment ->
-                        Cmd.ofMsg (ViewDepartmentsMessage ViewDepartments.InitMessage)
-                    | _ -> Cmd.none
+                    if model.InitialSignInChecked
+                    then
+                        match page with
+                        | ViewDepartment ->
+                            Cmd.ofMsg (ViewDepartmentsMessage ViewDepartments.InitMessage)
+                        | _ -> Cmd.none
+                    else Cmd.none
 
                 Cmd.batch [ pageTitleMessage; initMessage ]
         {
@@ -141,7 +148,7 @@ let update remotes (nm: NavigationManager) js message model =
     | GetSignedInAs ->
         model, Cmd.ofAuthorized remotes.Auth.getUser () RecvSignedInAs Error
     | RecvSignedInAs user ->
-        { model with IsSignedInAs = user }, Cmd.none
+        { model with IsSignedInAs = user; InitialSignInChecked = true }, Cmd.ofMsg (SetPage model.Page)
 
     | Redirect url ->
         let cmd = Cmd.performFunc (fun url -> nm.NavigateTo(url, false)) url RedirectSuccess
