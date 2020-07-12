@@ -7,12 +7,12 @@ open Bolero.Html
 open Bolero.Remoting
 open Bolero.Remoting.Client
 open Bolero.Templating.Client
+open Microsoft.AspNetCore.Components
 
 open PmaBolero.Client.SignIn
 open PmaBolero.Client.SignUp
 open PmaBolero.Client.Models.Auth
 open PmaBolero.Client.Helpers.ErrorNotification
-open Microsoft.AspNetCore.Components
 open PmaBolero.Client.Models.EmployeeData
 
 /// Routing endpoints definition.
@@ -23,6 +23,15 @@ type Page =
     | [<EndPoint "/project/all">] ViewProjects
     | [<EndPoint "/employee/all">] ViewEmployees
     | [<EndPoint "/department/all">] ViewDepartment
+
+let pageTitles page =
+    match page with
+    | Home -> "Home"
+    | SignIn -> "Sign In"
+    | SignUp -> "Sign Up"
+    | ViewProjects -> "View All Projects"
+    | ViewEmployees -> "View All Employees"
+    | ViewDepartment -> "View All Departments"
 
 let authenticatedPages =
     [ Home; ViewProjects; ViewEmployees; ViewDepartment ]
@@ -68,6 +77,8 @@ let initModel =
 /// The Elmish application's update messages.
 type Message =
     | SetPage of Page
+    | SetTitle of string
+    | SetTitleSuccess of string
     | ToggleBurgerMenu
     | SendSignOut
     | RecvSignOut
@@ -84,7 +95,11 @@ type Message =
     | ViewEmployeesMessage of ViewEmployees.Message
     | ViewProjectsMessage of ViewProjects.Message
 
-let update remotes (nm: NavigationManager) message model =
+let update remotes (nm: NavigationManager) js message model =
+#if DEBUG
+    printfn "%A" message
+#endif
+
     match message with
     | SetPage page ->
         let cmd =
@@ -93,16 +108,29 @@ let update remotes (nm: NavigationManager) message model =
                 authenticatedPages |> Set.contains page
             then Cmd.ofMsg (Redirect "/login")
             else
-                match page with
-                | ViewDepartment ->
-                    Cmd.ofMsg (ViewDepartmentsMessage ViewDepartments.InitMessage)
-                | _ -> Cmd.none
+                let pageTitleMessage =
+                    pageTitles page
+                    |> sprintf "PMA Bolero - %s"
+                    |> SetTitle
+                    |> Cmd.ofMsg
+                let initMessage =
+                    match page with
+                    | ViewDepartment ->
+                        Cmd.ofMsg (ViewDepartmentsMessage ViewDepartments.InitMessage)
+                    | _ -> Cmd.none
+
+                Cmd.batch [ pageTitleMessage; initMessage ]
         {
             model with
                 Page = page
                 NavMenuOpen = false
                 SignInModel = SignIn.initModel
                 SignUpModel = SignUp.initModel }, cmd
+    | SetTitle title ->
+        model, Cmd.ofJS js "setTitle" [| title |] SetTitleSuccess Error
+    | SetTitleSuccess ->
+        model, Cmd.none
+
     | ToggleBurgerMenu ->
         { model with NavMenuOpen = not model.NavMenuOpen }, Cmd.none
 
@@ -234,7 +262,7 @@ type MyApp() =
                 Project = projectService
             }
 
-        let update = update remotes this.NavigationManager
+        let update = update remotes this.NavigationManager this.JSRuntime
         Program.mkProgram (fun _ -> initModel, Cmd.ofMsg GetSignedInAs) update view
         |> Program.withRouter router
 #if DEBUG

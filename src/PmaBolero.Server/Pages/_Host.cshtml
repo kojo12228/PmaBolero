@@ -11,6 +11,11 @@
     <base href="/">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
     <link rel="stylesheet" href="css/index.css">
+    <script>
+      window.setTitle = (title) => {
+        document.title = title;
+      }
+    </script>
   </head>
   <body>
     <div id="main">@(await Html.RenderComponentAsync<PmaBolero.Client.Main.MyApp>(BoleroHostConfig))</div>
