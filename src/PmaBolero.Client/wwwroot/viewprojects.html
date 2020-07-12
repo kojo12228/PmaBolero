@@ -1,3 +1,62 @@
-<h1 class="title">
-  All Projects:
-</h1>
+<template id="ProjTemplate">
+  <h1 class="title">
+    Projects
+  </h1>
+
+  ${Progress}
+
+  <div class="columns is-multiline">
+    ${Tiles}
+  </div>
+
+  <template id="DisplayProgress">
+    <progress class="progress is-medium is-dark" max="100">45%</progress>
+  </template>
+
+  <template id="Tile">
+    <div class="column is-4-desktop is-6-tablet">
+      <div class="box">
+        <p class="subtitle"><strong>${Name}</strong></p>
+        <p class="small">Status: ${Status} | In ${DepartmentName}</p>
+        <p class="small">Skills Required: ${Skills}</p>
+        <hr>
+        <p>${Description}</p>
+        <hr>
+        <div class="columns">
+          <div class="column">
+            ${ProjectManager}
+          </div>
+          <div class="column">
+            ${Devs}
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="PmExists">
+    <p>Project Manager:</p>
+    <p>${PmName}</p>
+  </template>
+
+  <template id="NoPm">
+    <p>No PM assigned</p>
+  </template>
+
+  <template id="DevList">
+    <p>Developers:</p>
+    <div class="content">
+      <ul>
+        ${DevItems}
+      </ul>
+    </div>
+
+    <template id="DevItem">
+      <li>${Name}</li>
+    </template>
+  </template>
+
+  <template id="NoDevs">
+    <p>Project has no developers.</p>
+  </template>
+</template>
