@@ -124,7 +124,7 @@ let update remotes (nm: NavigationManager) js message model =
                         | ViewDepartment ->
                             Cmd.ofMsg (ViewDepartmentsMessage ViewDepartments.InitMessage)
                         | ViewEmployees ->
-                            Cmd.ofMsg (ViewEmployeesMessage ViewEmployees.InitMessage)
+                            Cmd.ofMsg (ViewEmployeesMessage MultiTilePageTemplate.InitMessage)
                         | ViewProjects ->
                             Cmd.ofMsg (ViewProjectsMessage ViewProjects.InitMessage)
                         | _ -> Cmd.none

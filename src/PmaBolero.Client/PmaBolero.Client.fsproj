@@ -8,6 +8,7 @@
     <Compile Include="Models/Auth.fs" />
     <Compile Include="Models/EmployeeData.fs" />
     <Compile Include="Helpers/ErrorNotification.fs" />
+    <Compile Include="MultiTilePage.fs" />
     <Compile Include="SignIn.fs" />
     <Compile Include="SignUp.fs" />
     <Compile Include="ViewDepartments.fs" />

@@ -11,40 +11,7 @@ open Bolero.Templating.Client
 open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
 
-type Model =
-    {
-        IsLoading: bool
-        Employees: Employee[]
-        AuthorisationFailure: bool
-        Error: string option
-    }
-
-let initModel =
-    {
-        IsLoading = false
-        Employees = [||]
-        AuthorisationFailure = true
-        Error = None
-    }
-
-type Message =
-    | InitMessage
-    | GetEmployees
-    | RecvEmployees of option<Employee[]>
-    | Error of exn
-
-let update remote message model =
-    match message with
-    | InitMessage ->
-        { model with IsLoading = true }, Cmd.ofMsg GetEmployees
-    | GetEmployees ->
-        model, Cmd.ofAuthorized remote.getEmployees () RecvEmployees Error
-    | RecvEmployees (Some empls) ->
-        { model with Employees = empls; IsLoading = false }, Cmd.none
-    | RecvEmployees None ->
-        { model with AuthorisationFailure = true }, Cmd.none
-    | Error e ->
-        { model with Error = Some e.Message }, Cmd.none
+type Model = MultiTilePageTemplate.Model<Employee>
 
 type ViewEmployeesPage = Template<"wwwroot/viewemployees.html">
 
@@ -98,16 +65,22 @@ let viewEmployeeTile (employee: Employee) =
                 populateProjects employee.ProjectIds)
         .Elt()
 
+let initModel: Model =
+    {
+        Title = "Department"
+        IsLoading = false
+        Data = [||]
+        ToTile = viewEmployeeTile
+        AuthorisationFailure = false
+        Error = None
+    }
+
+type Message = MultiTilePageTemplate.Message<Employee>
+
+let update remote (message: Message) (model: Model) =
+    let getDataFunc = remote.getEmployees
+
+    MultiTilePageTemplate.update getDataFunc message model
+
 let view model dispatch =
-    ViewEmployeesPage
-        .EmplTemplate()
-        .Progress(
-            cond model.IsLoading <| function
-            | false -> empty
-            | true ->
-                ViewEmployeesPage.DisplayProgress().Elt()
-        )
-        .Tiles(
-            forEach model.Employees viewEmployeeTile
-        )
-        .Elt()
+    MultiTilePageTemplate.view model dispatch
