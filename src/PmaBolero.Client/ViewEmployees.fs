@@ -13,6 +13,22 @@ open PmaBolero.Client.Models.EmployeeData
 
 type Model = MultiTilePageTemplate.Model<Employee>
 
+let initModel: Model =
+    {
+        Title = "Department"
+        IsLoading = false
+        Data = [||]
+        AuthorisationFailure = false
+        Error = None
+    }
+
+type Message = MultiTilePageTemplate.Message<Employee>
+
+let update remote (message: Message) (model: Model) =
+    let getDataFunc = remote.getEmployees
+
+    MultiTilePageTemplate.update getDataFunc message model
+
 type ViewEmployeesPage = Template<"wwwroot/viewemployees.html">
 
 let populateSkills (skills: string []) =
@@ -65,22 +81,5 @@ let viewEmployeeTile (employee: Employee) =
                 populateProjects employee.ProjectIds)
         .Elt()
 
-let initModel: Model =
-    {
-        Title = "Department"
-        IsLoading = false
-        Data = [||]
-        ToTile = viewEmployeeTile
-        AuthorisationFailure = false
-        Error = None
-    }
-
-type Message = MultiTilePageTemplate.Message<Employee>
-
-let update remote (message: Message) (model: Model) =
-    let getDataFunc = remote.getEmployees
-
-    MultiTilePageTemplate.update getDataFunc message model
-
 let view model dispatch =
-    MultiTilePageTemplate.view model dispatch
+    MultiTilePageTemplate.view viewEmployeeTile model dispatch

@@ -13,7 +13,6 @@ type Model<'T> =
         Title: string
         IsLoading: bool
         Data: 'T []
-        ToTile: 'T -> Node
         AuthorisationFailure: bool
         Error: string option
     }
@@ -39,7 +38,7 @@ let update getData message model =
 
 type MultiTileTemplate = Template<"wwwroot/multitilepage.html">
 
-let view model dispatch =
+let view toTile model dispatch =
     MultiTileTemplate
         .Page()
         .Title(model.Title)
@@ -50,6 +49,6 @@ let view model dispatch =
                 MultiTileTemplate.DisplayProgress().Elt()
         )
         .Tiles(
-            forEach model.Data model.ToTile
+            forEach model.Data toTile
         )
         .Elt()
