@@ -8,6 +8,8 @@ open Bolero.Remoting
 open Bolero.Remoting.Client
 open Bolero.Templating.Client
 
+open PmaBolero.Client.Helpers.ErrorNotification
+
 type Model<'T> =
     {
         Title: string
@@ -22,6 +24,7 @@ type Message<'T> =
     | GetData
     | RecvData of option<'T[]>
     | Error of exn
+    | ClearError
 
 let update getData message model =
     match message with
@@ -32,9 +35,18 @@ let update getData message model =
     | RecvData (Some data) ->
         { model with Data = data; IsLoading = false }, Cmd.none
     | RecvData None ->
-        { model with AuthorisationFailure = true }, Cmd.none
+        // Should not be a possible state of the application, since the user
+        // should not be able to get to this page without signing in
+        {
+            model with
+                AuthorisationFailure = true
+                Error = Some "You need to sign in to view this page."
+                IsLoading = false
+        }, Cmd.none
     | Error e ->
         { model with Error = Some e.Message }, Cmd.none
+    | ClearError ->
+        { model with Error = None }, Cmd.none
 
 type MultiTileTemplate = Template<"wwwroot/multitilepage.html">
 
@@ -55,5 +67,10 @@ let view (toTile: 'T -> Node) (model: Model<'T>) dispatch =
                     .TileContent(toTile d)
                     .Elt()
             )
+        )
+        .ErrorNotification(
+            cond model.Error <| function
+            | None -> empty
+            | Some msg -> errorNotifDanger msg (fun _ -> dispatch ClearError)
         )
         .Elt()

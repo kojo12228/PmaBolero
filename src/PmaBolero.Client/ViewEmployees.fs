@@ -90,4 +90,5 @@ let generateTile (employee: Employee) =
         .Elt()
 
 let view (model: Model) dispatch =
-    TilesTemplate.view generateTile model dispatch
+    let mappedDispatch = TilesMessage >> dispatch
+    TilesTemplate.view generateTile model mappedDispatch
