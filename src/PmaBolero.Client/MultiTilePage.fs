@@ -38,7 +38,7 @@ let update getData message model =
 
 type MultiTileTemplate = Template<"wwwroot/multitilepage.html">
 
-let view toTile model dispatch =
+let view (toTile: 'T -> Node) (model: Model<'T>) dispatch =
     MultiTileTemplate
         .Page()
         .Title(model.Title)
@@ -49,6 +49,11 @@ let view toTile model dispatch =
                 MultiTileTemplate.DisplayProgress().Elt()
         )
         .Tiles(
-            forEach model.Data toTile
+            forEach model.Data (fun d ->
+                MultiTileTemplate
+                    .Tile()
+                    .TileContent(toTile d)
+                    .Elt()
+            )
         )
         .Elt()

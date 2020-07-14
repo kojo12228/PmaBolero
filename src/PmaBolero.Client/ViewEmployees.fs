@@ -67,7 +67,7 @@ let populateProjects (projects: (int * string) []) =
 
 let generateTile (employee: Employee) =
     ViewEmployeesPage
-        .Tile()
+        .EmployeeTile()
         .Name(employee.FullName)
         .Email(employee.Email)
         .Role(string employee.Role)

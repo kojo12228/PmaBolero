@@ -72,7 +72,7 @@ let viewPm (pmOpt: (int * string) option) =
 
 let generateTile (project: Project) =
     ViewProjectsPage
-        .Tile()
+        .ProjectTile()
         .Name(project.Name)
         .Status(project.Status |> string)
         .DepartmentName(project.DepartmentId |> snd)

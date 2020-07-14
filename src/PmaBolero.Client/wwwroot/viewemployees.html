@@ -1,66 +1,46 @@
-<template id="EmplTemplate">
-  <h1 class="title">
-    Employees
-  </h1>
+<template id="EmployeeTile">
+  <p class="subtitle"><strong>${Name}</strong></p>
+  <p class="small"><strong>${Email}</strong></p>
+  <p class="small">${Role} | In ${DepartmentName}</p>
 
-  ${Progress}
+  <hr>
 
-  <div class="columns is-multiline">
-    ${Tiles}
+  <div class="columns">
+    <div class="column">
+      ${Skills}
+    </div>
+    <div class="column">
+      ${Projects}
+    </div>
   </div>
+</template>
 
-  <template id="DisplayProgress">
-    <progress class="progress is-medium is-dark" max="100">45%</progress>
-  </template>
+<template id="NoSkills">
+  <p>No skills included.</p>
+</template>
+<template id="SkillList">
+  <p>Skills:</p>
+  <div class="content">
+    <ul>
+      ${Items}
+    </ul>
+  </div>
+</template>
+<template id="SkillItem">
+  <li>${Skill}</li>
+</template>
 
-  <template id="Tile">
-    <div class="column is-4-desktop is-6-tablet">
-      <div class="box">
-        <p class="subtitle"><strong>${Name}</strong></p>
-        <p class="small"><strong>${Email}</strong></p>
-        <p class="small">${Role} | In ${DepartmentName}</p>
-
-        <hr>
-
-        <div class="columns">
-          <div class="column">
-            ${Skills}
-          </div>
-          <div class="column">
-            ${Projects}
-          </div>
-        </div>
-      </div>
-    </div>
-  </template>
-
-  <template id="NoSkills">
-    <p>No skills included.</p>
-  </template>
-  <template id="SkillList">
-    <p>Skills:</p>
-    <div class="content">
-      <ul>
-        ${Items}
-      </ul>
-    </div>
-  </template>
-  <template id="SkillItem">
-    <li>${Skill}</li>
-  </template>
-
-  <template id="NoProjects">
-    <p>Not assigned to any projects.</p>
-  </template>
-  <template id="ProjectList">
-    <p>Projects:</p>
-    <div class="content">
-      <ul>
-        ${Items}
-      </ul>
-    </div>
-  </template>
-  <template id="ProjectItem">
-    <li>${Name}</li>
-  </template>
+<template id="NoProjects">
+  <p>Not assigned to any projects.</p>
+</template>
+<template id="ProjectList">
+  <p>Projects:</p>
+  <div class="content">
+    <ul>
+      ${Items}
+    </ul>
+  </div>
+</template>
+<template id="ProjectItem">
+  <li>${Name}</li>
 </template>
