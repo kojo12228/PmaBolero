@@ -1,4 +1,4 @@
-module PmaBolero.Client.TilesTemplate
+module PmaBolero.Client.ViewSingle
 
 open System
 open Elmish
@@ -13,60 +13,74 @@ open PmaBolero.Client.Helpers.ProgressBar
 
 type Model<'T> =
     {
+        DataType: string
+        UrlPrefix: string
         Title: string
         IsLoading: bool
-        Data: 'T []
+        Data: 'T option
         AuthorisationFailure: bool
         Error: string option
     }
 
 type Message<'T> =
-    | InitMessage
-    | GetData
-    | RecvData of option<'T[]>
+    | InitMessage of int
+    | GetData of int
+    | RecvData of option<option<'T>>
     | Error of exn
     | ClearError
 
 let update getData message model =
     match message with
-    | InitMessage ->
-        { model with IsLoading = true }, Cmd.ofMsg GetData
-    | GetData ->
-        model, Cmd.ofAuthorized getData () RecvData Error
-    | RecvData (Some data) ->
-        { model with Data = data; IsLoading = false }, Cmd.none
+    | InitMessage dataId ->
+        { model with IsLoading = true }, Cmd.ofMsg (GetData dataId)
+    | GetData dataId ->
+        model, Cmd.ofAuthorized getData dataId RecvData Error
+
+    // Authorised and valid ID
+    | RecvData (Some (Some data)) ->
+        { model with Data = Some data; IsLoading = false }, Cmd.none
+    // Authorised, but invalid ID
+    | RecvData (Some None) ->
+        {
+            model with
+                Error = Some "No department exists with this ID."
+                IsLoading = false
+        }, Cmd.none
+    // Unauthorised
     | RecvData None ->
-        // Should not be a possible state of the application, since the user
-        // should not be able to get to this page without signing in
         {
             model with
                 AuthorisationFailure = true
                 Error = Some "You need to sign in to view this page."
                 IsLoading = false
         }, Cmd.none
+
     | Error e ->
         { model with Error = Some e.Message }, Cmd.none
     | ClearError ->
         { model with Error = None }, Cmd.none
 
-type MultiTileTemplate = Template<"wwwroot/multitilepage.html">
+type ViewSingleTemplate = Template<"wwwroot/singletilepage.html">
 
-let view (toTile: 'T -> Node) (model: Model<'T>) dispatch =
-    MultiTileTemplate
-        .Page()
-        .Title(model.Title)
+let view (toTile: 'T -> Node) (pageTitle: 'T option -> string) (model: Model<'T>) dispatch =
+    ViewSingleTemplate
+        .ViewSingle()
+        .UrlSection(model.UrlPrefix)
+        .PageDataType(model.DataType)
+        .Name(pageTitle model.Data)
         .Progress(
             cond model.IsLoading <| function
             | false -> empty
             | true -> createBar()
         )
-        .Tiles(
-            forEach model.Data (fun d ->
-                MultiTileTemplate
-                    .Tile()
+        .Tile(
+            cond model.Data <| function
+            | None -> empty
+            | Some d ->
+                ViewSingleTemplate
+                    .TileContentBox()
                     .TileContent(toTile d)
                     .Elt()
-            )
         )
         .ErrorNotification(
             cond model.Error <| function

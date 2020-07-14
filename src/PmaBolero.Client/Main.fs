@@ -22,7 +22,8 @@ type Page =
     | [<EndPoint "/signup">] SignUp
     | [<EndPoint "/project/all">] ViewProjects
     | [<EndPoint "/employee/all">] ViewEmployees
-    | [<EndPoint "/department/all">] ViewDepartment
+    | [<EndPoint "/department/all">] ViewDepartments
+    | [<EndPoint "/department">] ViewDepartment of int
 
 let pageTitles page =
     match page with
@@ -31,10 +32,12 @@ let pageTitles page =
     | SignUp -> "Sign Up"
     | ViewProjects -> "View All Projects"
     | ViewEmployees -> "View All Employees"
-    | ViewDepartment -> "View All Departments"
+    | ViewDepartments -> "View All Departments"
+    | ViewDepartment _ -> "View Department"
 
+// Change to match statement
 let authenticatedPages =
-    [ Home; ViewProjects; ViewEmployees; ViewDepartment ]
+    [ Home; ViewProjects; ViewEmployees; ViewDepartments;]
     |> Set.ofList
 
 type Remotes =
@@ -57,6 +60,7 @@ type Model =
         SignInModel: SignIn.Model
         SignUpModel: SignUp.Model
         ViewDepartmentsModel: ViewDepartments.Model
+        ViewDepartmentModel: ViewDepartment.Model
         ViewEmployeesModel: ViewEmployees.Model
         ViewProjectsModel: ViewProjects.Model
     }
@@ -72,6 +76,7 @@ let initModel =
         SignInModel = SignIn.initModel
         SignUpModel = SignUp.initModel
         ViewDepartmentsModel = ViewDepartments.initModel
+        ViewDepartmentModel = ViewDepartment.initModel
         ViewEmployeesModel = ViewEmployees.initModel
         ViewProjectsModel = ViewProjects.initModel
     }
@@ -94,6 +99,7 @@ type Message =
     | SignInMessage of SignIn.Message
     | SignUpMessage of SignUp.Message
     | ViewDepartmentsMessage of ViewDepartments.Message
+    | ViewDepartmentMessage of ViewDepartment.Message
     | ViewEmployeesMessage of ViewEmployees.Message
     | ViewProjectsMessage of ViewProjects.Message
 
@@ -121,8 +127,10 @@ let update remotes (nm: NavigationManager) js message model =
                     if model.InitialSignInChecked
                     then
                         match page with
-                        | ViewDepartment ->
+                        | ViewDepartments ->
                             Cmd.ofMsg (ViewDepartmentsMessage ViewDepartments.InitMessage)
+                        | ViewDepartment deptId ->
+                            Cmd.ofMsg (ViewDepartmentMessage (ViewDepartment.InitMessage deptId))
                         | ViewEmployees ->
                             Cmd.ofMsg (ViewEmployeesMessage ViewEmployees.InitMessage)
                         | ViewProjects ->
@@ -196,6 +204,9 @@ let update remotes (nm: NavigationManager) js message model =
     | ViewDepartmentsMessage msg ->
         let viewDeptModel, cmd = ViewDepartments.update remotes.Department msg model.ViewDepartmentsModel
         { model with ViewDepartmentsModel = viewDeptModel }, Cmd.map ViewDepartmentsMessage cmd
+    | ViewDepartmentMessage msg ->
+        let viewDeptModel, cmd = ViewDepartment.update remotes.Department msg model.ViewDepartmentModel
+        { model with ViewDepartmentModel = viewDeptModel }, Cmd.map ViewDepartmentMessage cmd
 
     | ViewEmployeesMessage msg ->
         let viewEmplsModel, cmd = ViewEmployees.update remotes.Employee msg model.ViewEmployeesModel
@@ -240,7 +251,8 @@ let view model dispatch =
             | Home -> homePage model dispatch
             | SignIn -> SignIn.view model.SignInModel (mapDispatch SignInMessage)
             | SignUp -> SignUp.view model.SignUpModel (mapDispatch SignUpMessage)
-            | ViewDepartment -> ViewDepartments.view model.ViewDepartmentsModel (mapDispatch ViewDepartmentsMessage)
+            | ViewDepartments -> ViewDepartments.view model.ViewDepartmentsModel (mapDispatch ViewDepartmentsMessage)
+            | ViewDepartment _ -> ViewDepartment.view model.ViewDepartmentModel (mapDispatch ViewDepartmentMessage)
             | ViewEmployees -> ViewEmployees.view model.ViewEmployeesModel (mapDispatch ViewEmployeesMessage)
             | ViewProjects -> ViewProjects.view model.ViewProjectsModel (mapDispatch ViewProjectsMessage)
         )

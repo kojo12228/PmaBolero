@@ -7,13 +7,15 @@
   <ItemGroup>
     <Compile Include="Models/Auth.fs" />
     <Compile Include="Models/EmployeeData.fs" />
-    <Compile Include="Helpers/ErrorNotification.fs" />
+    <Compile Include="Helpers/InterfaceHelpers.fs" />
     <Compile Include="MultiTilePage.fs" />
+    <Compile Include="ViewSingle.fs" />
     <Compile Include="SignIn.fs" />
     <Compile Include="SignUp.fs" />
     <Compile Include="ViewDepartments.fs" />
     <Compile Include="ViewEmployees.fs" />
     <Compile Include="ViewProjects.fs" />
+    <Compile Include="ViewDepartment.fs" />
     <Compile Include="Main.fs" />
     <Compile Include="Startup.fs" />
   </ItemGroup>

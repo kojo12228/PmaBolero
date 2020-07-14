@@ -68,6 +68,7 @@ let populateEmployees (employees: (int * string) []) =
 let generateTile (dept: Department) =
     ViewDepartmentsPage
         .DepartmentTile()
+        .Id(string dept.Id)
         .DepartmentName(dept.Name)
         .ProjectsList(
             cond (Array.isEmpty dept.Projects) <| function

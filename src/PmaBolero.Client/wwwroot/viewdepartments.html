@@ -1,6 +1,6 @@
 
 <template id="DepartmentTile">
-  <p class="subtitle"><strong>${DepartmentName}</strong></p>
+  <a class="subtitle link" href="/department/${Id}"><strong>${DepartmentName}</strong></p></a>
   <hr>
   <div class="columns">
     <div class="column">
@@ -8,6 +8,14 @@
     </div>
     <div class="column">
       ${EmployeesList}
+    </div>
+  </div>
+  <div class="columns">
+    <div class="column">
+      <a href="/department/${Id}" class="button is-primary is-fullwidth">View</a>
+    </div>
+    <div class="column">
+      <button class="button is-warning is-fullwidth" disabled>Delete</button>
     </div>
   </div>
 
