@@ -16,6 +16,7 @@
     <Compile Include="ViewEmployees.fs" />
     <Compile Include="ViewProjects.fs" />
     <Compile Include="ViewDepartment.fs" />
+    <Compile Include="ViewEmployee.fs" />
     <Compile Include="ViewProject.fs" />
     <Compile Include="Main.fs" />
     <Compile Include="Startup.fs" />

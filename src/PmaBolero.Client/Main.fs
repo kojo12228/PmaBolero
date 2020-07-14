@@ -23,6 +23,7 @@ type Page =
     | [<EndPoint "/project/all">] ViewProjects
     | [<EndPoint "/project">] ViewProject of int
     | [<EndPoint "/employee/all">] ViewEmployees
+    | [<EndPoint "/employee">] ViewEmployee of int
     | [<EndPoint "/department/all">] ViewDepartments
     | [<EndPoint "/department">] ViewDepartment of int
 
@@ -36,6 +37,7 @@ let pageTitles page =
     | ViewProject _ -> "View Project"
 
     | ViewEmployees -> "View All Employees"
+    | ViewEmployee -> "View Employee"
 
     | ViewDepartments -> "View All Departments"
     | ViewDepartment _ -> "View Department"
@@ -44,7 +46,7 @@ let pageTitles page =
 let authenticatedPages page =
     match page with
     | Home | ViewProjects | ViewEmployees | ViewDepartments
-    | ViewProject _ | ViewDepartment _ -> true
+    | ViewProject _ | ViewEmployee _ | ViewDepartment _ -> true
     | _ -> false
 
 type Remotes =
@@ -69,6 +71,7 @@ type Model =
         ViewDepartmentsModel: ViewDepartments.Model
         ViewDepartmentModel: ViewDepartment.Model
         ViewEmployeesModel: ViewEmployees.Model
+        ViewEmployeeModel: ViewEmployee.Model
         ViewProjectsModel: ViewProjects.Model
         ViewProjectModel: ViewProject.Model
     }
@@ -86,6 +89,7 @@ let initModel =
         ViewDepartmentsModel = ViewDepartments.initModel
         ViewDepartmentModel = ViewDepartment.initModel
         ViewEmployeesModel = ViewEmployees.initModel
+        ViewEmployeeModel = ViewEmployee.initModel
         ViewProjectsModel = ViewProjects.initModel
         ViewProjectModel = ViewProject.initModel
     }
@@ -110,6 +114,7 @@ type Message =
     | ViewDepartmentsMessage of ViewDepartments.Message
     | ViewDepartmentMessage of ViewDepartment.Message
     | ViewEmployeesMessage of ViewEmployees.Message
+    | ViewEmployeeMessage of ViewEmployee.Message
     | ViewProjectsMessage of ViewProjects.Message
     | ViewProjectMessage of ViewProject.Message
 
@@ -143,6 +148,8 @@ let update remotes (nm: NavigationManager) js message model =
                             Cmd.ofMsg (ViewDepartmentMessage (ViewDepartment.InitMessage deptId))
                         | ViewEmployees ->
                             Cmd.ofMsg (ViewEmployeesMessage ViewEmployees.InitMessage)
+                        | ViewEmployee emplId ->
+                            Cmd.ofMsg (ViewEmployeeMessage (ViewEmployee.InitMessage emplId))
                         | ViewProjects ->
                             Cmd.ofMsg (ViewProjectsMessage ViewProjects.InitMessage)
                         | ViewProject projId ->
@@ -223,6 +230,9 @@ let update remotes (nm: NavigationManager) js message model =
     | ViewEmployeesMessage msg ->
         let viewEmplsModel, cmd = ViewEmployees.update remotes.Employee msg model.ViewEmployeesModel
         { model with ViewEmployeesModel = viewEmplsModel }, Cmd.map ViewEmployeesMessage cmd
+    | ViewEmployeeMessage msg ->
+        let viewEmplModel, cmd = ViewEmployee.update remotes.Employee msg model.ViewEmployeeModel
+        { model with ViewEmployeeModel = viewEmplModel }, Cmd.map ViewEmployeeMessage cmd
 
     | ViewProjectsMessage msg ->
         let viewProjsModel, cmd = ViewProjects.update remotes.Project msg model.ViewProjectsModel
@@ -269,6 +279,7 @@ let view model dispatch =
             | ViewDepartments -> ViewDepartments.view model.ViewDepartmentsModel (mapDispatch ViewDepartmentsMessage)
             | ViewDepartment _ -> ViewDepartment.view model.ViewDepartmentModel (mapDispatch ViewDepartmentMessage)
             | ViewEmployees -> ViewEmployees.view model.ViewEmployeesModel (mapDispatch ViewEmployeesMessage)
+            | ViewEmployee _ -> ViewEmployee.view model.ViewEmployeeModel (mapDispatch ViewEmployeeMessage)
             | ViewProjects -> ViewProjects.view model.ViewProjectsModel (mapDispatch ViewProjectsMessage)
             | ViewProject _ -> ViewProject.view model.ViewProjectModel (mapDispatch ViewProjectMessage)
         )

@@ -1,4 +1,4 @@
-<template id="EmployeeTile">
+<template id="Tile">
   <a href="/employee/${Id}" class="subtitle"><strong>${Name}</strong></a>
   <p class="small"><strong>${Email}</strong></p>
   <p class="small">
@@ -7,23 +7,8 @@
 
   <hr>
 
-  <div class="columns">
-    <div class="column">
-      ${Skills}
-    </div>
-    <div class="column">
-      ${Projects}
-    </div>
-  </div>
-
-  <div class="columns">
-    <div class="column">
-      <a href="/employee/${Id}" class="button is-primary is-fullwidth">View</a>
-    </div>
-    <div class="column">
-      <button class="button is-warning is-fullwidth" disabled>Delete</button>
-    </div>
-  </div>
+  ${Skills}
+  ${Projects}
 </template>
 
 <template id="NoSkills">

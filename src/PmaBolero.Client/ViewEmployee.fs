@@ -1,4 +1,4 @@
-module PmaBolero.Client.ViewEmployees
+module PmaBolero.Client.ViewEmployee
 
 open System
 open Elmish
@@ -8,43 +8,43 @@ open Bolero.Remoting
 open Bolero.Remoting.Client
 open Bolero.Templating.Client
 
-open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
 
-type Model = TilesTemplate.Model<Employee>
+type Model = ViewSingle.Model<Employee>
 
 let initModel: Model =
     {
-        Title = "Employees"
-        IsLoading = false
-        Data = [||]
+        DataType = "Employees"
+        UrlPrefix = "employee"
+        IsLoading = true
+        Data = None
         AuthorisationFailure = false
         Error = None
     }
 
 type Message =
-    | InitMessage
-    | TilesMessage of TilesTemplate.Message<Employee>
+    | InitMessage of int
+    | TileMessage of ViewSingle.Message<Employee>
 
-let update remote (message: Message) (model: Model) =
-    let getDataFunc = remote.getEmployees
+let update remote message model =
+    let getDataFunc = remote.getEmployee
 
-    let tilesMsg =
+    let tileMsg =
         match message with
-        | InitMessage -> TilesTemplate.InitMessage
-        | TilesMessage msg -> msg
+        | InitMessage emplId -> ViewSingle.InitMessage emplId
+        | TileMessage msg -> msg
 
-    let updatedModel, cmd = TilesTemplate.update getDataFunc tilesMsg model
-    updatedModel, Cmd.map TilesMessage cmd
+    ViewSingle.update getDataFunc tileMsg model
+    |> fun (model, cmd) -> model, Cmd.map TileMessage cmd
 
-type ViewEmployeesPage = Template<"wwwroot/viewemployees.html">
+type ViewEmployeePage = Template<"wwwroot/viewemployee.html">
 
 let populateSkills (skills: string []) =
-    ViewEmployeesPage
+    ViewEmployeePage
         .SkillList()
         .Items(
             forEach skills (fun skill ->
-                ViewEmployeesPage
+                ViewEmployeePage
                     .SkillItem()
                     .Skill(skill)
                     .Elt()
@@ -53,11 +53,11 @@ let populateSkills (skills: string []) =
         .Elt()
 
 let populateProjects (projects: (int * string) []) =
-    ViewEmployeesPage
+    ViewEmployeePage
         .ProjectList()
         .Items(
             forEach projects (fun (projId, name) ->
-                ViewEmployeesPage
+                ViewEmployeePage
                     .ProjectItem()
                     .Id(string projId)
                     .Name(name)
@@ -67,8 +67,8 @@ let populateProjects (projects: (int * string) []) =
         .Elt()
 
 let generateTile (employee: Employee) =
-    ViewEmployeesPage
-        .EmployeeTile()
+    ViewEmployeePage
+        .Tile()
         .Id(string employee.Id)
         .Name(employee.FullName)
         .Email(employee.Email)
@@ -78,14 +78,14 @@ let generateTile (employee: Employee) =
         .Skills(
             cond (Array.isEmpty employee.Skills) <| function
             | true ->
-                ViewEmployeesPage
+                ViewEmployeePage
                     .NoSkills()
                     .Elt()
             | false -> populateSkills employee.Skills)
         .Projects(
             cond (Array.isEmpty employee.ProjectIds) <| function
             | true ->
-                ViewEmployeesPage
+                ViewEmployeePage
                     .NoProjects()
                     .Elt()
             | false ->
@@ -93,5 +93,7 @@ let generateTile (employee: Employee) =
         .Elt()
 
 let view (model: Model) dispatch =
-    let mappedDispatch = TilesMessage >> dispatch
-    TilesTemplate.view generateTile model mappedDispatch
+    let employeeTitle (empl: Employee) = empl.FullName
+
+    let mappedDispatch = TileMessage >> dispatch
+    ViewSingle.view generateTile employeeTitle model mappedDispatch
