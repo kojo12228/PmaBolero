@@ -15,7 +15,7 @@ type Model = MultiTilePageTemplate.Model<Employee>
 
 let initModel: Model =
     {
-        Title = "Department"
+        Title = "Employees"
         IsLoading = false
         Data = [||]
         AuthorisationFailure = false
@@ -57,7 +57,7 @@ let populateProjects (projects: (int * string) []) =
         )
         .Elt()
 
-let viewEmployeeTile (employee: Employee) =
+let generateTile (employee: Employee) =
     ViewEmployeesPage
         .Tile()
         .Name(employee.FullName)
@@ -81,5 +81,5 @@ let viewEmployeeTile (employee: Employee) =
                 populateProjects employee.ProjectIds)
         .Elt()
 
-let view model dispatch =
-    MultiTilePageTemplate.view viewEmployeeTile model dispatch
+let view (model: Model) dispatch =
+    MultiTilePageTemplate.view generateTile model dispatch

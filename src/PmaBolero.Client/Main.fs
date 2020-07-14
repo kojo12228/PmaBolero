@@ -122,11 +122,11 @@ let update remotes (nm: NavigationManager) js message model =
                     then
                         match page with
                         | ViewDepartment ->
-                            Cmd.ofMsg (ViewDepartmentsMessage ViewDepartments.InitMessage)
+                            Cmd.ofMsg (ViewDepartmentsMessage MultiTilePageTemplate.InitMessage)
                         | ViewEmployees ->
                             Cmd.ofMsg (ViewEmployeesMessage MultiTilePageTemplate.InitMessage)
                         | ViewProjects ->
-                            Cmd.ofMsg (ViewProjectsMessage ViewProjects.InitMessage)
+                            Cmd.ofMsg (ViewProjectsMessage MultiTilePageTemplate.InitMessage)
                         | _ -> Cmd.none
                     else Cmd.none
 

@@ -8,42 +8,26 @@ open Bolero.Remoting
 open Bolero.Remoting.Client
 open Bolero.Templating.Client
 
+open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
 
-type Model =
-    {
-        IsLoading: bool
-        Projects: Project[]
-        AuthorisationFailure: bool
-        Error: string option
-    }
+type Model = MultiTilePageTemplate.Model<Project>
 
-let initModel =
+let initModel: Model =
     {
+        Title = "Projects"
         IsLoading = false
-        Projects = [||]
+        Data = [||]
         AuthorisationFailure = false
         Error = None
     }
 
-type Message =
-    | InitMessage
-    | GetProjects
-    | RecvProjects of option<Project[]>
-    | Error of exn
+type Message = MultiTilePageTemplate.Message<Project>
 
-let update remote message model =
-    match message with
-    | InitMessage ->
-        { model with IsLoading = true }, Cmd.ofMsg GetProjects
-    | GetProjects ->
-        model, Cmd.ofAuthorized remote.getProjects () RecvProjects Error
-    | RecvProjects (Some projs) ->
-        { model with Projects = projs; IsLoading = false }, Cmd.none
-    | RecvProjects None ->
-        { model with AuthorisationFailure = true }, Cmd.none
-    | Error e ->
-        { model with Error = Some e.Message }, Cmd.none
+let update remote (message: Message) (model: Model) =
+    let getDataFunc = remote.getProjects
+
+    MultiTilePageTemplate.update getDataFunc message model
 
 type ViewProjectsPage = Template<"wwwroot/viewprojects.html">
 
@@ -78,7 +62,7 @@ let viewPm (pmOpt: (int * string) option) =
             .NoPm()
             .Elt()
 
-let viewProjectTile (project: Project) =
+let generateTile (project: Project) =
     ViewProjectsPage
         .Tile()
         .Name(project.Name)
@@ -90,16 +74,5 @@ let viewProjectTile (project: Project) =
         .Devs(populateDevs project.DeveloperIds)
         .Elt()
 
-let view model dispatch =
-    ViewProjectsPage
-        .ProjTemplate()
-        .Progress(
-            cond model.IsLoading <| function
-            | false -> empty
-            | true ->
-                ViewProjectsPage.DisplayProgress().Elt()
-        )
-        .Tiles(
-            forEach model.Projects viewProjectTile
-        )
-        .Elt()
+let view (model: Model) dispatch =
+    MultiTilePageTemplate.view generateTile model dispatch

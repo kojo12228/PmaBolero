@@ -8,42 +8,26 @@ open Bolero.Remoting
 open Bolero.Remoting.Client
 open Bolero.Templating.Client
 
+open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
 
-type Model =
-    {
-        IsLoading: bool
-        Departments: Department[]
-        AuthorisationFailure: bool
-        Error: string option
-    }
+type Model = MultiTilePageTemplate.Model<Department>
 
-let initModel =
+let initModel: Model =
     {
+        Title = "Departments"
         IsLoading = false
-        Departments = [||]
+        Data = [||]
         AuthorisationFailure = false
         Error = None
     }
 
-type Message =
-    | InitMessage
-    | GetDepartments
-    | RecvDepartments of option<Department[]>
-    | Error of exn
+type Message = MultiTilePageTemplate.Message<Department>
 
-let update remote message model =
-    match message with
-    | InitMessage ->
-        { model with IsLoading = true }, Cmd.ofMsg GetDepartments
-    | GetDepartments ->
-        model, Cmd.ofAuthorized remote.getDepartments () RecvDepartments Error
-    | RecvDepartments (Some depts) ->
-        { model with Departments = depts; IsLoading = false }, Cmd.none
-    | RecvDepartments None ->
-        { model with AuthorisationFailure = true}, Cmd.none
-    | Error e ->
-        { model with Error = Some e.Message }, Cmd.none
+let update remote (message: Message) (model: Model) =
+    let getDataFunc = remote.getDepartments
+
+    MultiTilePageTemplate.update getDataFunc message model
 
 type ViewDepartmentsPage = Template<"wwwroot/viewdepartments.html">
 
@@ -73,7 +57,7 @@ let populateEmployees (employees: (int * string) []) =
         )
         .Elt()
 
-let renderDepartments (dept: Department) =
+let generateTile (dept: Department) =
     ViewDepartmentsPage
         .DepartmentTile()
         .DepartmentName(dept.Name)
@@ -97,16 +81,5 @@ let renderDepartments (dept: Department) =
         )
         .Elt()
 
-let view model dispatch =
-    ViewDepartmentsPage
-        .ViewDepartments()
-        .Progress(
-            cond model.IsLoading <| function
-            | false -> empty
-            | true ->
-                ViewDepartmentsPage.DisplayProgress().Elt()
-        )
-        .DepartmentTiles(
-            forEach model.Departments renderDepartments
-        )
-        .Elt()
+let view (model: Model) dispatch =
+    MultiTilePageTemplate.view generateTile model dispatch
