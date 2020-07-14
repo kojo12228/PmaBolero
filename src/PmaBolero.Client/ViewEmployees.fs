@@ -11,7 +11,7 @@ open Bolero.Templating.Client
 open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
 
-type Model = MultiTilePageTemplate.Model<Employee>
+type Model = TilesTemplate.Model<Employee>
 
 let initModel: Model =
     {
@@ -22,12 +22,20 @@ let initModel: Model =
         Error = None
     }
 
-type Message = MultiTilePageTemplate.Message<Employee>
+type Message =
+    | InitMessage
+    | TilesMessage of TilesTemplate.Message<Employee>
 
 let update remote (message: Message) (model: Model) =
     let getDataFunc = remote.getEmployees
 
-    MultiTilePageTemplate.update getDataFunc message model
+    let tilesMsg =
+        match message with
+        | InitMessage -> TilesTemplate.InitMessage
+        | TilesMessage msg -> msg
+
+    let updatedModel, cmd = TilesTemplate.update getDataFunc tilesMsg model
+    updatedModel, Cmd.map TilesMessage cmd
 
 type ViewEmployeesPage = Template<"wwwroot/viewemployees.html">
 
@@ -82,4 +90,4 @@ let generateTile (employee: Employee) =
         .Elt()
 
 let view (model: Model) dispatch =
-    MultiTilePageTemplate.view generateTile model dispatch
+    TilesTemplate.view generateTile model dispatch
