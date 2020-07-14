@@ -1,8 +1,21 @@
 <template id="ProjectTile">
   <a href="/project/${Id}" class="subtitle"><strong>${Name}</strong></a>
-  <p class="small">
-    Status: ${Status} | In <a href="/department/${DeptId}">${DepartmentName}</a>
-  </p>
+
+  <div class="field is-grouped is-grouped-multiline">
+    <div class="control">
+      <div class="tags has-addons">
+        <span class="tag">Status</span>
+        <span class="tag is-primary">${Status}</span>
+      </div>
+    </div>
+    <div class="control">
+      <div class="tags has-addons">
+        <span class="tag">Department</span>
+        <a class="tag is-link is-primary" href="/department/${DeptId}">${DepartmentName}</a>
+      </div>
+    </div>
+  </div>
+
   <p class="small">Skills Required: ${Skills}</p>
   <hr>
   <p>${Description}</p>

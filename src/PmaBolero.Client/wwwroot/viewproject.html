@@ -1,6 +1,12 @@
 <template id="Tile">
-  <p>Department: <a href="/department/${DeptId}"><strong>${DepartmentName}</strong></a></p>
-  <p>Status: <strong>${Status}</strong></p>
+  <div class="tags are-medium has-addons">
+    <span class="tag">Status</span>
+    <span class="tag is-primary">${Status}</span>
+  </div>
+  <div class="tags are-medium has-addons">
+    <span class="tag">Department</span>
+    <a class="tag is-link is-primary" href="/department/${DeptId}">${DepartmentName}</a>
+  </div>
   ${Skills}
   <hr>
   <p>${Description}</p>
