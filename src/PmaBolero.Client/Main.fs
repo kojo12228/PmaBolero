@@ -21,6 +21,7 @@ type Page =
     | [<EndPoint "/login">] SignIn
     | [<EndPoint "/signup">] SignUp
     | [<EndPoint "/project/all">] ViewProjects
+    | [<EndPoint "/project">] ViewProject of int
     | [<EndPoint "/employee/all">] ViewEmployees
     | [<EndPoint "/department/all">] ViewDepartments
     | [<EndPoint "/department">] ViewDepartment of int
@@ -30,15 +31,21 @@ let pageTitles page =
     | Home -> "Home"
     | SignIn -> "Sign In"
     | SignUp -> "Sign Up"
+
     | ViewProjects -> "View All Projects"
+    | ViewProject _ -> "View Project"
+
     | ViewEmployees -> "View All Employees"
+
     | ViewDepartments -> "View All Departments"
     | ViewDepartment _ -> "View Department"
 
 // Change to match statement
-let authenticatedPages =
-    [ Home; ViewProjects; ViewEmployees; ViewDepartments;]
-    |> Set.ofList
+let authenticatedPages page =
+    match page with
+    | Home | ViewProjects | ViewEmployees | ViewDepartments
+    | ViewProject _ | ViewDepartment _ -> true
+    | _ -> false
 
 type Remotes =
     {
@@ -63,6 +70,7 @@ type Model =
         ViewDepartmentModel: ViewDepartment.Model
         ViewEmployeesModel: ViewEmployees.Model
         ViewProjectsModel: ViewProjects.Model
+        ViewProjectModel: ViewProject.Model
     }
 
 let initModel =
@@ -79,6 +87,7 @@ let initModel =
         ViewDepartmentModel = ViewDepartment.initModel
         ViewEmployeesModel = ViewEmployees.initModel
         ViewProjectsModel = ViewProjects.initModel
+        ViewProjectModel = ViewProject.initModel
     }
 
 /// The Elmish application's update messages.
@@ -102,6 +111,7 @@ type Message =
     | ViewDepartmentMessage of ViewDepartment.Message
     | ViewEmployeesMessage of ViewEmployees.Message
     | ViewProjectsMessage of ViewProjects.Message
+    | ViewProjectMessage of ViewProject.Message
 
 let update remotes (nm: NavigationManager) js message model =
 #if DEBUG
@@ -115,7 +125,7 @@ let update remotes (nm: NavigationManager) js message model =
             if
                 model.InitialSignInChecked &&
                 Option.isNone model.IsSignedInAs &&
-                authenticatedPages |> Set.contains page
+                authenticatedPages page
             then Cmd.ofMsg (Redirect "/login")
             else
                 let pageTitleMessage =
@@ -135,6 +145,8 @@ let update remotes (nm: NavigationManager) js message model =
                             Cmd.ofMsg (ViewEmployeesMessage ViewEmployees.InitMessage)
                         | ViewProjects ->
                             Cmd.ofMsg (ViewProjectsMessage ViewProjects.InitMessage)
+                        | ViewProject projId ->
+                            Cmd.ofMsg (ViewProjectMessage (ViewProject.InitMessage projId))
                         | _ -> Cmd.none
                     else Cmd.none
 
@@ -215,6 +227,9 @@ let update remotes (nm: NavigationManager) js message model =
     | ViewProjectsMessage msg ->
         let viewProjsModel, cmd = ViewProjects.update remotes.Project msg model.ViewProjectsModel
         { model with ViewProjectsModel = viewProjsModel }, Cmd.map ViewProjectsMessage cmd
+    | ViewProjectMessage msg ->
+        let viewProjModel, cmd = ViewProject.update remotes.Project msg model.ViewProjectModel
+        { model with ViewProjectModel = viewProjModel }, Cmd.map ViewProjectMessage cmd
 
 /// Connects the routing system to the Elmish application.
 let router = Router.infer SetPage (fun model -> model.Page)
@@ -255,6 +270,7 @@ let view model dispatch =
             | ViewDepartment _ -> ViewDepartment.view model.ViewDepartmentModel (mapDispatch ViewDepartmentMessage)
             | ViewEmployees -> ViewEmployees.view model.ViewEmployeesModel (mapDispatch ViewEmployeesMessage)
             | ViewProjects -> ViewProjects.view model.ViewProjectsModel (mapDispatch ViewProjectsMessage)
+            | ViewProject _ -> ViewProject.view model.ViewProjectModel (mapDispatch ViewProjectMessage)
         )
         .MainNotification(
             cond model.Error <| function

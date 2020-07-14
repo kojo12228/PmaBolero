@@ -1,6 +1,8 @@
 <template id="ProjectTile">
-  <p class="subtitle"><strong>${Name}</strong></p>
-  <p class="small">Status: ${Status} | In ${DepartmentName}</p>
+  <a href="/project/${Id}" class="subtitle"><strong>${Name}</strong></a>
+  <p class="small">
+    Status: ${Status} | In <a href="/department/${DeptId}">${DepartmentName}</a>
+  </p>
   <p class="small">Skills Required: ${Skills}</p>
   <hr>
   <p>${Description}</p>
@@ -13,11 +15,19 @@
       ${Devs}
     </div>
   </div>
+  <div class="columns">
+    <div class="column">
+      <a href="/project/${Id}" class="button is-primary is-fullwidth">View</a>
+    </div>
+    <div class="column">
+      <button class="button is-warning is-fullwidth" disabled>Delete</button>
+    </div>
+  </div>
 </template>
 
 <template id="PmExists">
   <p>Project Manager:</p>
-  <p>${PmName}</p>
+  <a href="/employee/${Id}">${PmName}</p>
 </template>
 
 <template id="NoPm">
@@ -33,7 +43,7 @@
   </div>
 
   <template id="DevItem">
-    <li>${Name}</li>
+    <li><a href="/employee/${Id}">${Name}</a></li>
   </template>
 </template>
 

@@ -1,0 +1,48 @@
+<template id="Tile">
+  <p>Department: <a href="/department/${DeptId}"><strong>${DepartmentName}</strong></a></p>
+  <p>Status: <strong>${Status}</strong></p>
+  ${Skills}
+  <hr>
+  <p>${Description}</p>
+  <hr>
+  ${ProjectManager}
+  ${Devs}
+</template>
+
+<template id="NoSkills">
+  <p>No skills required</p>
+</template>
+<template id="SkillList">
+  <p>Skills Required: </p>
+  <div class="content">
+    <ul>
+      ${Items}
+    </ul>
+  </div>
+</template>
+<template id="SkillItem">
+  <li>${Skill}</li>
+</template>
+
+<template id="PmExists">
+  <p>Project Manager:</p>
+  <a href="/employee/${Id}">${PmName}</p>
+</template>
+<template id="NoPm">
+  <p>No PM assigned</p>
+</template>
+
+<template id="DevList">
+  <p><strong>Developers:</strong></p>
+  <div class="content">
+    <ul>
+      ${DevItems}
+    </ul>
+  </div>
+</template>
+<template id="DevItem">
+  <li><a href="${Id}">${Name}</a></li>
+</template>
+<template id="NoDevs">
+  <p>Project has no developers.</p>
+</template>

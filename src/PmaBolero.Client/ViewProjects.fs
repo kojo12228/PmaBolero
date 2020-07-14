@@ -49,9 +49,10 @@ let populateDevs (devNames: (int * string) []) =
                     .NoDevs()
                     .Elt()
             | false ->
-                forEach devNames (fun (_, name) ->
+                forEach devNames (fun (devId, name) ->
                     ViewProjectsPage
                         .DevItem()
+                        .Id(string devId)
                         .Name(name)
                         .Elt()
                 )
@@ -60,9 +61,10 @@ let populateDevs (devNames: (int * string) []) =
 
 let viewPm (pmOpt: (int * string) option) =
     cond pmOpt <| function
-    | Some (_, name) ->
+    | Some (pmId, name) ->
         ViewProjectsPage
             .PmExists()
+            .Id(string pmId)
             .PmName(name)
             .Elt()
     | None ->
@@ -73,8 +75,10 @@ let viewPm (pmOpt: (int * string) option) =
 let generateTile (project: Project) =
     ViewProjectsPage
         .ProjectTile()
+        .Id(string project.Id)
         .Name(project.Name)
         .Status(project.Status |> string)
+        .DeptId(project.DepartmentId |> fst |> string)
         .DepartmentName(project.DepartmentId |> snd)
         .Skills(String.Join(", ", project.SkillRequirements))
         .Description(project.Description)

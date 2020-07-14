@@ -16,7 +16,6 @@ let initModel: Model =
     {
         DataType = "Departments"
         UrlPrefix = "department"
-        Title = "Loading..."
         IsLoading = true
         Data = None
         AuthorisationFailure = false
@@ -39,11 +38,6 @@ let update remote message model =
     |> fun (model, cmd) -> model, Cmd.map TileMessage cmd
 
 type ViewDepartmentPage = Template<"wwwroot/viewdepartment.html">
-
-let getTitle (deptOpt: Department option) =
-    match deptOpt with
-    | Some dept -> dept.Name
-    | None -> "Loading..."
 
 let populateProjects (projects: (int * string) []) =
     ViewDepartmentPage
@@ -95,5 +89,7 @@ let generateTile (dept: Department) =
         .Elt()
 
 let view (model: Model) dispatch =
+    let deptTitle (dept: Department) = dept.Name
+
     let mappedDispatch = TileMessage >> dispatch
-    ViewSingle.view generateTile getTitle model mappedDispatch
+    ViewSingle.view generateTile deptTitle model mappedDispatch

@@ -15,7 +15,6 @@ type Model<'T> =
     {
         DataType: string
         UrlPrefix: string
-        Title: string
         IsLoading: bool
         Data: 'T option
         AuthorisationFailure: bool
@@ -62,12 +61,16 @@ let update getData message model =
 
 type ViewSingleTemplate = Template<"wwwroot/singletilepage.html">
 
-let view (toTile: 'T -> Node) (pageTitle: 'T option -> string) (model: Model<'T>) dispatch =
+let view (toTile: 'T -> Node) (pageTitle: 'T -> string) (model: Model<'T>) dispatch =
     ViewSingleTemplate
         .ViewSingle()
         .UrlSection(model.UrlPrefix)
         .PageDataType(model.DataType)
-        .Name(pageTitle model.Data)
+        .Name(
+            match model.Data with
+            | Some d -> pageTitle d
+            | None -> "Loading"
+        )
         .Progress(
             cond model.IsLoading <| function
             | false -> empty
