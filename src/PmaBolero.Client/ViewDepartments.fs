@@ -43,9 +43,11 @@ let populateProjects (projects: (int * string) []) =
     ViewDepartmentsPage
         .PopulateProjects()
         .ProjectNames(
-            forEach projects (fun (_, projName) ->
+            forEach projects (fun (projId, projName) ->
                 ViewDepartmentsPage
                     .DepartmentSublisting()
+                    .UrlPrefix("project")
+                    .Id(string projId)
                     .Name(projName)
                     .Elt()
             )
@@ -56,9 +58,11 @@ let populateEmployees (employees: (int * string) []) =
     ViewDepartmentsPage
         .PopulateEmployees()
         .EmployeeNames(
-            forEach employees (fun (_, emplName) ->
+            forEach employees (fun (emplId, emplName) ->
                 ViewDepartmentsPage
                     .DepartmentSublisting()
+                    .UrlPrefix("employee")
+                    .Id(string emplId)
                     .Name(emplName)
                     .Elt()
             )
