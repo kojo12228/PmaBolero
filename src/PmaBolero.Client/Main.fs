@@ -141,18 +141,18 @@ let update remotes (nm: NavigationManager) js message model =
                 let initMessage =
                     if model.InitialSignInChecked
                     then
+                        let signInRole = model.IsSignedInAs |> Option.map snd
                         match page with
                         | ViewDepartments ->
                             Cmd.ofMsg (ViewDepartmentsMessage ViewDepartments.InitMessage)
                         | ViewDepartment deptId ->
                             Cmd.ofMsg (ViewDepartmentMessage (ViewDepartment.InitMessage deptId))
                         | ViewEmployees ->
-                            let signInRole = model.IsSignedInAs |> Option.map snd
                             Cmd.ofMsg (ViewEmployeesMessage (ViewEmployees.InitMessage signInRole))
                         | ViewEmployee emplId ->
                             Cmd.ofMsg (ViewEmployeeMessage (ViewEmployee.InitMessage emplId))
                         | ViewProjects ->
-                            Cmd.ofMsg (ViewProjectsMessage ViewProjects.InitMessage)
+                            Cmd.ofMsg (ViewProjectsMessage (ViewProjects.InitMessage signInRole))
                         | ViewProject projId ->
                             Cmd.ofMsg (ViewProjectMessage (ViewProject.InitMessage projId))
                         | _ -> Cmd.none
