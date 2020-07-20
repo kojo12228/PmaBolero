@@ -147,7 +147,8 @@ let update remotes (nm: NavigationManager) js message model =
                         | ViewDepartment deptId ->
                             Cmd.ofMsg (ViewDepartmentMessage (ViewDepartment.InitMessage deptId))
                         | ViewEmployees ->
-                            Cmd.ofMsg (ViewEmployeesMessage ViewEmployees.InitMessage)
+                            let signInRole = model.IsSignedInAs |> Option.map snd
+                            Cmd.ofMsg (ViewEmployeesMessage (ViewEmployees.InitMessage signInRole))
                         | ViewEmployee emplId ->
                             Cmd.ofMsg (ViewEmployeeMessage (ViewEmployee.InitMessage emplId))
                         | ViewProjects ->
