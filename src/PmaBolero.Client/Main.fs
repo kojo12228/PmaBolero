@@ -138,6 +138,8 @@ let update remotes (nm: NavigationManager) js message model =
                 Option.isNone model.IsSignedInAs &&
                 authenticatedPages page
             then Cmd.ofMsg (Redirect "/login")
+            elif model.InitialSignInChecked && page = Page.Home
+            then Cmd.ofMsg (Redirect "/project/all")
             else
                 let pageTitleMessage =
                     pageTitles page
@@ -266,6 +268,25 @@ let homePage model dispatch =
 let navMenu model dispatch =
     Main.Navigation()
         .NavMenuActive(if model.NavMenuOpen then "is-active" else "")
+        .ProjectNavbarItem(
+            cond model.IsSignedInAs <| function
+            | None -> empty
+            | Some (_, Developer) ->
+                Main.GenericProjectNavbarItem().Elt()
+            | _ -> Main.ElevatedProjectNavbarItem().Elt()
+        )
+        .EmployeeNavbarItem(
+            cond model.IsSignedInAs <| function
+            | None -> empty
+            | Some (_, Admin) ->
+                Main.ElevatedEmployeeNavbarItem().Elt()
+            | _ -> Main.GenericEmployeeNavbarItem().Elt()
+        )
+        .DepartmentNavbarItem(
+            cond model.IsSignedInAs <| function
+            | None -> empty
+            | _ -> Main.GenericDepartmentNavbarItem().Elt()
+        )
         .ToggleBurger(fun _ -> dispatch ToggleBurgerMenu)
         .SignInSection(
             cond model.IsSignedInAs <| function

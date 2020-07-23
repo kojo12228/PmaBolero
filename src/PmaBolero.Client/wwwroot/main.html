@@ -16,15 +16,55 @@
 
     <div id="navbarBasicExample" class="navbar-menu ${NavMenuActive}">
       <div class="navbar-start">
-        <a class="navbar-item" href="/project/all">
-          Projects
-        </a>
-        <a class="navbar-item" href="/employee/all">
-          Employees
-        </a>
-        <a class="navbar-item" href="/department/all">
-          Departments
-        </a>
+        ${ProjectNavbarItem}
+        ${EmployeeNavbarItem}
+        ${DepartmentNavbarItem}
+
+        <template id="GenericProjectNavbarItem">
+          <a class="navbar-item" href="/project/all">
+            Projects
+          </a>
+        </template>
+        <template id="ElevatedProjectNavbarItem">
+          <!-- Will only appear to admins and PMs -->
+          <div class="navbar-item has-dropdown is-hoverable">
+            <a class="navbar-link" href="/project/all">
+              Projects
+            </a>
+    
+            <div class="navbar-dropdown">
+              <a class="navbar-item" href="/project/add">
+                Add New Project
+              </a>
+            </div>
+          </div>
+        </template>
+
+        <template id="GenericEmployeeNavbarItem">
+          <a class="navbar-item" href="/employee/all">
+            Employees
+          </a>
+        </template>
+        <template id="ElevatedEmployeeNavbarItem">
+          <!-- Will only appear to admins -->
+          <div class="navbar-item has-dropdown is-hoverable">
+            <a class="navbar-link" href="/employee/all">
+              Employees
+            </a>
+    
+            <div class="navbar-dropdown">
+              <a class="navbar-item" href="/employee/add">
+                Add New Employee
+              </a>
+            </div>
+          </div>
+        </template>
+
+        <template id="GenericDepartmentNavbarItem">
+          <a class="navbar-item" href="/department/all">
+            Departments
+          </a>
+        </template>
       </div>
       <div class="navbar-end">
         <div class="navbar-item">
