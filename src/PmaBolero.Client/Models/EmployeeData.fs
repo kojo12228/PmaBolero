@@ -80,6 +80,7 @@ type ProjectService =
 type DepartmentService =
     {
         getDepartments: unit -> Async<Department[]>
+        getDepartmentIds: unit -> Async<(int * string)[]>
         getDepartment: int -> Async<option<Department>>
     }
     interface IRemoteService with

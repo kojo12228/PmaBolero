@@ -22,6 +22,7 @@ type Page =
     | [<EndPoint "/signup">] SignUp
     | [<EndPoint "/project/all">] ViewProjects
     | [<EndPoint "/project">] ViewProject of int
+    | [<EndPoint "/project/add">] CreateProject
     | [<EndPoint "/employee/all">] ViewEmployees
     | [<EndPoint "/employee">] ViewEmployee of int
     | [<EndPoint "/department/all">] ViewDepartments
@@ -35,6 +36,7 @@ let pageTitles page =
 
     | ViewProjects -> "View All Projects"
     | ViewProject _ -> "View Project"
+    | CreateProject -> "Create New Project"
 
     | ViewEmployees -> "View All Employees"
     | ViewEmployee -> "View Employee"
@@ -46,7 +48,8 @@ let pageTitles page =
 let authenticatedPages page =
     match page with
     | Home | ViewProjects | ViewEmployees | ViewDepartments
-    | ViewProject _ | ViewEmployee _ | ViewDepartment _ -> true
+    | ViewProject _ | ViewEmployee _ | ViewDepartment _
+    | CreateProject -> true
     | _ -> false
 
 type Remotes =
@@ -74,6 +77,7 @@ type Model =
         ViewEmployeeModel: ViewEmployee.Model
         ViewProjectsModel: ViewProjects.Model
         ViewProjectModel: ViewProject.Model
+        CreateProjectModel: CreateProject.Model
     }
 
 let initModel =
@@ -92,6 +96,7 @@ let initModel =
         ViewEmployeeModel = ViewEmployee.initModel
         ViewProjectsModel = ViewProjects.initModel
         ViewProjectModel = ViewProject.initModel
+        CreateProjectModel = CreateProject.initModel
     }
 
 /// The Elmish application's update messages.
@@ -117,6 +122,7 @@ type Message =
     | ViewEmployeeMessage of ViewEmployee.Message
     | ViewProjectsMessage of ViewProjects.Message
     | ViewProjectMessage of ViewProject.Message
+    | CreateProjectMessage of CreateProject.Message
 
 let update remotes (nm: NavigationManager) js message model =
 #if DEBUG
@@ -155,6 +161,8 @@ let update remotes (nm: NavigationManager) js message model =
                             Cmd.ofMsg (ViewProjectsMessage (ViewProjects.InitMessage signInRole))
                         | ViewProject projId ->
                             Cmd.ofMsg (ViewProjectMessage (ViewProject.InitMessage projId))
+                        | CreateProject ->
+                            Cmd.ofMsg (CreateProjectMessage CreateProject.InitMessage)
                         | _ -> Cmd.none
                     else Cmd.none
 
@@ -241,6 +249,11 @@ let update remotes (nm: NavigationManager) js message model =
     | ViewProjectMessage msg ->
         let viewProjModel, cmd = ViewProject.update remotes.Project msg model.ViewProjectModel
         { model with ViewProjectModel = viewProjModel }, Cmd.map ViewProjectMessage cmd
+    | CreateProjectMessage (CreateProject.Redirect url) ->
+        model, Cmd.ofMsg (Redirect url)
+    | CreateProjectMessage msg ->
+        let createProjModel, cmd = CreateProject.update remotes.Project remotes.Employee remotes.Department msg model.CreateProjectModel
+        { model with CreateProjectModel = createProjModel }, Cmd.map CreateProjectMessage cmd
 
 /// Connects the routing system to the Elmish application.
 let router = Router.infer SetPage (fun model -> model.Page)
@@ -283,6 +296,7 @@ let view model dispatch =
             | ViewEmployee _ -> ViewEmployee.view model.ViewEmployeeModel (mapDispatch ViewEmployeeMessage)
             | ViewProjects -> ViewProjects.view model.ViewProjectsModel (mapDispatch ViewProjectsMessage)
             | ViewProject _ -> ViewProject.view model.ViewProjectModel (mapDispatch ViewProjectMessage)
+            | CreateProject -> CreateProject.view model.CreateProjectModel (mapDispatch CreateProjectMessage)
         )
         .MainNotification(
             cond model.Error <| function

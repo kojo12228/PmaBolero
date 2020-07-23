@@ -22,6 +22,13 @@ type DepartmentService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                     |> Array.map (snd >> Backend.toClientDepartment)
             }
 
+            getDepartmentIds = ctx.Authorize <| fun () -> async {
+                return
+                    Backend.departments
+                    |> Map.toArray
+                    |> Array.map (snd >> (fun dept -> dept.Id, dept.Name))
+            }
+
             getDepartment = ctx.Authorize <| fun deptId -> async {
                 return
                     Backend.departments

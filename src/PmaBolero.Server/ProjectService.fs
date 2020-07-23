@@ -14,7 +14,7 @@ type ProjectService(ctx: IRemoteContext, env: IWebHostEnvironment) =
     inherit RemoteHandler<EmployeeData.ProjectService>()
 
     override this.Handler = {
-        createProject = ctx.AuthorizeWith [AuthorizeAttribute("admin, pm")] <| fun newProj -> async {
+        createProject = ctx.AuthorizeWith [AuthorizeAttribute(Roles = "admin, pm")] <| fun newProj -> async {
             let newProjId = Backend.getNextProjectId()
 
             let validDeptId() = Map.containsKey newProj.DepartmentId Backend.departments
