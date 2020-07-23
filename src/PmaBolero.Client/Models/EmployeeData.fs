@@ -45,6 +45,8 @@ type EmployeeService =
             {| Email: string; FullName: string; DepartmentId: int; Role: Auth.Role; Skills: string[] |}
             -> Async<int>
         getEmployees: unit -> Async<Employee[]>
+        getProjectManagers: unit -> Async<(int * string) []>
+        getDevelopers: unit -> Async<(int * string) []>
         getEmployee: int -> Async<option<Employee>>
         transferToDepartment: int * int -> Async<option<Employee>>
         changeRole: int * Auth.Role -> Async<option<Employee>>

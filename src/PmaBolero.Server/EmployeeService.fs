@@ -43,6 +43,22 @@ type EmployeeService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                     |> Array.map Backend.toClientEmployee
             }
 
+            getProjectManagers = ctx.Authorize <| fun () -> async {
+                return
+                    Backend.employees
+                    |> Map.toArray
+                    |> Array.filter (fun (_, e) -> e.Role = Auth.ProjectManager)
+                    |> Array.map (fun (_, e) -> e.Id, e.FullName)
+            }
+
+            getDevelopers = ctx.Authorize <| fun () -> async {
+                return
+                    Backend.employees
+                    |> Map.toArray
+                    |> Array.filter (fun (_, e) -> e.Role = Auth.Developer)
+                    |> Array.map (fun (_, e) -> e.Id, e.FullName)
+            }
+
             getEmployee = ctx.Authorize <| fun employeeId -> async {
                 let employeeOpt = Map.tryFind employeeId Backend.employees
 
