@@ -193,7 +193,7 @@ let view model dispatch =
         .PmIsLoading(if model.IsLoading.Pms then "is-loading" else "")
         .DevOptions(
             cond model.IsLoading.Devs <| function
-            | true -> createBar()
+            | true -> createIndeterminateBar()
             | false ->
                 forEach model.Developers <| (fun (devId, devName) ->
                     CreateProjectTemplate

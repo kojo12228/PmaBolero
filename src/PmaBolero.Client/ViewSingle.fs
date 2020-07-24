@@ -74,7 +74,7 @@ let view (toTile: 'T -> Node) (pageTitle: 'T -> string) (model: Model<'T>) dispa
         .Progress(
             cond model.IsLoading <| function
             | false -> empty
-            | true -> createBar()
+            | true -> createIndeterminateBar()
         )
         .Tile(
             cond model.Data <| function

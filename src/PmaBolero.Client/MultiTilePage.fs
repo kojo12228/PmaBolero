@@ -58,7 +58,7 @@ let view (toTile: 'T -> Node) (model: Model<'T>) dispatch =
         .Progress(
             cond model.IsLoading <| function
             | false -> empty
-            | true -> createBar()
+            | true -> createIndeterminateBar()
         )
         .Tiles(
             forEach model.Data (fun d ->

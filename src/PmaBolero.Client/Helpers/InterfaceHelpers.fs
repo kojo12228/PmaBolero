@@ -32,7 +32,13 @@ module ErrorNotification =
         errorNotif msg hideEvent "is-success"
 
 module ProgressBar =
-    let createBar() =
+    let createIndeterminateBar() =
         HelperTemplate
-            .ProgressBar()
+            .IndeterminateProgressBar()
+            .Elt()
+
+    let createDeterminateBar value =
+        HelperTemplate
+            .DeterminateProgressBar()
+            .BarValue(string value)
             .Elt()
