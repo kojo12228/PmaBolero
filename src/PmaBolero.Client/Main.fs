@@ -178,7 +178,7 @@ let update remotes (nm: NavigationManager) js message model =
                         | ViewEmployees ->
                             Cmd.ofMsg (ViewEmployeesMessage (ViewEmployees.InitMessage signInRole))
                         | ViewEmployee emplId ->
-                            Cmd.ofMsg (ViewEmployeeMessage (ViewEmployee.InitMessage emplId))
+                            Cmd.ofMsg (ViewEmployeeMessage (ViewEmployee.InitMessage (emplId, signInRole)))
                         | CreateEmployee ->
                             Cmd.ofMsg (CreateEmployeeMessage (CreateEmployee.InitMessage))
                         | EditEmployee emplId ->

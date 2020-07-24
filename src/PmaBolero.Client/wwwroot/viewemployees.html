@@ -21,7 +21,13 @@
       <a href="/employee/${Id}" class="button is-primary is-fullwidth">View</a>
     </div>
     <div class="column">
-    <button class="button is-warning is-fullwidth" disabled="${DisableDelete}" onclick="${DeleteClick}">Delete</button>
+      <a  href="employee/${Id}/edit" class="button is-fullwidth"
+          disabled="${EditDisable}">
+        Edit
+      </a>
+    </div>
+    <div class="column">
+      <button class="button is-warning is-fullwidth" disabled="${DisableDelete}" onclick="${DeleteClick}">Delete</button>
     </div>
   </div>
 </template>

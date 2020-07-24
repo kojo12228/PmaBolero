@@ -103,6 +103,11 @@ let generateTile signInRole dispatch (employee: Employee) =
                     .Elt()
             | false ->
                 populateProjects employee.ProjectIds)
+        .EditDisable(
+            match signInRole with
+            | Some Auth.Admin -> false
+            | _ -> true
+        )
         .DisableDelete(
             match signInRole with
             | Some Auth.Admin -> false
