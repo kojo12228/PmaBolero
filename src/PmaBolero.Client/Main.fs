@@ -175,7 +175,7 @@ let update remotes (nm: NavigationManager) js message model =
                         | ViewProjects ->
                             Cmd.ofMsg (ViewProjectsMessage (ViewProjects.InitMessage signInRole))
                         | ViewProject projId ->
-                            Cmd.ofMsg (ViewProjectMessage (ViewProject.InitMessage projId))
+                            Cmd.ofMsg (ViewProjectMessage (ViewProject.InitMessage (projId, signInRole)))
                         | CreateProject ->
                             Cmd.ofMsg (CreateProjectMessage CreateProject.InitMessage)
                         | EditProject projId ->

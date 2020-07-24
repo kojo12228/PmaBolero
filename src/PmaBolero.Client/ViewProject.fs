@@ -8,34 +8,52 @@ open Bolero.Remoting
 open Bolero.Remoting.Client
 open Bolero.Templating.Client
 
+open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
 
-type Model = ViewSingle.Model<Project>
+type Model =
+    {
+        SignInRole: Auth.Role option
+        TileModel: ViewSingle.Model<Project>
+    }
 
 let initModel: Model =
     {
-        DataType = "Projects"
-        UrlPrefix = "project"
-        IsLoading = true
-        Data = None
-        AuthorisationFailure = false
-        Error = None
+        SignInRole = None
+        TileModel =
+            {
+                DataType = "Projects"
+                UrlPrefix = "project"
+                IsLoading = true
+                Data = None
+                AuthorisationFailure = false
+                Error = None
+            }
     }
 
 type Message =
-    | InitMessage of int
+    | InitMessage of int * (Auth.Role option)
     | TileMessage of ViewSingle.Message<Project>
 
 let update remote message model =
     let getDataFunc = remote.getProject
 
-    let tileMsg =
-        match message with
-        | InitMessage projId -> ViewSingle.InitMessage projId
-        | TileMessage msg -> msg
+    match message with
+    | InitMessage (projId, roleOpt) ->
+        let tileModel, tileCmd =
+            ViewSingle.update
+                getDataFunc
+                (ViewSingle.InitMessage projId)
+                model.TileModel
 
-    ViewSingle.update getDataFunc tileMsg model
-    |> fun (model, cmd) -> model, Cmd.map TileMessage cmd
+        { model with SignInRole = roleOpt; TileModel = tileModel }, Cmd.map TileMessage tileCmd
+    | TileMessage msg ->
+        let getDataFunc = remote.getProject
+
+        ViewSingle.update getDataFunc msg model.TileModel
+        |> fun (tileModel, cmd) ->
+            { model with TileModel = tileModel },
+            Cmd.map TileMessage cmd
 
 type ViewProjectPage = Template<"wwwroot/viewproject.html">
 
@@ -66,7 +84,7 @@ let populateDevs (devs: (int * string) []) =
         )
         .Elt()
 
-let generateTile (project: Project) =
+let generateTile signInRole (project: Project) =
     ViewProjectPage
         .Tile()
         .DeptId(project.DepartmentId |> fst |> string)
@@ -93,10 +111,16 @@ let generateTile (project: Project) =
             | false -> populateDevs project.DeveloperIds
             | true -> ViewProjectPage.NoDevs().Elt()
         )
+        .Id(string project.Id)
+        .EditDisabled(
+            match signInRole with
+            | Some Auth.Admin | Some Auth.ProjectManager -> false
+            | _ -> true
+        )
         .Elt()
 
 let view (model: Model) dispatch =
     let projectTitle (proj: Project) = proj.Name
 
     let mappedDispatch = TileMessage >> dispatch
-    ViewSingle.view generateTile projectTitle model mappedDispatch
+    ViewSingle.view (generateTile model.SignInRole) projectTitle model.TileModel mappedDispatch

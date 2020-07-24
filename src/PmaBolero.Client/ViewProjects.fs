@@ -97,6 +97,11 @@ let generateTile signInRole dispatch (project: Project) =
         .Description(project.Description)
         .ProjectManager(viewPm project.ProjectManagerId)
         .Devs(populateDevs project.DeveloperIds)
+        .EditDisable(
+            match signInRole with
+            | Some Auth.Admin | Some Auth.ProjectManager -> false
+            | _ -> true
+        )
         .DeleteDisable(
             match signInRole with
             | Some Auth.Admin -> false

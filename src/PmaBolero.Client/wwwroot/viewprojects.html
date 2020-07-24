@@ -33,7 +33,10 @@
       <a href="/project/${Id}" class="button is-primary is-fullwidth">View</a>
     </div>
     <div class="column">
-    <button class="button is-warning is-fullwidth" disabled="${DeleteDisable}" onclick="${DeleteClick}">Delete</button>
+      <a href="/project/${Id}/edit" class="button is-fullwidth" disabled="${EditDisable}">Edit</a>
+    </div>
+    <div class="column">
+      <button class="button is-warning is-fullwidth" disabled="${DeleteDisable}" onclick="${DeleteClick}">Delete</button>
     </div>
   </div>
 </template>
