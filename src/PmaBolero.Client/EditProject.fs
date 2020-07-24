@@ -12,37 +12,7 @@ open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
 
 open PmaBolero.Client.Helpers
-
-type LoadingTypes =
-    | LoadingEmpty
-    | LoadingQuarter
-    | LoadingHalf
-    | LoadingThreeQuarter
-    | LoadingComplete
-
-let loadingToVal load =
-    match load with
-    | LoadingEmpty -> 0
-    | LoadingQuarter -> 25
-    | LoadingHalf -> 50
-    | LoadingThreeQuarter -> 75
-    | LoadingComplete -> 100
-
-let loadingIncrementQuarter load =
-    match load with
-    | LoadingEmpty -> LoadingQuarter
-    | LoadingQuarter -> LoadingHalf
-    | LoadingHalf -> LoadingThreeQuarter
-    | LoadingThreeQuarter -> LoadingComplete
-    | LoadingComplete -> LoadingComplete
-
-let loadingIncrementHalf load =
-    match load with
-    | LoadingEmpty -> LoadingHalf
-    | LoadingQuarter -> LoadingHalf
-    | LoadingHalf -> LoadingComplete
-    | LoadingThreeQuarter -> LoadingComplete
-    | LoadingComplete -> LoadingComplete
+open PmaBolero.Client.Helpers.ProgressBar
 
 type Model =
     {
@@ -60,7 +30,7 @@ type Model =
         SelectedDept: int option
         ProjectManagers: (int * string) []
         SelectedPm: int option
-        IsLoadingPercentage: LoadingTypes
+        LoadingStatus: LoadingStatus
         Error: string option
         Success: string option
     }
@@ -80,7 +50,7 @@ let initModel =
         SelectedDept = None
         ProjectManagers = [||]
         SelectedPm = None
-        IsLoadingPercentage = LoadingEmpty
+        LoadingStatus = LoadingEmpty
         Error = None
         Success = None
     }
@@ -158,10 +128,10 @@ let update remoteProject remoteEmployee remoteDepartment message model =
                     SkillsRequired = proj.SkillRequirements |> Set.ofArray
                     SelectedDept = proj.DepartmentId |> fst |> Some
                     SelectedPm = proj.ProjectManagerId |> Option.map fst
-                    IsLoadingPercentage =
+                    LoadingStatus =
                         match model.SignInRole with
-                        | Some Auth.Admin -> loadingIncrementQuarter model.IsLoadingPercentage
-                        | Some Auth.ProjectManager -> loadingIncrementHalf model.IsLoadingPercentage
+                        | Some Auth.Admin -> loadingNextQuarter model.LoadingStatus
+                        | Some Auth.ProjectManager -> loadingNextHalf model.LoadingStatus
                         | _ -> LoadingEmpty
             }
 
@@ -174,10 +144,10 @@ let update remoteProject remoteEmployee remoteDepartment message model =
         {
             model with
                 Developers = devs
-                IsLoadingPercentage =
+                LoadingStatus =
                     match model.SignInRole with
-                    | Some Auth.Admin -> loadingIncrementQuarter model.IsLoadingPercentage
-                    | Some Auth.ProjectManager -> loadingIncrementHalf model.IsLoadingPercentage
+                    | Some Auth.Admin -> loadingNextQuarter model.LoadingStatus
+                    | Some Auth.ProjectManager -> loadingNextHalf model.LoadingStatus
                     | _ -> LoadingEmpty
         }, Cmd.none
     | GetProjectManagers ->
@@ -186,7 +156,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
         {
             model with
                 ProjectManagers = pms
-                IsLoadingPercentage = loadingIncrementQuarter model.IsLoadingPercentage
+                LoadingStatus = loadingNextQuarter model.LoadingStatus
         }, Cmd.none
     | GetDepartments ->
         model, Cmd.ofAuthorized remoteDepartment.getDepartmentIds () RecvDepartments Error
@@ -194,7 +164,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
         {
             model with
                 Departments = depts
-                IsLoadingPercentage = loadingIncrementQuarter model.IsLoadingPercentage
+                LoadingStatus = loadingNextQuarter model.LoadingStatus
         }, Cmd.none
     | RecvProject None | RecvDevelopers None
     | RecvDepartments None | RecvProjectManagers ->
@@ -243,7 +213,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
                     SkillRequirements = model.SkillsRequired |> Set.toArray
                 |}
 
-            { model with IsLoadingPercentage = LoadingHalf },
+            { model with LoadingStatus = LoadingHalf },
             Cmd.ofAuthorized remoteProject.updateProjectElevated updatedProject UpdateProjectResponse Error
         | Some Auth.ProjectManager ->
             let updatedProject =
@@ -256,7 +226,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
                     SkillRequirements = model.SkillsRequired |> Set.toArray
                 |}
 
-            { model with IsLoadingPercentage = LoadingHalf },
+            { model with LoadingStatus = LoadingHalf },
             Cmd.ofAuthorized remoteProject.updateProject updatedProject UpdateProjectResponse Error
         | _ ->
             { model with Error = Some "Unable to update project" }, Cmd.none
@@ -272,7 +242,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
                     SkillsRequired = proj.SkillRequirements |> Set.ofArray
                     SelectedDept = proj.DepartmentId |> fst |> Some
                     SelectedPm = proj.ProjectManagerId |> Option.map fst
-                    IsLoadingPercentage = LoadingComplete
+                    LoadingStatus = LoadingComplete
                     Success = Some "Project successfully updated"
             }
 
@@ -280,7 +250,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
     | UpdateDepartment ->
         match model.SelectedDept with
         | Some deptId ->
-            { model with IsLoadingPercentage = LoadingHalf },
+            { model with LoadingStatus = LoadingHalf },
             Cmd.ofAuthorized remoteProject.assignToDepartment (model.OriginalProject.Value.Id, deptId) UpdateDepartmentResponse Error
         | None -> { model with Error = Some "Required to set a department" }, Cmd.none
     | UpdateDepartmentResponse (Some (Some proj)) ->
@@ -289,19 +259,19 @@ let update remoteProject remoteEmployee remoteDepartment message model =
                 OriginalProject = Some proj
                 SelectedDept = proj.DepartmentId |> fst |> Some
                 Success = Some "Project successfully updated"
-                IsLoadingPercentage = LoadingComplete
+                LoadingStatus = LoadingComplete
         }, Cmd.none
     | UpdateProjectResponse (Some None) | UpdateDepartmentResponse (Some None) ->
         {
             model with
                 Error = Some "Unable to updated project at this time."
-                IsLoadingPercentage = LoadingComplete
+                LoadingStatus = LoadingComplete
         }, Cmd.none
     | UpdateProjectResponse None | UpdateDepartmentResponse (None) ->
         {
             model with
                 Error = Some "Unable to send data due to authentication error"
-                IsLoadingPercentage = LoadingComplete
+                LoadingStatus = LoadingComplete
 
         }, Cmd.none
 
@@ -418,18 +388,18 @@ let view model dispatch =
             | None -> ""
         )
         .ProgressBar(
-            cond model.IsLoadingPercentage <| function
+            cond model.LoadingStatus <| function
             | LoadingComplete -> empty
-            | load -> ProgressBar.createDeterminateBar (loadingToVal load)
+            | load -> ProgressBar.createDeterminateBar load
         )
         .MainEditBox(
-            cond model.IsLoadingPercentage <| function
+            cond model.LoadingStatus <| function
             | LoadingComplete ->
                 viewMainEditBox model dispatch
             | _ -> empty
         )
         .ChangeDepartmentBox(
-            cond model.IsLoadingPercentage <| function
+            cond model.LoadingStatus <| function
             | LoadingComplete ->
                 cond model.SignInRole <| function
                 | Some Auth.Admin ->

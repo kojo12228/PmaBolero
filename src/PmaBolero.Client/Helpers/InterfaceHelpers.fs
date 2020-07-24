@@ -37,8 +37,39 @@ module ProgressBar =
             .IndeterminateProgressBar()
             .Elt()
 
-    let createDeterminateBar value =
+    type LoadingStatus =
+    | LoadingEmpty
+    | LoadingQuarter
+    | LoadingHalf
+    | LoadingThreeQuarter
+    | LoadingComplete
+
+    let private loadingToVal load =
+        match load with
+        | LoadingEmpty -> "0"
+        | LoadingQuarter -> "25"
+        | LoadingHalf -> "50"
+        | LoadingThreeQuarter -> "75"
+        | LoadingComplete -> "100"
+
+    let loadingNextQuarter load =
+        match load with
+        | LoadingEmpty -> LoadingQuarter
+        | LoadingQuarter -> LoadingHalf
+        | LoadingHalf -> LoadingThreeQuarter
+        | LoadingThreeQuarter -> LoadingComplete
+        | LoadingComplete -> LoadingComplete
+
+    let loadingNextHalf load =
+        match load with
+        | LoadingEmpty -> LoadingHalf
+        | LoadingQuarter -> LoadingHalf
+        | LoadingHalf -> LoadingComplete
+        | LoadingThreeQuarter -> LoadingComplete
+        | LoadingComplete -> LoadingComplete
+
+    let createDeterminateBar (value: LoadingStatus) =
         HelperTemplate
             .DeterminateProgressBar()
-            .BarValue(string value)
+            .BarValue(loadingToVal value)
             .Elt()
