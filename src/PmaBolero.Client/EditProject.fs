@@ -359,7 +359,7 @@ let viewDepartmentBox model dispatch =
         .EditDepartment()
         .CurrentDeptName(
             match model.OriginalProject with
-            | Some proj -> proj.Name
+            | Some proj -> proj.DepartmentId |> snd
             | None -> ""
         )
         .Department(

@@ -1,0 +1,116 @@
+<template id="EditEmployee">
+  <p class="title">Edit Employee</p>
+  <p class="subtitle">${EmployeeName}</p>
+
+  ${ProgressBar}
+  ${MainEditBox}
+  ${EditRoleBox}
+  ${EditDepartmentBox}
+
+  <template id="MainBox">
+    <div class="box">
+      <form onsubmit="${SubmitMain}">
+        <div class="field">
+          <lable class="label">Name</lable>
+          <div class="control">
+            <input class="input" type="text" bind="${Name}" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Email</label>
+          <div class="control">
+            <input class="input" type="email" bind="${Email}" />
+          </div>
+        </div>
+
+        <div class="field has-addons">
+          <div class="control is-expanded">
+            <input class="input" type="text" bind="${SkillField}" placeholder="Skill"/>
+          </div>
+          <div class="control">
+            <button class="button" type="button" onclick="${AddSkillClick}">Add Skill</button>
+          </div>
+        </div>
+
+        <div class="tags">
+          ${SkillTags}
+          <template id="SkillTag">
+            <span class="tag is-medium is-rounded">
+              ${Skill}
+              <button class="delete is-small" type="button" onclick="${DeleteSkill}"></button>
+            </span>
+          </template>
+        </div>
+
+        <div class="field">
+          <div class="control">
+            <input  class="button is-primary is-fullwidth" type="submit"
+                    value="Update" disabled="${DisabledUpdate}"/>
+          </div>
+        </div>
+      </form>
+    </div>
+  </template>
+
+  <template id="RoleBox">
+    <div class="box">
+      <p>
+        <strong>Current Role</strong>: ${CurrentDeptName}
+      </p>
+
+      <form onsubmit="${SubmitRole}">
+        <div class="field">
+          <label class="label">Role</label>
+          <div class="select">
+            <select bind="${Role}">
+              <option default value="Developer">Developer</option>
+              <option value="ProjectManager">Project Manager</option>
+              <option value="Admin">Admin</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="control">
+            <input  class="button is-primary is-fullwidth" type="submit"
+                    value="Update"/>
+          </div>
+        </div>
+      </form>
+    </div>
+  </template>
+
+  <template id="DepartmentBox">
+    <div class="box">
+      <p>
+        <strong>Current Department</strong>: ${CurrentDeptName}
+      </p>
+
+      <form onsubmit="${SubmitDepartment}">
+        <div class="field">
+          <label class="label">Department</label>
+          <div class="control">
+            <div class="select">
+              <select bind="${Department}">
+                ${DeptOptions}
+                <template id="DeptItem">
+                  <option value="${DeptId}">${Name}</option>
+                </template>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="control">
+            <input  class="button is-primary is-fullwidth" type="submit"
+                    value="Update" disabled="${DisabledSubmit}"/>
+          </div>
+        </div>
+      </form>
+    </div>
+  </template>
+
+  ${Notification}
+</template>

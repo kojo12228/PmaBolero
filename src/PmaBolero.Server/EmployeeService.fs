@@ -133,26 +133,20 @@ type EmployeeService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                     | None -> return None
                 }
 
-            // To ensure a user cannot change their email to an admin email,
-            // email cannot be used and email is used to authenticate the request
-            updateEmployee = ctx.Authorize <| fun (updatedEmplDetails) -> async {
+            updateEmployee = ctx.AuthorizeWith [AuthorizeAttribute(Roles = "admin")] <| fun (updatedEmplDetails) -> async {
                 let storedEmpl = Map.tryFind updatedEmplDetails.Id Backend.employees
                 match storedEmpl with
                 | Some empl ->
-                    if empl.Email <> ctx.HttpContext.User.Identity.Name
-                    then
-                        ctx.HttpContext.Response.StatusCode <- 403
-                        return None
-                    else
-                        let newEmpl =
-                            {
-                                empl with
-                                    FullName = updatedEmplDetails.FullName
-                                    Skills = updatedEmplDetails.Skills
-                            }
-                        Backend.employees <- Map.add empl.Id newEmpl Backend.employees
+                    let newEmpl =
+                        {
+                            empl with
+                                FullName = updatedEmplDetails.FullName
+                                Skills = updatedEmplDetails.Skills
+                        }
+                    Backend.employees <- Map.add empl.Id newEmpl Backend.employees
 
-                        return Some ()
+                    let employee = Map.find empl.Id Backend.employees
+                    return Some (Backend.toClientEmployee employee)
                 | None ->
                     return None
             }

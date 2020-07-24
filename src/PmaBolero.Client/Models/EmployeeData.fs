@@ -52,7 +52,7 @@ type EmployeeService =
         changeRole: int * Auth.Role -> Async<option<Employee>>
         updateEmployee:
             {| Id: int; FullName: string; Skills: string[] |}
-            -> Async<option<unit>>
+            -> Async<option<Employee>>
         deleteEmployee: int -> Async<option<int>>
     }
     interface IRemoteService with

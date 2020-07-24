@@ -27,6 +27,7 @@ type Page =
     | [<EndPoint "/employee/all">] ViewEmployees
     | [<EndPoint "/employee">] ViewEmployee of int
     | [<EndPoint "/employee/add">] CreateEmployee
+    | [<EndPoint "/employee/{id}/edit">] EditEmployee of id: int
     | [<EndPoint "/department/all">] ViewDepartments
     | [<EndPoint "/department">] ViewDepartment of int
 
@@ -44,6 +45,7 @@ let pageTitles page =
     | ViewEmployees -> "View All Employees"
     | ViewEmployee _ -> "View Employee"
     | CreateEmployee -> "Create New Employee"
+    | EditEmployee _ -> "Edit Employee"
 
     | ViewDepartments -> "View All Departments"
     | ViewDepartment _ -> "View Department"
@@ -54,7 +56,7 @@ let authenticatedPages page =
     | Home | ViewProjects | ViewEmployees | ViewDepartments
     | ViewProject _ | ViewEmployee _ | ViewDepartment _
     | CreateProject | CreateEmployee
-    | EditProject _ -> true
+    | EditProject _ | EditEmployee _ -> true
     | _ -> false
 
 type Remotes =
@@ -81,6 +83,7 @@ type Model =
         ViewEmployeesModel: ViewEmployees.Model
         ViewEmployeeModel: ViewEmployee.Model
         CreateEmployeeModel: CreateEmployee.Model
+        EditEmployeeModel: EditEmployee.Model
         ViewProjectsModel: ViewProjects.Model
         ViewProjectModel: ViewProject.Model
         CreateProjectModel: CreateProject.Model
@@ -102,6 +105,7 @@ let initModel =
         ViewEmployeesModel = ViewEmployees.initModel
         ViewEmployeeModel = ViewEmployee.initModel
         CreateEmployeeModel = CreateEmployee.initModel
+        EditEmployeeModel = EditEmployee.initModel
         ViewProjectsModel = ViewProjects.initModel
         ViewProjectModel = ViewProject.initModel
         CreateProjectModel = CreateProject.initModel
@@ -123,13 +127,18 @@ type Message =
     | ClearSuccess
     | Redirect of string
     | RedirectSuccess of unit
+
     | SignInMessage of SignIn.Message
     | SignUpMessage of SignUp.Message
+
     | ViewDepartmentsMessage of ViewDepartments.Message
     | ViewDepartmentMessage of ViewDepartment.Message
+
     | ViewEmployeesMessage of ViewEmployees.Message
     | ViewEmployeeMessage of ViewEmployee.Message
     | CreateEmployeeMessage of CreateEmployee.Message
+    | EditEmployeeMessage of EditEmployee.Message
+
     | ViewProjectsMessage of ViewProjects.Message
     | ViewProjectMessage of ViewProject.Message
     | CreateProjectMessage of CreateProject.Message
@@ -172,6 +181,8 @@ let update remotes (nm: NavigationManager) js message model =
                             Cmd.ofMsg (ViewEmployeeMessage (ViewEmployee.InitMessage emplId))
                         | CreateEmployee ->
                             Cmd.ofMsg (CreateEmployeeMessage (CreateEmployee.InitMessage))
+                        | EditEmployee emplId ->
+                            Cmd.ofMsg (EditEmployeeMessage (EditEmployee.InitMessage emplId))
                         | ViewProjects ->
                             Cmd.ofMsg (ViewProjectsMessage (ViewProjects.InitMessage signInRole))
                         | ViewProject projId ->
@@ -264,6 +275,9 @@ let update remotes (nm: NavigationManager) js message model =
     | CreateEmployeeMessage msg ->
         let createEmplModel, cmd = CreateEmployee.update remotes.Employee remotes.Department msg model.CreateEmployeeModel
         { model with CreateEmployeeModel = createEmplModel }, Cmd.map CreateEmployeeMessage cmd
+    | EditEmployeeMessage msg ->
+        let editEmplModel, cmd = EditEmployee.update remotes.Employee remotes.Department msg model.EditEmployeeModel
+        { model with EditEmployeeModel = editEmplModel }, Cmd.map EditEmployeeMessage cmd
 
     | ViewProjectsMessage msg ->
         let viewProjsModel, cmd = ViewProjects.update remotes.Project msg model.ViewProjectsModel
@@ -334,11 +348,15 @@ let view model dispatch =
             | Home -> homePage model dispatch
             | SignIn -> SignIn.view model.SignInModel (mapDispatch SignInMessage)
             | SignUp -> SignUp.view model.SignUpModel (mapDispatch SignUpMessage)
+
             | ViewDepartments -> ViewDepartments.view model.ViewDepartmentsModel (mapDispatch ViewDepartmentsMessage)
             | ViewDepartment _ -> ViewDepartment.view model.ViewDepartmentModel (mapDispatch ViewDepartmentMessage)
+
             | ViewEmployees -> ViewEmployees.view model.ViewEmployeesModel (mapDispatch ViewEmployeesMessage)
             | ViewEmployee _ -> ViewEmployee.view model.ViewEmployeeModel (mapDispatch ViewEmployeeMessage)
             | CreateEmployee -> CreateEmployee.view model.CreateEmployeeModel (mapDispatch CreateEmployeeMessage)
+            | EditEmployee _ -> EditEmployee.view model.EditEmployeeModel (mapDispatch EditEmployeeMessage)
+
             | ViewProjects -> ViewProjects.view model.ViewProjectsModel (mapDispatch ViewProjectsMessage)
             | ViewProject _ -> ViewProject.view model.ViewProjectModel (mapDispatch ViewProjectMessage)
             | CreateProject -> CreateProject.view model.CreateProjectModel (mapDispatch CreateProjectMessage)
