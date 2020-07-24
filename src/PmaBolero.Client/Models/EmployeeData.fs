@@ -43,7 +43,7 @@ type EmployeeService =
     {
         createEmployee:
             {| Email: string; FullName: string; DepartmentId: int; Role: Auth.Role; Skills: string[] |}
-            -> Async<int>
+            -> Async<option<int>>
         getEmployees: unit -> Async<Employee[]>
         getProjectManagers: unit -> Async<(int * string) []>
         getDevelopers: unit -> Async<(int * string) []>

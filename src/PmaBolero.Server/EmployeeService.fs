@@ -16,23 +16,27 @@ type EmployeeService(ctx: IRemoteContext, env: IWebHostEnvironment) =
     override this.Handler =
         {
             createEmployee = ctx.AuthorizeWith [AuthorizeAttribute(Roles = "admin")] <| fun newEmployee -> async {
-                let newId = Backend.getNextEmployeeId()
-                
-                let employee =
-                    {
-                        Id = Backend.getNextEmployeeId()
-                        Email = newEmployee.Email
-                        FullName = newEmployee.FullName
-                        Role = newEmployee.Role
-                        Skills = newEmployee.Skills
-                    }
+                if
+                    Map.exists (fun _ dept -> dept.Id = newEmployee.DepartmentId) Backend.departments
+                then
+                    let newId = Backend.getNextEmployeeId()
+                    
+                    let employee =
+                        {
+                            Id = Backend.getNextEmployeeId()
+                            Email = newEmployee.Email
+                            FullName = newEmployee.FullName
+                            Role = newEmployee.Role
+                            Skills = newEmployee.Skills
+                        }
 
-                Backend.employees <- Map.add newId employee Backend.employees
+                    Backend.employees <- Map.add newId employee Backend.employees
 
-                let newDeptEmployees = Set.add newId Backend.departmentEmployees.[newEmployee.DepartmentId]
-                Backend.departmentEmployees <- Map.add newEmployee.DepartmentId newDeptEmployees Backend.departmentEmployees
+                    let newDeptEmployees = Set.add newId Backend.departmentEmployees.[newEmployee.DepartmentId]
+                    Backend.departmentEmployees <- Map.add newEmployee.DepartmentId newDeptEmployees Backend.departmentEmployees
 
-                return newId
+                    return Some newId
+                else return None
             }
 
             getEmployees = ctx.Authorize <| fun () -> async {

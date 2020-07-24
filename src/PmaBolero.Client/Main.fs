@@ -25,6 +25,7 @@ type Page =
     | [<EndPoint "/project/add">] CreateProject
     | [<EndPoint "/employee/all">] ViewEmployees
     | [<EndPoint "/employee">] ViewEmployee of int
+    | [<EndPoint "/employee/add">] CreateEmployee
     | [<EndPoint "/department/all">] ViewDepartments
     | [<EndPoint "/department">] ViewDepartment of int
 
@@ -39,7 +40,8 @@ let pageTitles page =
     | CreateProject -> "Create New Project"
 
     | ViewEmployees -> "View All Employees"
-    | ViewEmployee -> "View Employee"
+    | ViewEmployee _ -> "View Employee"
+    | CreateEmployee -> "Create New Employee"
 
     | ViewDepartments -> "View All Departments"
     | ViewDepartment _ -> "View Department"
@@ -49,7 +51,7 @@ let authenticatedPages page =
     match page with
     | Home | ViewProjects | ViewEmployees | ViewDepartments
     | ViewProject _ | ViewEmployee _ | ViewDepartment _
-    | CreateProject -> true
+    | CreateProject | CreateEmployee -> true
     | _ -> false
 
 type Remotes =
@@ -75,6 +77,7 @@ type Model =
         ViewDepartmentModel: ViewDepartment.Model
         ViewEmployeesModel: ViewEmployees.Model
         ViewEmployeeModel: ViewEmployee.Model
+        CreateEmployeeModel: CreateEmployee.Model
         ViewProjectsModel: ViewProjects.Model
         ViewProjectModel: ViewProject.Model
         CreateProjectModel: CreateProject.Model
@@ -94,6 +97,7 @@ let initModel =
         ViewDepartmentModel = ViewDepartment.initModel
         ViewEmployeesModel = ViewEmployees.initModel
         ViewEmployeeModel = ViewEmployee.initModel
+        CreateEmployeeModel = CreateEmployee.initModel
         ViewProjectsModel = ViewProjects.initModel
         ViewProjectModel = ViewProject.initModel
         CreateProjectModel = CreateProject.initModel
@@ -120,6 +124,7 @@ type Message =
     | ViewDepartmentMessage of ViewDepartment.Message
     | ViewEmployeesMessage of ViewEmployees.Message
     | ViewEmployeeMessage of ViewEmployee.Message
+    | CreateEmployeeMessage of CreateEmployee.Message
     | ViewProjectsMessage of ViewProjects.Message
     | ViewProjectMessage of ViewProject.Message
     | CreateProjectMessage of CreateProject.Message
@@ -159,6 +164,8 @@ let update remotes (nm: NavigationManager) js message model =
                             Cmd.ofMsg (ViewEmployeesMessage (ViewEmployees.InitMessage signInRole))
                         | ViewEmployee emplId ->
                             Cmd.ofMsg (ViewEmployeeMessage (ViewEmployee.InitMessage emplId))
+                        | CreateEmployee ->
+                            Cmd.ofMsg (CreateEmployeeMessage (CreateEmployee.InitMessage))
                         | ViewProjects ->
                             Cmd.ofMsg (ViewProjectsMessage (ViewProjects.InitMessage signInRole))
                         | ViewProject projId ->
@@ -244,6 +251,11 @@ let update remotes (nm: NavigationManager) js message model =
     | ViewEmployeeMessage msg ->
         let viewEmplModel, cmd = ViewEmployee.update remotes.Employee msg model.ViewEmployeeModel
         { model with ViewEmployeeModel = viewEmplModel }, Cmd.map ViewEmployeeMessage cmd
+    | CreateEmployeeMessage (CreateEmployee.Redirect url) ->
+        model, Cmd.ofMsg (Redirect url)
+    | CreateEmployeeMessage msg ->
+        let createEmplModel, cmd = CreateEmployee.update remotes.Employee remotes.Department msg model.CreateEmployeeModel
+        { model with CreateEmployeeModel = createEmplModel }, Cmd.map CreateEmployeeMessage cmd
 
     | ViewProjectsMessage msg ->
         let viewProjsModel, cmd = ViewProjects.update remotes.Project msg model.ViewProjectsModel
@@ -315,6 +327,7 @@ let view model dispatch =
             | ViewDepartment _ -> ViewDepartment.view model.ViewDepartmentModel (mapDispatch ViewDepartmentMessage)
             | ViewEmployees -> ViewEmployees.view model.ViewEmployeesModel (mapDispatch ViewEmployeesMessage)
             | ViewEmployee _ -> ViewEmployee.view model.ViewEmployeeModel (mapDispatch ViewEmployeeMessage)
+            | CreateEmployee -> CreateEmployee.view model.CreateEmployeeModel (mapDispatch CreateEmployeeMessage)
             | ViewProjects -> ViewProjects.view model.ViewProjectsModel (mapDispatch ViewProjectsMessage)
             | ViewProject _ -> ViewProject.view model.ViewProjectModel (mapDispatch ViewProjectMessage)
             | CreateProject -> CreateProject.view model.CreateProjectModel (mapDispatch CreateProjectMessage)

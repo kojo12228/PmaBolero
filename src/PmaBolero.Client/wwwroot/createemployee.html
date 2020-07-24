@@ -1,0 +1,85 @@
+<template id="CreateEmployee">
+  <p class="title">Create New Employee</p>
+
+  <div class="box">
+    <form onsubmit="${SubmitEmployee}">
+      <div class="columns">
+        <div class="column">
+          <div class="field">
+            <lable class="label">First Name</lable>
+            <div class="control">
+              <input class="input" type="text" bind="${FirstName}" />
+            </div>
+          </div>
+        </div>
+
+        <div class="column">
+          <div class="field">
+            <label class="label">Last Name</label>
+            <div class="control">
+              <input class="input" type="text" bind="${LastName}"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">Email</label>
+        <div class="control">
+          <input class="input" type="email" bind="${Email}" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">Department</label>
+        <div class="select ${DeptIsLoading}">
+          <select bind="${Department}">
+            ${DeptOptions}
+            <template id="DeptItem">
+              <option value="${DeptId}">${Name}</option>
+            </template>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">Role</label>
+        <div class="select">
+          <select bind="${Role}">
+            <option default value="Developer">Developer</option>
+            <option value="ProjectManager">Project Manager</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field has-addons">
+        <div class="control is-expanded">
+          <input class="input" type="text" bind="${SkillField}" placeholder="Skill"/>
+        </div>
+        <div class="control">
+          <button class="button" type="button" onclick="${AddSkillClick}">Add Skill</button>
+        </div>
+      </div>
+
+      <div class="tags">
+        ${SkillTags}
+        <template id="SkillTag">
+          <span class="tag is-medium is-rounded">
+            ${Skill}
+            <button class="delete is-small" type="button" onclick="${DeleteSkill}"></button>
+          </span>
+        </template>
+      </div>
+
+      <div class="field">
+        <div class="control">
+          <input  class="button is-primary" type="submit"
+                  value="Create" disabled="${DisabledSubmit}"/>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  ${ErrorNotification}
+</template>
