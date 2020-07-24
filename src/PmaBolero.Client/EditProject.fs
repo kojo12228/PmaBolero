@@ -28,6 +28,22 @@ let loadingToVal load =
     | LoadingThreeQuarter -> 75
     | LoadingComplete -> 100
 
+let loadingIncrementQuarter load =
+    match load with
+    | LoadingEmpty -> LoadingQuarter
+    | LoadingQuarter -> LoadingHalf
+    | LoadingHalf -> LoadingThreeQuarter
+    | LoadingThreeQuarter -> LoadingComplete
+    | LoadingComplete -> LoadingComplete
+
+let loadingIncrementHalf load =
+    match load with
+    | LoadingEmpty -> LoadingHalf
+    | LoadingQuarter -> LoadingHalf
+    | LoadingHalf -> LoadingComplete
+    | LoadingThreeQuarter -> LoadingComplete
+    | LoadingComplete -> LoadingComplete
+
 type Model =
     {
         SignInRole: Auth.Role option
@@ -144,8 +160,8 @@ let update remoteProject remoteEmployee remoteDepartment message model =
                     SelectedPm = proj.ProjectManagerId |> Option.map fst
                     IsLoadingPercentage =
                         match model.SignInRole with
-                        | Some Auth.Admin -> LoadingQuarter
-                        | Some Auth.ProjectManager -> LoadingHalf
+                        | Some Auth.Admin -> loadingIncrementQuarter model.IsLoadingPercentage
+                        | Some Auth.ProjectManager -> loadingIncrementHalf model.IsLoadingPercentage
                         | _ -> LoadingEmpty
             }
 
@@ -160,8 +176,8 @@ let update remoteProject remoteEmployee remoteDepartment message model =
                 Developers = devs
                 IsLoadingPercentage =
                     match model.SignInRole with
-                    | Some Auth.Admin -> LoadingHalf
-                    | Some Auth.ProjectManager -> LoadingComplete
+                    | Some Auth.Admin -> loadingIncrementQuarter model.IsLoadingPercentage
+                    | Some Auth.ProjectManager -> loadingIncrementHalf model.IsLoadingPercentage
                     | _ -> LoadingEmpty
         }, Cmd.none
     | GetProjectManagers ->
@@ -170,7 +186,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
         {
             model with
                 ProjectManagers = pms
-                IsLoadingPercentage = LoadingThreeQuarter
+                IsLoadingPercentage = loadingIncrementQuarter model.IsLoadingPercentage
         }, Cmd.none
     | GetDepartments ->
         model, Cmd.ofAuthorized remoteDepartment.getDepartmentIds () RecvDepartments Error
@@ -178,7 +194,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
         {
             model with
                 Departments = depts
-                IsLoadingPercentage = LoadingComplete
+                IsLoadingPercentage = loadingIncrementQuarter model.IsLoadingPercentage
         }, Cmd.none
     | RecvProject None | RecvDevelopers None
     | RecvDepartments None | RecvProjectManagers ->
@@ -371,6 +387,11 @@ let viewMainEditBox model dispatch =
 let viewDepartmentBox model dispatch =
     EditProjectTemplate
         .EditDepartment()
+        .CurrentDeptName(
+            match model.OriginalProject with
+            | Some proj -> proj.Name
+            | None -> ""
+        )
         .Department(
             optionIntToString model.SelectedDept,
             fun deptIdStr -> dispatch (SetDepartment (int deptIdStr))
