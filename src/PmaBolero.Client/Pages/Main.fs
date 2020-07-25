@@ -21,14 +21,17 @@ type Page =
     // Use PageModel<'T> so no page model persists
     | [<EndPoint "/login">] SignIn of PageModel<SignIn.Model>
     | [<EndPoint "/signup">] SignUp of PageModel<SignUp.Model>
+    // Project pages
     | [<EndPoint "/project/all">] ViewProjects of PageModel<ViewGroup.Project.Model>
     | [<EndPoint "/project">] ViewProject of int * PageModel<ViewItem.Project.Model>
     | [<EndPoint "/project/add">] CreateProject of PageModel<Create.Project.Model>
     | [<EndPoint "/project/{id}/edit">] EditProject of id: int * PageModel<Edit.Project.Model>
+    // Employee pages
     | [<EndPoint "/employee/all">] ViewEmployees of PageModel<ViewGroup.Employee.Model>
     | [<EndPoint "/employee">] ViewEmployee of int * PageModel<ViewItem.Employee.Model>
     | [<EndPoint "/employee/add">] CreateEmployee of PageModel<Create.Employee.Model>
     | [<EndPoint "/employee/{id}/edit">] EditEmployee of id: int * PageModel<Edit.Employee.Model>
+    // Department pages
     | [<EndPoint "/department/all">] ViewDepartments of PageModel<ViewGroup.Department.Model>
     | [<EndPoint "/department">] ViewDepartment of int * PageModel<ViewItem.Department.Model>
 
@@ -51,7 +54,8 @@ let pageTitles page =
     | ViewDepartments -> "View All Departments"
     | ViewDepartment _ -> "View Department"
 
-// Change to match statement
+/// Check whether a given page should only be reached if the user is
+/// signed in.
 let authenticatedPages page =
     match page with
     | Home | ViewProjects | ViewEmployees | ViewDepartments
@@ -91,16 +95,20 @@ let initModel =
 
 let defaultModel = function
     | Home -> ()
+
     | SignIn model -> Router.definePageModel model SignIn.initModel
     | SignUp model -> Router.definePageModel model SignUp.initModel
+
     | ViewProjects model -> Router.definePageModel model ViewGroup.Project.initModel
     | ViewProject (_, model) -> Router.definePageModel model ViewItem.Project.initModel
     | CreateProject model -> Router.definePageModel model Create.Project.initModel
     | EditProject (_, model) -> Router.definePageModel model Edit.Project.initModel
+
     | ViewEmployees model -> Router.definePageModel model ViewGroup.Employee.initModel
     | ViewEmployee (_, model) -> Router.definePageModel model ViewItem.Employee.initModel
     | CreateEmployee model -> Router.definePageModel model Create.Employee.initModel
     | EditEmployee (_, model) -> Router.definePageModel model Edit.Employee.initModel
+
     | ViewDepartments model -> Router.definePageModel model ViewGroup.Department.initModel
     | ViewDepartment (_, model) -> Router.definePageModel model ViewItem.Department.initModel
 
@@ -113,7 +121,7 @@ type Message =
     | ToggleBurgerMenu
     | SendSignOut
     | RecvSignOut
-    | GetSignedInAs
+    | GetSignedInAs // Called when website is initialised
     | RecvSignedInAs of (string * Role) option
     | Error of exn
     | ClearError
@@ -121,38 +129,70 @@ type Message =
     | Redirect of string
     | RedirectSuccess of unit
 
+    // Wrapping of messages for each individual page
     | SignInMessage of SignIn.Message
     | SignUpMessage of SignUp.Message
-
-    | ViewDepartmentsMessage of ViewGroup.Department.Message
-    | ViewDepartmentMessage of ViewItem.Department.Message
-
-    | ViewEmployeesMessage of ViewGroup.Employee.Message
-    | ViewEmployeeMessage of ViewItem.Employee.Message
-    | CreateEmployeeMessage of Create.Employee.Message
-    | EditEmployeeMessage of Edit.Employee.Message
 
     | ViewProjectsMessage of ViewGroup.Project.Message
     | ViewProjectMessage of ViewItem.Project.Message
     | CreateProjectMessage of Create.Project.Message
     | EditProjectMessage of Edit.Project.Message
 
+    | ViewEmployeesMessage of ViewGroup.Employee.Message
+    | ViewEmployeeMessage of ViewItem.Employee.Message
+    | CreateEmployeeMessage of Create.Employee.Message
+    | EditEmployeeMessage of Edit.Employee.Message
+
+    | ViewDepartmentsMessage of ViewGroup.Department.Message
+    | ViewDepartmentMessage of ViewItem.Department.Message
+
+let initMessages model page =
+    let signInRole = model.IsSignedInAs |> Option.map snd
+    match page with
+    | ViewDepartments ->
+        Cmd.ofMsg (ViewDepartmentsMessage ViewGroup.Department.InitMessage)
+    | ViewDepartment (deptId, _) ->
+        Cmd.ofMsg (ViewDepartmentMessage (ViewItem.Department.InitMessage deptId))
+    | ViewEmployees ->
+        Cmd.ofMsg (ViewEmployeesMessage (ViewGroup.Employee.InitMessage signInRole))
+    | ViewEmployee (emplId, _) ->
+        Cmd.ofMsg (ViewEmployeeMessage (ViewItem.Employee.InitMessage (emplId, signInRole)))
+    | CreateEmployee ->
+        Cmd.ofMsg (CreateEmployeeMessage (Create.Employee.InitMessage))
+    | EditEmployee (emplId, _) ->
+        Cmd.ofMsg (EditEmployeeMessage (Edit.Employee.InitMessage emplId))
+    | ViewProjects ->
+        Cmd.ofMsg (ViewProjectsMessage (ViewGroup.Project.InitMessage signInRole))
+    | ViewProject (projId, _) ->
+        Cmd.ofMsg (ViewProjectMessage (ViewItem.Project.InitMessage (projId, signInRole)))
+    | CreateProject ->
+        Cmd.ofMsg (CreateProjectMessage Create.Project.InitMessage)
+    | EditProject (projId, _) ->
+        Cmd.ofMsg (EditProjectMessage (Edit.Project.InitMessage (projId, signInRole)))
+    | _ -> Cmd.none
+
 let update remotes (nm: NavigationManager) js message model =
 #if DEBUG
+    // Print messages for logging purposes
+    // Not a perfect solution as objects aren't very legible
     printfn "%A" message
 #endif
 
     match message, model.Page with
     | SetPage page, _ ->
-        // TODO: Refactor lengthy logic out of match statement
+        let shouldRedirectToLogin =
+            // Already checked cookie for signin
+            model.InitialSignInChecked &&
+            // After checking, the user is not signed in
+            Option.isNone model.IsSignedInAs &&
+            // The user is trying to visit a page that requires auth
+            authenticatedPages page
+
         let cmd =
-            if
-                model.InitialSignInChecked &&
-                Option.isNone model.IsSignedInAs &&
-                authenticatedPages page
-            then Cmd.ofMsg (Redirect "/login")
-            elif model.InitialSignInChecked && page = Page.Home
-            then Cmd.ofMsg (Redirect "/project/all")
+            if shouldRedirectToLogin then
+                Cmd.ofMsg (Redirect "/login")
+            elif model.InitialSignInChecked && page = Home then
+                Cmd.ofMsg (Redirect "/project/all")
             else
                 let pageTitleMessage =
                     pageTitles page
@@ -161,33 +201,11 @@ let update remotes (nm: NavigationManager) js message model =
                     |> Cmd.ofMsg
                 let initMessage =
                     if model.InitialSignInChecked
-                    then
-                        let signInRole = model.IsSignedInAs |> Option.map snd
-                        match page with
-                        | ViewDepartments ->
-                            Cmd.ofMsg (ViewDepartmentsMessage ViewGroup.Department.InitMessage)
-                        | ViewDepartment (deptId, _) ->
-                            Cmd.ofMsg (ViewDepartmentMessage (ViewItem.Department.InitMessage deptId))
-                        | ViewEmployees ->
-                            Cmd.ofMsg (ViewEmployeesMessage (ViewGroup.Employee.InitMessage signInRole))
-                        | ViewEmployee (emplId, _) ->
-                            Cmd.ofMsg (ViewEmployeeMessage (ViewItem.Employee.InitMessage (emplId, signInRole)))
-                        | CreateEmployee ->
-                            Cmd.ofMsg (CreateEmployeeMessage (Create.Employee.InitMessage))
-                        | EditEmployee (emplId, _) ->
-                            Cmd.ofMsg (EditEmployeeMessage (Edit.Employee.InitMessage emplId))
-                        | ViewProjects ->
-                            Cmd.ofMsg (ViewProjectsMessage (ViewGroup.Project.InitMessage signInRole))
-                        | ViewProject (projId, _) ->
-                            Cmd.ofMsg (ViewProjectMessage (ViewItem.Project.InitMessage (projId, signInRole)))
-                        | CreateProject ->
-                            Cmd.ofMsg (CreateProjectMessage Create.Project.InitMessage)
-                        | EditProject (projId, _) ->
-                            Cmd.ofMsg (EditProjectMessage (Edit.Project.InitMessage (projId, signInRole)))
-                        | _ -> Cmd.none
+                    then initMessages model page
                     else Cmd.none
 
                 Cmd.batch [ pageTitleMessage; initMessage ]
+
         { model with Page = page; NavMenuOpen = false }, cmd
     | SetTitle title, _ ->
         model, Cmd.ofJS js "setTitle" [| title |] SetTitleSuccess Error
@@ -294,7 +312,8 @@ let update remotes (nm: NavigationManager) js message model =
         model, Cmd.none
 #endif
 
-/// Connects the routing system to the Elmish application.
+/// Connects the routing system to the Elmish application, using default
+/// models defined in `defaultModel`
 let router = Router.inferWithModel SetPage (fun model -> model.Page) defaultModel
 
 type Main = Template<"wwwroot/main.html">
