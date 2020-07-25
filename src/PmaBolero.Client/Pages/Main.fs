@@ -18,18 +18,19 @@ open PmaBolero.Client.Models.EmployeeData
 /// Routing endpoints definition.
 type Page =
     | [<EndPoint "/">] Home
-    | [<EndPoint "/login">] SignIn
-    | [<EndPoint "/signup">] SignUp
-    | [<EndPoint "/project/all">] ViewProjects
-    | [<EndPoint "/project">] ViewProject of int
-    | [<EndPoint "/project/add">] CreateProject
-    | [<EndPoint "/project/{id}/edit">] EditProject of id: int
-    | [<EndPoint "/employee/all">] ViewEmployees
-    | [<EndPoint "/employee">] ViewEmployee of int
-    | [<EndPoint "/employee/add">] CreateEmployee
-    | [<EndPoint "/employee/{id}/edit">] EditEmployee of id: int
-    | [<EndPoint "/department/all">] ViewDepartments
-    | [<EndPoint "/department">] ViewDepartment of int
+    // Use PageModel<'T> so no page model persists
+    | [<EndPoint "/login">] SignIn of PageModel<SignIn.Model>
+    | [<EndPoint "/signup">] SignUp of PageModel<SignUp.Model>
+    | [<EndPoint "/project/all">] ViewProjects of PageModel<ViewGroup.Project.Model>
+    | [<EndPoint "/project">] ViewProject of int * PageModel<ViewItem.Project.Model>
+    | [<EndPoint "/project/add">] CreateProject of PageModel<Create.Project.Model>
+    | [<EndPoint "/project/{id}/edit">] EditProject of id: int * PageModel<Edit.Project.Model>
+    | [<EndPoint "/employee/all">] ViewEmployees of PageModel<ViewGroup.Employee.Model>
+    | [<EndPoint "/employee">] ViewEmployee of int * PageModel<ViewItem.Employee.Model>
+    | [<EndPoint "/employee/add">] CreateEmployee of PageModel<Create.Employee.Model>
+    | [<EndPoint "/employee/{id}/edit">] EditEmployee of id: int * PageModel<Edit.Employee.Model>
+    | [<EndPoint "/department/all">] ViewDepartments of PageModel<ViewGroup.Department.Model>
+    | [<EndPoint "/department">] ViewDepartment of int * PageModel<ViewItem.Department.Model>
 
 let pageTitles page =
     match page with
@@ -76,18 +77,6 @@ type Model =
         IsSignedInAs: (string * Role) option
         Error: string option
         Success: string option
-        SignInModel: SignIn.Model
-        SignUpModel: SignUp.Model
-        ViewDepartmentsModel: ViewGroup.Department.Model
-        ViewDepartmentModel: ViewItem.Department.Model
-        ViewEmployeesModel: ViewGroup.Employee.Model
-        ViewEmployeeModel: ViewItem.Employee.Model
-        CreateEmployeeModel: Create.Employee.Model
-        EditEmployeeModel: Edit.Employee.Model
-        ViewProjectsModel: ViewGroup.Project.Model
-        ViewProjectModel: ViewItem.Project.Model
-        CreateProjectModel: Create.Project.Model
-        EditProjectModel: Edit.Project.Model
     }
 
 let initModel =
@@ -98,19 +87,23 @@ let initModel =
         IsSignedInAs = None
         Error = None
         Success = None
-        SignInModel = SignIn.initModel
-        SignUpModel = SignUp.initModel
-        ViewDepartmentsModel = ViewGroup.Department.initModel
-        ViewDepartmentModel = ViewItem.Department.initModel
-        ViewEmployeesModel = ViewGroup.Employee.initModel
-        ViewEmployeeModel = ViewItem.Employee.initModel
-        CreateEmployeeModel = Create.Employee.initModel
-        EditEmployeeModel = Edit.Employee.initModel
-        ViewProjectsModel = ViewGroup.Project.initModel
-        ViewProjectModel = ViewItem.Project.initModel
-        CreateProjectModel = Create.Project.initModel
-        EditProjectModel = Edit.Project.initModel
     }
+
+let defaultModel = function
+    | Home -> ()
+    | SignIn model -> Router.definePageModel model SignIn.initModel
+    | SignUp model -> Router.definePageModel model SignUp.initModel
+    | ViewProjects model -> Router.definePageModel model ViewGroup.Project.initModel
+    | ViewProject (_, model) -> Router.definePageModel model ViewItem.Project.initModel
+    | CreateProject model -> Router.definePageModel model Create.Project.initModel
+    | EditProject (_, model) -> Router.definePageModel model Edit.Project.initModel
+    | ViewEmployees model -> Router.definePageModel model ViewGroup.Employee.initModel
+    | ViewEmployee (_, model) -> Router.definePageModel model ViewItem.Employee.initModel
+    | CreateEmployee model -> Router.definePageModel model Create.Employee.initModel
+    | EditEmployee (_, model) -> Router.definePageModel model Edit.Employee.initModel
+    | ViewDepartments model -> Router.definePageModel model ViewGroup.Department.initModel
+    | ViewDepartment (_, model) -> Router.definePageModel model ViewItem.Department.initModel
+
 
 /// The Elmish application's update messages.
 type Message =
@@ -149,8 +142,8 @@ let update remotes (nm: NavigationManager) js message model =
     printfn "%A" message
 #endif
 
-    match message with
-    | SetPage page ->
+    match message, model.Page with
+    | SetPage page, _ ->
         // TODO: Refactor lengthy logic out of match statement
         let cmd =
             if
@@ -173,129 +166,136 @@ let update remotes (nm: NavigationManager) js message model =
                         match page with
                         | ViewDepartments ->
                             Cmd.ofMsg (ViewDepartmentsMessage ViewGroup.Department.InitMessage)
-                        | ViewDepartment deptId ->
+                        | ViewDepartment (deptId, _) ->
                             Cmd.ofMsg (ViewDepartmentMessage (ViewItem.Department.InitMessage deptId))
                         | ViewEmployees ->
                             Cmd.ofMsg (ViewEmployeesMessage (ViewGroup.Employee.InitMessage signInRole))
-                        | ViewEmployee emplId ->
+                        | ViewEmployee (emplId, _) ->
                             Cmd.ofMsg (ViewEmployeeMessage (ViewItem.Employee.InitMessage (emplId, signInRole)))
                         | CreateEmployee ->
                             Cmd.ofMsg (CreateEmployeeMessage (Create.Employee.InitMessage))
-                        | EditEmployee emplId ->
+                        | EditEmployee (emplId, _) ->
                             Cmd.ofMsg (EditEmployeeMessage (Edit.Employee.InitMessage emplId))
                         | ViewProjects ->
                             Cmd.ofMsg (ViewProjectsMessage (ViewGroup.Project.InitMessage signInRole))
-                        | ViewProject projId ->
+                        | ViewProject (projId, _) ->
                             Cmd.ofMsg (ViewProjectMessage (ViewItem.Project.InitMessage (projId, signInRole)))
                         | CreateProject ->
                             Cmd.ofMsg (CreateProjectMessage Create.Project.InitMessage)
-                        | EditProject projId ->
+                        | EditProject (projId, _) ->
                             Cmd.ofMsg (EditProjectMessage (Edit.Project.InitMessage (projId, signInRole)))
                         | _ -> Cmd.none
                     else Cmd.none
 
                 Cmd.batch [ pageTitleMessage; initMessage ]
-        {
-            model with
-                Page = page
-                NavMenuOpen = false
-                SignInModel = SignIn.initModel
-                SignUpModel = SignUp.initModel }, cmd
-    | SetTitle title ->
+        { model with Page = page; NavMenuOpen = false }, cmd
+    | SetTitle title, _ ->
         model, Cmd.ofJS js "setTitle" [| title |] SetTitleSuccess Error
-    | SetTitleSuccess ->
+    | SetTitleSuccess, _ ->
         model, Cmd.none
 
-    | ToggleBurgerMenu ->
+    | ToggleBurgerMenu, _ ->
         { model with NavMenuOpen = not model.NavMenuOpen }, Cmd.none
 
-    | SendSignOut ->
+    | SendSignOut, _ ->
         model, Cmd.ofAsync remotes.Auth.signOut () (fun () -> RecvSignOut) Error
-    | RecvSignOut ->
+    | RecvSignOut, _ ->
         { model with IsSignedInAs = None}, Cmd.ofMsg (Redirect "/login")
-    | GetSignedInAs ->
+    | GetSignedInAs, _ ->
         model, Cmd.ofAuthorized remotes.Auth.getUser () RecvSignedInAs Error
-    | RecvSignedInAs user ->
+    | RecvSignedInAs user, _ ->
         { model with IsSignedInAs = user; InitialSignInChecked = true }, Cmd.ofMsg (SetPage model.Page)
 
-    | Redirect url ->
+    | Redirect url, _ ->
         let cmd = Cmd.performFunc (fun url -> nm.NavigateTo(url, false)) url RedirectSuccess
         model, cmd
-    | RedirectSuccess _ ->
+    | RedirectSuccess _, _ ->
         model, Cmd.none
 
-    | Error RemoteUnauthorizedException ->
+    | Error RemoteUnauthorizedException, _ ->
         {
             model
                 with
                     Error = Some "You have been logged out."
                     IsSignedInAs = None
         }, Cmd.none
-    | Error exn ->
+    | Error exn, _ ->
         { model with Error = Some exn.Message }, Cmd.none
-    | ClearError -> 
+    | ClearError, _ -> 
         { model with Error = None }, Cmd.none
-    | ClearSuccess ->
+    | ClearSuccess, _ ->
         { model with Success = None}, Cmd.none
 
-    | SignInMessage (SignIn.SignInSuccess (username, role)) ->
+    | SignInMessage (SignIn.SignInSuccess (username, role)), _ ->
         {
             model with
                 IsSignedInAs = Some (username, role);
-                SignInModel = SignIn.initModel // No longer necessary on redirect
         }, Cmd.ofMsg (Redirect "/project/all")
-    | SignInMessage msg ->
-        let signInModel, cmd = SignIn.update remotes.Auth msg model.SignInModel
-        { model with SignInModel = signInModel}, Cmd.map SignInMessage cmd
+    | SignInMessage msg, SignIn pgModel ->
+        let signInModel, cmd = SignIn.update remotes.Auth msg pgModel.Model
+        { model with Page = SignIn { Model = signInModel }}, Cmd.map SignInMessage cmd
 
-    | SignUpMessage (SignUp.SignUpSuccess) ->
+    | SignUpMessage (SignUp.SignUpSuccess), _ ->
         {
             model with
                 Success = Some "Successfully created account. Please sign in."
         }, Cmd.ofMsg (Redirect "/login")
-    | SignUpMessage msg ->
-        let signUpModel, cmd = SignUp.update remotes.Auth msg model.SignUpModel
-        { model with SignUpModel = signUpModel }, Cmd.map SignUpMessage cmd
+    | SignUpMessage msg, SignUp pgModel ->
+        let signUpModel, cmd = SignUp.update remotes.Auth msg pgModel.Model
+        { model with Page = SignUp { Model = signUpModel } }, Cmd.map SignUpMessage cmd
 
-    | ViewDepartmentsMessage msg ->
-        let viewDeptModel, cmd = ViewGroup.Department.update remotes.Department msg model.ViewDepartmentsModel
-        { model with ViewDepartmentsModel = viewDeptModel }, Cmd.map ViewDepartmentsMessage cmd
-    | ViewDepartmentMessage msg ->
-        let viewDeptModel, cmd = ViewItem.Department.update remotes.Department msg model.ViewDepartmentModel
-        { model with ViewDepartmentModel = viewDeptModel }, Cmd.map ViewDepartmentMessage cmd
+    | ViewDepartmentsMessage msg, ViewDepartments pgModel ->
+        let viewDeptModel, cmd = ViewGroup.Department.update remotes.Department msg pgModel.Model
+        { model with Page = ViewDepartments { Model = viewDeptModel} }, Cmd.map ViewDepartmentsMessage cmd
+    | ViewDepartmentMessage msg, ViewDepartment (deptId, pgModel) ->
+        let viewDeptModel, cmd = ViewItem.Department.update remotes.Department msg pgModel.Model
+        { model with Page = ViewDepartment (deptId, { Model = viewDeptModel }) }, Cmd.map ViewDepartmentMessage cmd
 
-    | ViewEmployeesMessage msg ->
-        let viewEmplsModel, cmd = ViewGroup.Employee.update remotes.Employee msg model.ViewEmployeesModel
-        { model with ViewEmployeesModel = viewEmplsModel }, Cmd.map ViewEmployeesMessage cmd
-    | ViewEmployeeMessage msg ->
-        let viewEmplModel, cmd = ViewItem.Employee.update remotes.Employee msg model.ViewEmployeeModel
-        { model with ViewEmployeeModel = viewEmplModel }, Cmd.map ViewEmployeeMessage cmd
-    | CreateEmployeeMessage (Create.Employee.Redirect url) ->
+    | ViewEmployeesMessage msg, ViewEmployees pgModel ->
+        let viewEmplsModel, cmd = ViewGroup.Employee.update remotes.Employee msg pgModel.Model
+        { model with Page = ViewEmployees { Model = viewEmplsModel } }, Cmd.map ViewEmployeesMessage cmd
+    | ViewEmployeeMessage msg, ViewEmployee (emplId, pgModel) ->
+        let viewEmplModel, cmd = ViewItem.Employee.update remotes.Employee msg pgModel.Model
+        { model with Page = ViewEmployee (emplId, { Model = viewEmplModel }) }, Cmd.map ViewEmployeeMessage cmd
+    | CreateEmployeeMessage (Create.Employee.Redirect url), _ ->
         model, Cmd.ofMsg (Redirect url)
-    | CreateEmployeeMessage msg ->
-        let createEmplModel, cmd = Create.Employee.update remotes.Employee remotes.Department msg model.CreateEmployeeModel
-        { model with CreateEmployeeModel = createEmplModel }, Cmd.map CreateEmployeeMessage cmd
-    | EditEmployeeMessage msg ->
-        let editEmplModel, cmd = Edit.Employee.update remotes.Employee remotes.Department msg model.EditEmployeeModel
-        { model with EditEmployeeModel = editEmplModel }, Cmd.map EditEmployeeMessage cmd
+    | CreateEmployeeMessage msg, CreateEmployee pgModel ->
+        let createEmplModel, cmd = Create.Employee.update remotes.Employee remotes.Department msg pgModel.Model
+        { model with Page = CreateEmployee { Model = createEmplModel } }, Cmd.map CreateEmployeeMessage cmd
+    | EditEmployeeMessage msg, EditEmployee (emplId, pgModel) ->
+        let editEmplModel, cmd = Edit.Employee.update remotes.Employee remotes.Department msg pgModel.Model
+        { model with Page = EditEmployee (emplId, { Model = editEmplModel }) }, Cmd.map EditEmployeeMessage cmd
 
-    | ViewProjectsMessage msg ->
-        let viewProjsModel, cmd = ViewGroup.Project.update remotes.Project msg model.ViewProjectsModel
-        { model with ViewProjectsModel = viewProjsModel }, Cmd.map ViewProjectsMessage cmd
-    | ViewProjectMessage msg ->
-        let viewProjModel, cmd = ViewItem.Project.update remotes.Project msg model.ViewProjectModel
-        { model with ViewProjectModel = viewProjModel }, Cmd.map ViewProjectMessage cmd
-    | CreateProjectMessage (Create.Project.Redirect url) ->
+    | ViewProjectsMessage msg, ViewProjects pgModel ->
+        let viewProjsModel, cmd = ViewGroup.Project.update remotes.Project msg pgModel.Model
+        { model with Page = ViewProjects { Model = viewProjsModel } }, Cmd.map ViewProjectsMessage cmd
+    | ViewProjectMessage msg, ViewProject (projId, pgModel) ->
+        let viewProjModel, cmd = ViewItem.Project.update remotes.Project msg pgModel.Model
+        { model with Page = ViewProject (projId, { Model = viewProjModel }) }, Cmd.map ViewProjectMessage cmd
+    | CreateProjectMessage (Create.Project.Redirect url), _ ->
         model, Cmd.ofMsg (Redirect url)
-    | CreateProjectMessage msg ->
-        let createProjModel, cmd = Create.Project.update remotes.Project remotes.Employee remotes.Department msg model.CreateProjectModel
-        { model with CreateProjectModel = createProjModel }, Cmd.map CreateProjectMessage cmd
-    | EditProjectMessage msg ->
-        let editProjModel, cmd = Edit.Project.update remotes.Project remotes.Employee remotes.Department msg model.EditProjectModel
-        { model with EditProjectModel = editProjModel }, Cmd.map EditProjectMessage cmd
+    | CreateProjectMessage msg, CreateProject pgModel ->
+        let createProjModel, cmd = Create.Project.update remotes.Project remotes.Employee remotes.Department msg pgModel.Model
+        { model with Page = CreateProject { Model = createProjModel } }, Cmd.map CreateProjectMessage cmd
+    | EditProjectMessage msg, EditProject (projId, pgModel) ->
+        let editProjModel, cmd = Edit.Project.update remotes.Project remotes.Employee remotes.Department msg pgModel.Model
+        { model with Page = EditProject (projId, { Model = editProjModel }) }, Cmd.map EditProjectMessage cmd
+    | msg ->
+#if DEBUG
+        { 
+            model with
+                Error =
+                    msg
+                    |> string
+                    |> sprintf "Unhandled message: %s"
+                    |> Some
+        }, Cmd.none
+#else
+        model, Cmd.none
+#endif
 
 /// Connects the routing system to the Elmish application.
-let router = Router.infer SetPage (fun model -> model.Page)
+let router = Router.inferWithModel SetPage (fun model -> model.Page) defaultModel
 
 type Main = Template<"wwwroot/main.html">
 
@@ -345,21 +345,21 @@ let view model dispatch =
         .Body(
             cond model.Page <| function
             | Home -> homePage model dispatch
-            | SignIn -> SignIn.view model.SignInModel (mapDispatch SignInMessage)
-            | SignUp -> SignUp.view model.SignUpModel (mapDispatch SignUpMessage)
+            | SignIn pgModel -> SignIn.view pgModel.Model (mapDispatch SignInMessage)
+            | SignUp pgModel -> SignUp.view pgModel.Model (mapDispatch SignUpMessage)
 
-            | ViewDepartments -> ViewGroup.Department.view model.ViewDepartmentsModel (mapDispatch ViewDepartmentsMessage)
-            | ViewDepartment _ -> ViewItem.Department.view model.ViewDepartmentModel (mapDispatch ViewDepartmentMessage)
+            | ViewDepartments pgModel -> ViewGroup.Department.view pgModel.Model (mapDispatch ViewDepartmentsMessage)
+            | ViewDepartment (_, pgModel) -> ViewItem.Department.view pgModel.Model (mapDispatch ViewDepartmentMessage)
 
-            | ViewEmployees -> ViewGroup.Employee.view model.ViewEmployeesModel (mapDispatch ViewEmployeesMessage)
-            | ViewEmployee _ -> ViewItem.Employee.view model.ViewEmployeeModel (mapDispatch ViewEmployeeMessage)
-            | CreateEmployee -> Create.Employee.view model.CreateEmployeeModel (mapDispatch CreateEmployeeMessage)
-            | EditEmployee _ -> Edit.Employee.view model.EditEmployeeModel (mapDispatch EditEmployeeMessage)
+            | ViewEmployees pgModel -> ViewGroup.Employee.view pgModel.Model (mapDispatch ViewEmployeesMessage)
+            | ViewEmployee (_, pgModel) -> ViewItem.Employee.view pgModel.Model (mapDispatch ViewEmployeeMessage)
+            | CreateEmployee pgModel -> Create.Employee.view pgModel.Model (mapDispatch CreateEmployeeMessage)
+            | EditEmployee (_, pgModel) -> Edit.Employee.view pgModel.Model (mapDispatch EditEmployeeMessage)
 
-            | ViewProjects -> ViewGroup.Project.view model.ViewProjectsModel (mapDispatch ViewProjectsMessage)
-            | ViewProject _ -> ViewItem.Project.view model.ViewProjectModel (mapDispatch ViewProjectMessage)
-            | CreateProject -> Create.Project.view model.CreateProjectModel (mapDispatch CreateProjectMessage)
-            | EditProject _ -> Edit.Project.view model.EditProjectModel (mapDispatch EditProjectMessage)
+            | ViewProjects pgModel -> ViewGroup.Project.view pgModel.Model (mapDispatch ViewProjectsMessage)
+            | ViewProject (_, pgModel) -> ViewItem.Project.view pgModel.Model (mapDispatch ViewProjectMessage)
+            | CreateProject pgModel -> Create.Project.view pgModel.Model (mapDispatch CreateProjectMessage)
+            | EditProject (_, pgModel) -> Edit.Project.view pgModel.Model (mapDispatch EditProjectMessage)
         )
         .MainNotification(
             cond model.Error <| function
