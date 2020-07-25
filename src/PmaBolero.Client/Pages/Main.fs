@@ -299,8 +299,7 @@ let router = Router.infer SetPage (fun model -> model.Page)
 
 type Main = Template<"wwwroot/main.html">
 
-let homePage model dispatch =
-    Main.Home().Elt()
+let homePage model dispatch = empty
 
 let navMenu model dispatch =
     Main.Navigation()
