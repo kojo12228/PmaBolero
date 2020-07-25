@@ -47,7 +47,10 @@ let update remote message model =
     | SendSignIn ->
         model, Cmd.ofAsync remote.signIn (model.Username, model.Password) RecvSignIn Error
     | RecvSignIn None ->
-        { model with Error = Some "Sign in failed." }, Cmd.none
+        {
+            model with
+                Error = Some "Sign in failed. Try creating a new account at \"Sign Up\" (new accounts are removed on redeployment)."
+        }, Cmd.none
     | RecvSignIn (Some username) ->
         model, Cmd.ofMsg (SignInSuccess username)
 
