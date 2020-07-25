@@ -1,4 +1,4 @@
-module PmaBolero.Client.SignIn
+module PmaBolero.Client.Pages.Auth.SignIn
 
 open System
 open Elmish

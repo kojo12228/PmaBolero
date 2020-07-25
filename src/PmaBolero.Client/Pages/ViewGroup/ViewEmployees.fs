@@ -1,4 +1,4 @@
-module PmaBolero.Client.ViewEmployees
+module PmaBolero.Client.Pages.ViewGroup.Employee
 
 open System
 open Elmish
@@ -14,7 +14,7 @@ open PmaBolero.Client.Models.EmployeeData
 type Model =
     {
         SignInRole: Auth.Role option
-        TilesModel: TilesTemplate.Model<Employee>
+        TilesModel: ViewGroup.Model<Employee>
     }
 
 let initModel: Model =
@@ -34,20 +34,20 @@ type Message =
     | InitMessage of Auth.Role option
     | DeleteEmployee of int
     | DeleteReturn of option<option<int>>
-    | TilesMessage of TilesTemplate.Message<Employee>
+    | TilesMessage of ViewGroup.Message<Employee>
 
 let update remote (message: Message) (model: Model) =
     match message with
     | InitMessage role ->
-        { model with SignInRole = role}, Cmd.ofMsg (TilesMessage TilesTemplate.InitMessage)
+        { model with SignInRole = role}, Cmd.ofMsg (TilesMessage ViewGroup.InitMessage)
     | DeleteEmployee emplId ->
-        model, Cmd.ofAuthorized remote.deleteEmployee emplId DeleteReturn (TilesMessage << TilesTemplate.Error)
+        model, Cmd.ofAuthorized remote.deleteEmployee emplId DeleteReturn (TilesMessage << ViewGroup.Error)
     | DeleteReturn ->
-        model, Cmd.ofMsg (TilesMessage TilesTemplate.InitMessage)
+        model, Cmd.ofMsg (TilesMessage ViewGroup.InitMessage)
     | TilesMessage msg ->
         let getDataFunc = remote.getEmployees
 
-        let updatedModel, cmd = TilesTemplate.update getDataFunc msg model.TilesModel
+        let updatedModel, cmd = ViewGroup.update getDataFunc msg model.TilesModel
         { model with TilesModel = updatedModel }, Cmd.map TilesMessage cmd
 
 type ViewEmployeesPage = Template<"wwwroot/viewemployees.html">
@@ -118,4 +118,4 @@ let generateTile signInRole dispatch (employee: Employee) =
 
 let view (model: Model) dispatch =
     let mappedDispatch = TilesMessage >> dispatch
-    TilesTemplate.view (generateTile model.SignInRole dispatch) model.TilesModel mappedDispatch
+    ViewGroup.view (generateTile model.SignInRole dispatch) model.TilesModel mappedDispatch

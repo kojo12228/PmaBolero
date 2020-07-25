@@ -1,4 +1,4 @@
-module PmaBolero.Client.TilesTemplate
+module PmaBolero.Client.Pages.ViewGroup.ViewGroup
 
 open System
 open Elmish

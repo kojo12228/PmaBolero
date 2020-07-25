@@ -1,4 +1,4 @@
-module PmaBolero.Client.ViewDepartment
+module PmaBolero.Client.Pages.ViewItem.Department
 
 open System
 open Elmish
@@ -10,7 +10,7 @@ open Bolero.Templating.Client
 
 open PmaBolero.Client.Models.EmployeeData
 
-type Model = ViewSingle.Model<Department>
+type Model = ViewItem.Model<Department>
 
 let initModel: Model =
     {
@@ -24,17 +24,17 @@ let initModel: Model =
 
 type Message =
     | InitMessage of int
-    | TileMessage of ViewSingle.Message<Department>
+    | TileMessage of ViewItem.Message<Department>
 
 let update remote message model =
     let getDataFunc = remote.getDepartment
 
     let tileMsg =
         match message with
-        | InitMessage deptId -> ViewSingle.InitMessage deptId
+        | InitMessage deptId -> ViewItem.InitMessage deptId
         | TileMessage msg -> msg
 
-    ViewSingle.update getDataFunc tileMsg model
+    ViewItem.update getDataFunc tileMsg model
     |> fun (model, cmd) -> model, Cmd.map TileMessage cmd
 
 type ViewDepartmentPage = Template<"wwwroot/viewdepartment.html">
@@ -92,4 +92,4 @@ let view (model: Model) dispatch =
     let deptTitle (dept: Department) = dept.Name
 
     let mappedDispatch = TileMessage >> dispatch
-    ViewSingle.view generateTile deptTitle model mappedDispatch
+    ViewItem.view generateTile deptTitle model mappedDispatch

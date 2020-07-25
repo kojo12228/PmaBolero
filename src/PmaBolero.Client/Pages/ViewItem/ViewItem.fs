@@ -1,4 +1,4 @@
-module PmaBolero.Client.ViewSingle
+module PmaBolero.Client.Pages.ViewItem.ViewItem
 
 open System
 open Elmish

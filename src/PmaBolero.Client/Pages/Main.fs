@@ -1,4 +1,4 @@
-module PmaBolero.Client.Main
+module PmaBolero.Client.Pages.Main
 
 open System
 open Elmish
@@ -9,8 +9,8 @@ open Bolero.Remoting.Client
 open Bolero.Templating.Client
 open Microsoft.AspNetCore.Components
 
-open PmaBolero.Client.SignIn
-open PmaBolero.Client.SignUp
+open PmaBolero.Client
+open PmaBolero.Client.Pages.Auth
 open PmaBolero.Client.Models.Auth
 open PmaBolero.Client.Helpers.ErrorNotification
 open PmaBolero.Client.Models.EmployeeData
@@ -78,16 +78,16 @@ type Model =
         Success: string option
         SignInModel: SignIn.Model
         SignUpModel: SignUp.Model
-        ViewDepartmentsModel: ViewDepartments.Model
-        ViewDepartmentModel: ViewDepartment.Model
-        ViewEmployeesModel: ViewEmployees.Model
-        ViewEmployeeModel: ViewEmployee.Model
-        CreateEmployeeModel: CreateEmployee.Model
-        EditEmployeeModel: EditEmployee.Model
-        ViewProjectsModel: ViewProjects.Model
-        ViewProjectModel: ViewProject.Model
-        CreateProjectModel: CreateProject.Model
-        EditProjectModel: EditProject.Model
+        ViewDepartmentsModel: ViewGroup.Department.Model
+        ViewDepartmentModel: ViewItem.Department.Model
+        ViewEmployeesModel: ViewGroup.Employee.Model
+        ViewEmployeeModel: ViewItem.Employee.Model
+        CreateEmployeeModel: Create.Employee.Model
+        EditEmployeeModel: Edit.Employee.Model
+        ViewProjectsModel: ViewGroup.Project.Model
+        ViewProjectModel: ViewItem.Project.Model
+        CreateProjectModel: Create.Project.Model
+        EditProjectModel: Edit.Project.Model
     }
 
 let initModel =
@@ -100,16 +100,16 @@ let initModel =
         Success = None
         SignInModel = SignIn.initModel
         SignUpModel = SignUp.initModel
-        ViewDepartmentsModel = ViewDepartments.initModel
-        ViewDepartmentModel = ViewDepartment.initModel
-        ViewEmployeesModel = ViewEmployees.initModel
-        ViewEmployeeModel = ViewEmployee.initModel
-        CreateEmployeeModel = CreateEmployee.initModel
-        EditEmployeeModel = EditEmployee.initModel
-        ViewProjectsModel = ViewProjects.initModel
-        ViewProjectModel = ViewProject.initModel
-        CreateProjectModel = CreateProject.initModel
-        EditProjectModel = EditProject.initModel
+        ViewDepartmentsModel = ViewGroup.Department.initModel
+        ViewDepartmentModel = ViewItem.Department.initModel
+        ViewEmployeesModel = ViewGroup.Employee.initModel
+        ViewEmployeeModel = ViewItem.Employee.initModel
+        CreateEmployeeModel = Create.Employee.initModel
+        EditEmployeeModel = Edit.Employee.initModel
+        ViewProjectsModel = ViewGroup.Project.initModel
+        ViewProjectModel = ViewItem.Project.initModel
+        CreateProjectModel = Create.Project.initModel
+        EditProjectModel = Edit.Project.initModel
     }
 
 /// The Elmish application's update messages.
@@ -131,18 +131,18 @@ type Message =
     | SignInMessage of SignIn.Message
     | SignUpMessage of SignUp.Message
 
-    | ViewDepartmentsMessage of ViewDepartments.Message
-    | ViewDepartmentMessage of ViewDepartment.Message
+    | ViewDepartmentsMessage of ViewGroup.Department.Message
+    | ViewDepartmentMessage of ViewItem.Department.Message
 
-    | ViewEmployeesMessage of ViewEmployees.Message
-    | ViewEmployeeMessage of ViewEmployee.Message
-    | CreateEmployeeMessage of CreateEmployee.Message
-    | EditEmployeeMessage of EditEmployee.Message
+    | ViewEmployeesMessage of ViewGroup.Employee.Message
+    | ViewEmployeeMessage of ViewItem.Employee.Message
+    | CreateEmployeeMessage of Create.Employee.Message
+    | EditEmployeeMessage of Edit.Employee.Message
 
-    | ViewProjectsMessage of ViewProjects.Message
-    | ViewProjectMessage of ViewProject.Message
-    | CreateProjectMessage of CreateProject.Message
-    | EditProjectMessage of EditProject.Message
+    | ViewProjectsMessage of ViewGroup.Project.Message
+    | ViewProjectMessage of ViewItem.Project.Message
+    | CreateProjectMessage of Create.Project.Message
+    | EditProjectMessage of Edit.Project.Message
 
 let update remotes (nm: NavigationManager) js message model =
 #if DEBUG
@@ -172,25 +172,25 @@ let update remotes (nm: NavigationManager) js message model =
                         let signInRole = model.IsSignedInAs |> Option.map snd
                         match page with
                         | ViewDepartments ->
-                            Cmd.ofMsg (ViewDepartmentsMessage ViewDepartments.InitMessage)
+                            Cmd.ofMsg (ViewDepartmentsMessage ViewGroup.Department.InitMessage)
                         | ViewDepartment deptId ->
-                            Cmd.ofMsg (ViewDepartmentMessage (ViewDepartment.InitMessage deptId))
+                            Cmd.ofMsg (ViewDepartmentMessage (ViewItem.Department.InitMessage deptId))
                         | ViewEmployees ->
-                            Cmd.ofMsg (ViewEmployeesMessage (ViewEmployees.InitMessage signInRole))
+                            Cmd.ofMsg (ViewEmployeesMessage (ViewGroup.Employee.InitMessage signInRole))
                         | ViewEmployee emplId ->
-                            Cmd.ofMsg (ViewEmployeeMessage (ViewEmployee.InitMessage (emplId, signInRole)))
+                            Cmd.ofMsg (ViewEmployeeMessage (ViewItem.Employee.InitMessage (emplId, signInRole)))
                         | CreateEmployee ->
-                            Cmd.ofMsg (CreateEmployeeMessage (CreateEmployee.InitMessage))
+                            Cmd.ofMsg (CreateEmployeeMessage (Create.Employee.InitMessage))
                         | EditEmployee emplId ->
-                            Cmd.ofMsg (EditEmployeeMessage (EditEmployee.InitMessage emplId))
+                            Cmd.ofMsg (EditEmployeeMessage (Edit.Employee.InitMessage emplId))
                         | ViewProjects ->
-                            Cmd.ofMsg (ViewProjectsMessage (ViewProjects.InitMessage signInRole))
+                            Cmd.ofMsg (ViewProjectsMessage (ViewGroup.Project.InitMessage signInRole))
                         | ViewProject projId ->
-                            Cmd.ofMsg (ViewProjectMessage (ViewProject.InitMessage (projId, signInRole)))
+                            Cmd.ofMsg (ViewProjectMessage (ViewItem.Project.InitMessage (projId, signInRole)))
                         | CreateProject ->
-                            Cmd.ofMsg (CreateProjectMessage CreateProject.InitMessage)
+                            Cmd.ofMsg (CreateProjectMessage Create.Project.InitMessage)
                         | EditProject projId ->
-                            Cmd.ofMsg (EditProjectMessage (EditProject.InitMessage (projId, signInRole)))
+                            Cmd.ofMsg (EditProjectMessage (Edit.Project.InitMessage (projId, signInRole)))
                         | _ -> Cmd.none
                     else Cmd.none
 
@@ -238,7 +238,7 @@ let update remotes (nm: NavigationManager) js message model =
     | ClearSuccess ->
         { model with Success = None}, Cmd.none
 
-    | SignInMessage (SignInSuccess (username, role)) ->
+    | SignInMessage (SignIn.SignInSuccess (username, role)) ->
         {
             model with
                 IsSignedInAs = Some (username, role);
@@ -248,7 +248,7 @@ let update remotes (nm: NavigationManager) js message model =
         let signInModel, cmd = SignIn.update remotes.Auth msg model.SignInModel
         { model with SignInModel = signInModel}, Cmd.map SignInMessage cmd
 
-    | SignUpMessage (SignUpSuccess) ->
+    | SignUpMessage (SignUp.SignUpSuccess) ->
         {
             model with
                 Success = Some "Successfully created account. Please sign in."
@@ -258,40 +258,40 @@ let update remotes (nm: NavigationManager) js message model =
         { model with SignUpModel = signUpModel }, Cmd.map SignUpMessage cmd
 
     | ViewDepartmentsMessage msg ->
-        let viewDeptModel, cmd = ViewDepartments.update remotes.Department msg model.ViewDepartmentsModel
+        let viewDeptModel, cmd = ViewGroup.Department.update remotes.Department msg model.ViewDepartmentsModel
         { model with ViewDepartmentsModel = viewDeptModel }, Cmd.map ViewDepartmentsMessage cmd
     | ViewDepartmentMessage msg ->
-        let viewDeptModel, cmd = ViewDepartment.update remotes.Department msg model.ViewDepartmentModel
+        let viewDeptModel, cmd = ViewItem.Department.update remotes.Department msg model.ViewDepartmentModel
         { model with ViewDepartmentModel = viewDeptModel }, Cmd.map ViewDepartmentMessage cmd
 
     | ViewEmployeesMessage msg ->
-        let viewEmplsModel, cmd = ViewEmployees.update remotes.Employee msg model.ViewEmployeesModel
+        let viewEmplsModel, cmd = ViewGroup.Employee.update remotes.Employee msg model.ViewEmployeesModel
         { model with ViewEmployeesModel = viewEmplsModel }, Cmd.map ViewEmployeesMessage cmd
     | ViewEmployeeMessage msg ->
-        let viewEmplModel, cmd = ViewEmployee.update remotes.Employee msg model.ViewEmployeeModel
+        let viewEmplModel, cmd = ViewItem.Employee.update remotes.Employee msg model.ViewEmployeeModel
         { model with ViewEmployeeModel = viewEmplModel }, Cmd.map ViewEmployeeMessage cmd
-    | CreateEmployeeMessage (CreateEmployee.Redirect url) ->
+    | CreateEmployeeMessage (Create.Employee.Redirect url) ->
         model, Cmd.ofMsg (Redirect url)
     | CreateEmployeeMessage msg ->
-        let createEmplModel, cmd = CreateEmployee.update remotes.Employee remotes.Department msg model.CreateEmployeeModel
+        let createEmplModel, cmd = Create.Employee.update remotes.Employee remotes.Department msg model.CreateEmployeeModel
         { model with CreateEmployeeModel = createEmplModel }, Cmd.map CreateEmployeeMessage cmd
     | EditEmployeeMessage msg ->
-        let editEmplModel, cmd = EditEmployee.update remotes.Employee remotes.Department msg model.EditEmployeeModel
+        let editEmplModel, cmd = Edit.Employee.update remotes.Employee remotes.Department msg model.EditEmployeeModel
         { model with EditEmployeeModel = editEmplModel }, Cmd.map EditEmployeeMessage cmd
 
     | ViewProjectsMessage msg ->
-        let viewProjsModel, cmd = ViewProjects.update remotes.Project msg model.ViewProjectsModel
+        let viewProjsModel, cmd = ViewGroup.Project.update remotes.Project msg model.ViewProjectsModel
         { model with ViewProjectsModel = viewProjsModel }, Cmd.map ViewProjectsMessage cmd
     | ViewProjectMessage msg ->
-        let viewProjModel, cmd = ViewProject.update remotes.Project msg model.ViewProjectModel
+        let viewProjModel, cmd = ViewItem.Project.update remotes.Project msg model.ViewProjectModel
         { model with ViewProjectModel = viewProjModel }, Cmd.map ViewProjectMessage cmd
-    | CreateProjectMessage (CreateProject.Redirect url) ->
+    | CreateProjectMessage (Create.Project.Redirect url) ->
         model, Cmd.ofMsg (Redirect url)
     | CreateProjectMessage msg ->
-        let createProjModel, cmd = CreateProject.update remotes.Project remotes.Employee remotes.Department msg model.CreateProjectModel
+        let createProjModel, cmd = Create.Project.update remotes.Project remotes.Employee remotes.Department msg model.CreateProjectModel
         { model with CreateProjectModel = createProjModel }, Cmd.map CreateProjectMessage cmd
     | EditProjectMessage msg ->
-        let editProjModel, cmd = EditProject.update remotes.Project remotes.Employee remotes.Department msg model.EditProjectModel
+        let editProjModel, cmd = Edit.Project.update remotes.Project remotes.Employee remotes.Department msg model.EditProjectModel
         { model with EditProjectModel = editProjModel }, Cmd.map EditProjectMessage cmd
 
 /// Connects the routing system to the Elmish application.
@@ -349,18 +349,18 @@ let view model dispatch =
             | SignIn -> SignIn.view model.SignInModel (mapDispatch SignInMessage)
             | SignUp -> SignUp.view model.SignUpModel (mapDispatch SignUpMessage)
 
-            | ViewDepartments -> ViewDepartments.view model.ViewDepartmentsModel (mapDispatch ViewDepartmentsMessage)
-            | ViewDepartment _ -> ViewDepartment.view model.ViewDepartmentModel (mapDispatch ViewDepartmentMessage)
+            | ViewDepartments -> ViewGroup.Department.view model.ViewDepartmentsModel (mapDispatch ViewDepartmentsMessage)
+            | ViewDepartment _ -> ViewItem.Department.view model.ViewDepartmentModel (mapDispatch ViewDepartmentMessage)
 
-            | ViewEmployees -> ViewEmployees.view model.ViewEmployeesModel (mapDispatch ViewEmployeesMessage)
-            | ViewEmployee _ -> ViewEmployee.view model.ViewEmployeeModel (mapDispatch ViewEmployeeMessage)
-            | CreateEmployee -> CreateEmployee.view model.CreateEmployeeModel (mapDispatch CreateEmployeeMessage)
-            | EditEmployee _ -> EditEmployee.view model.EditEmployeeModel (mapDispatch EditEmployeeMessage)
+            | ViewEmployees -> ViewGroup.Employee.view model.ViewEmployeesModel (mapDispatch ViewEmployeesMessage)
+            | ViewEmployee _ -> ViewItem.Employee.view model.ViewEmployeeModel (mapDispatch ViewEmployeeMessage)
+            | CreateEmployee -> Create.Employee.view model.CreateEmployeeModel (mapDispatch CreateEmployeeMessage)
+            | EditEmployee _ -> Edit.Employee.view model.EditEmployeeModel (mapDispatch EditEmployeeMessage)
 
-            | ViewProjects -> ViewProjects.view model.ViewProjectsModel (mapDispatch ViewProjectsMessage)
-            | ViewProject _ -> ViewProject.view model.ViewProjectModel (mapDispatch ViewProjectMessage)
-            | CreateProject -> CreateProject.view model.CreateProjectModel (mapDispatch CreateProjectMessage)
-            | EditProject _ -> EditProject.view model.EditProjectModel (mapDispatch EditProjectMessage)
+            | ViewProjects -> ViewGroup.Project.view model.ViewProjectsModel (mapDispatch ViewProjectsMessage)
+            | ViewProject _ -> ViewItem.Project.view model.ViewProjectModel (mapDispatch ViewProjectMessage)
+            | CreateProject -> Create.Project.view model.CreateProjectModel (mapDispatch CreateProjectMessage)
+            | EditProject _ -> Edit.Project.view model.EditProjectModel (mapDispatch EditProjectMessage)
         )
         .MainNotification(
             cond model.Error <| function

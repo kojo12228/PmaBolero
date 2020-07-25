@@ -1,4 +1,4 @@
-module PmaBolero.Client.EditProject
+module PmaBolero.Client.Pages.Edit.Project
 
 open System
 open Elmish

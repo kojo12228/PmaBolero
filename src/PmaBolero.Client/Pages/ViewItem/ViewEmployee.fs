@@ -1,4 +1,4 @@
-module PmaBolero.Client.ViewEmployee
+module PmaBolero.Client.Pages.ViewItem.Employee
 
 open System
 open Elmish
@@ -14,7 +14,7 @@ open PmaBolero.Client.Models.EmployeeData
 type Model =
     {
         SignInRole: Auth.Role option
-        TileModel: ViewSingle.Model<Employee>
+        TileModel: ViewItem.Model<Employee>
     }
 
 let initModel: Model =
@@ -33,21 +33,21 @@ let initModel: Model =
 
 type Message =
     | InitMessage of int * (Auth.Role option)
-    | TileMessage of ViewSingle.Message<Employee>
+    | TileMessage of ViewItem.Message<Employee>
 
 let update remote message model =
     let getDataFunc = remote.getEmployee
 
     match message with
     | InitMessage (emplId, roleOpt) ->
-        let tileModel, tileMsg = ViewSingle.update getDataFunc (ViewSingle.InitMessage emplId) model.TileModel
+        let tileModel, tileMsg = ViewItem.update getDataFunc (ViewItem.InitMessage emplId) model.TileModel
         {
             model with
                 SignInRole = roleOpt
                 TileModel = tileModel
         }, Cmd.map TileMessage tileMsg
     | TileMessage msg ->
-        ViewSingle.update getDataFunc msg model.TileModel
+        ViewItem.update getDataFunc msg model.TileModel
         |> fun (tileModel, cmd) ->
             { model with TileModel = tileModel },
             Cmd.map TileMessage cmd
@@ -116,4 +116,4 @@ let view (model: Model) dispatch =
     let employeeTitle (empl: Employee) = empl.FullName
 
     let mappedDispatch = TileMessage >> dispatch
-    ViewSingle.view (generateTile model.SignInRole) employeeTitle model.TileModel mappedDispatch
+    ViewItem.view (generateTile model.SignInRole) employeeTitle model.TileModel mappedDispatch

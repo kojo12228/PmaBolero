@@ -1,4 +1,4 @@
-module PmaBolero.Client.ViewProjects
+module PmaBolero.Client.Pages.ViewGroup.Project
 
 open System
 open Elmish
@@ -14,7 +14,7 @@ open PmaBolero.Client.Models.EmployeeData
 type Model =
     { 
         SignInRole: Auth.Role option
-        TilesModel: TilesTemplate.Model<Project>
+        TilesModel: ViewGroup.Model<Project>
     }
 
 let initModel: Model =
@@ -34,20 +34,20 @@ type Message =
     | InitMessage of Auth.Role option
     | DeleteProject of int
     | DeleteReturn of int option option
-    | TilesMessage of TilesTemplate.Message<Project>
+    | TilesMessage of ViewGroup.Message<Project>
 
 let update remote (message: Message) (model: Model) =
     match message with
     | InitMessage role ->
-        { model with SignInRole = role }, Cmd.ofMsg (TilesMessage TilesTemplate.InitMessage)
+        { model with SignInRole = role }, Cmd.ofMsg (TilesMessage ViewGroup.InitMessage)
     | DeleteProject projId ->
-        model, Cmd.ofAuthorized remote.deleteProject projId DeleteReturn (TilesMessage << TilesTemplate.Error)
+        model, Cmd.ofAuthorized remote.deleteProject projId DeleteReturn (TilesMessage << ViewGroup.Error)
     | DeleteReturn _ ->
-        model, Cmd.ofMsg (TilesMessage TilesTemplate.InitMessage)
+        model, Cmd.ofMsg (TilesMessage ViewGroup.InitMessage)
     | TilesMessage msg ->
         let getDataFunc = remote.getProjects
 
-        let updatedModel, cmd = TilesTemplate.update getDataFunc msg model.TilesModel
+        let updatedModel, cmd = ViewGroup.update getDataFunc msg model.TilesModel
         { model with TilesModel = updatedModel }, Cmd.map TilesMessage cmd
 
 type ViewProjectsPage = Template<"wwwroot/viewprojects.html">
@@ -112,4 +112,4 @@ let generateTile signInRole dispatch (project: Project) =
 
 let view (model: Model) dispatch =
     let mappedDispatch = TilesMessage >> dispatch
-    TilesTemplate.view (generateTile model.SignInRole dispatch) model.TilesModel mappedDispatch
+    ViewGroup.view (generateTile model.SignInRole dispatch) model.TilesModel mappedDispatch
