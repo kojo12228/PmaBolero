@@ -159,6 +159,8 @@ let optionIntToString optInt =
     | None -> ""
 
 let view model dispatch =
+    // fsharplint:disable CanBeReplacedWithComposition
+
     CreateProjectTemplate
         .CreateProject()
         .Name(model.Name, fun name -> dispatch (SetName name))

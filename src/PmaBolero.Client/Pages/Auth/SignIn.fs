@@ -66,6 +66,8 @@ let update remote message model =
 type SignInPage = Template<"wwwroot/signin.html">
 
 let view model dispatch =
+    // fsharplint:disable CanBeReplacedWithComposition
+
     SignInPage.SignIn()
         .Username(model.Username, fun un -> dispatch (SetUsername un))
         .Password(model.Password, fun pw -> dispatch (SetPassword pw))

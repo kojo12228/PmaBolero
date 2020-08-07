@@ -26,6 +26,8 @@ let stringToRoleMap =
     |> Seq.map (fun (x, y) -> y, x)
     |> Map.ofSeq
 
+// fsharplint:disable RecordFieldNames
+
 type AuthService =
     {
         signIn: string * string -> Async<option<string * Role>>

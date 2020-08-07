@@ -146,6 +146,8 @@ let optionIntToString optInt =
     | None -> ""
 
 let view model dispatch =
+    // fsharplint:disable CanBeReplacedWithComposition
+
     CreateEmployeeTemplate
         .CreateEmployee()
         .FirstName(model.FirstName, fun fn -> dispatch (SetFirstName fn))

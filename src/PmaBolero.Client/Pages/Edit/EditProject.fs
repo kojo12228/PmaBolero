@@ -167,7 +167,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
                 LoadingStatus = loadingNextQuarter model.LoadingStatus
         }, Cmd.none
     | RecvProject None | RecvDevelopers None
-    | RecvDepartments None | RecvProjectManagers ->
+    | RecvDepartments None | RecvProjectManagers None ->
         { model with Error = Some "Unable to get data due to authentication error" }, Cmd.none
 
     | SetName name ->
@@ -294,6 +294,8 @@ let optionIntToString optInt =
     match optInt with
     | Some i -> string i
     | None -> ""
+
+// fsharplint:disable CanBeReplacedWithComposition
 
 let viewMainEditBox model dispatch =
     EditProjectTemplate

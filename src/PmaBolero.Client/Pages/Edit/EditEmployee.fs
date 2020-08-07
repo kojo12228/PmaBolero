@@ -226,7 +226,10 @@ let optionIntToString optInt =
     | Some i -> string i
     | None -> ""
 
+// fsharplint:disable CanBeReplacedWithComposition
+
 let viewMainEditBox model dispatch =
+
     EditEmployeeTemplate
         .MainBox()
         .Name(model.Name, fun nm -> dispatch (SetName nm))

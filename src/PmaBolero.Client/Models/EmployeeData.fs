@@ -39,6 +39,8 @@ type Department =
         Projects: (int * string) array
     }
 
+// fsharplint:disable RecordFieldNames
+
 type EmployeeService =
     {
         createEmployee:

@@ -38,29 +38,29 @@ type Page =
 let pageTitles page =
     match page with
     | Home -> "Home"
-    | SignIn -> "Sign In"
-    | SignUp -> "Sign Up"
+    | SignIn _ -> "Sign In"
+    | SignUp _ -> "Sign Up"
 
-    | ViewProjects -> "View All Projects"
+    | ViewProjects _ -> "View All Projects"
     | ViewProject _ -> "View Project"
-    | CreateProject -> "Create New Project"
+    | CreateProject _ -> "Create New Project"
     | EditProject _ -> "Edit Project"
 
-    | ViewEmployees -> "View All Employees"
+    | ViewEmployees _ -> "View All Employees"
     | ViewEmployee _ -> "View Employee"
-    | CreateEmployee -> "Create New Employee"
+    | CreateEmployee _ -> "Create New Employee"
     | EditEmployee _ -> "Edit Employee"
 
-    | ViewDepartments -> "View All Departments"
+    | ViewDepartments _ -> "View All Departments"
     | ViewDepartment _ -> "View Department"
 
 /// Check whether a given page should only be reached if the user is
 /// signed in.
 let authenticatedPages page =
     match page with
-    | Home | ViewProjects | ViewEmployees | ViewDepartments
+    | Home | ViewProjects _ | ViewEmployees _ | ViewDepartments _
     | ViewProject _ | ViewEmployee _ | ViewDepartment _
-    | CreateProject | CreateEmployee
+    | CreateProject _ | CreateEmployee _
     | EditProject _ | EditEmployee _ -> true
     | _ -> false
 
@@ -149,23 +149,23 @@ type Message =
 let initMessages model page =
     let signInRole = model.IsSignedInAs |> Option.map snd
     match page with
-    | ViewDepartments ->
+    | ViewDepartments _ ->
         Cmd.ofMsg (ViewDepartmentsMessage ViewGroup.Department.InitMessage)
     | ViewDepartment (deptId, _) ->
         Cmd.ofMsg (ViewDepartmentMessage (ViewItem.Department.InitMessage deptId))
-    | ViewEmployees ->
+    | ViewEmployees _ ->
         Cmd.ofMsg (ViewEmployeesMessage (ViewGroup.Employee.InitMessage signInRole))
     | ViewEmployee (emplId, _) ->
         Cmd.ofMsg (ViewEmployeeMessage (ViewItem.Employee.InitMessage (emplId, signInRole)))
-    | CreateEmployee ->
+    | CreateEmployee _ ->
         Cmd.ofMsg (CreateEmployeeMessage (Create.Employee.InitMessage))
     | EditEmployee (emplId, _) ->
         Cmd.ofMsg (EditEmployeeMessage (Edit.Employee.InitMessage emplId))
-    | ViewProjects ->
+    | ViewProjects _ ->
         Cmd.ofMsg (ViewProjectsMessage (ViewGroup.Project.InitMessage signInRole))
     | ViewProject (projId, _) ->
         Cmd.ofMsg (ViewProjectMessage (ViewItem.Project.InitMessage (projId, signInRole)))
-    | CreateProject ->
+    | CreateProject _ ->
         Cmd.ofMsg (CreateProjectMessage Create.Project.InitMessage)
     | EditProject (projId, _) ->
         Cmd.ofMsg (EditProjectMessage (Edit.Project.InitMessage (projId, signInRole)))
@@ -209,7 +209,7 @@ let update remotes (nm: NavigationManager) js message model =
         { model with Page = page; NavMenuOpen = false }, cmd
     | SetTitle title, _ ->
         model, Cmd.ofJS js "setTitle" [| title |] SetTitleSuccess Error
-    | SetTitleSuccess, _ ->
+    | SetTitleSuccess _, _ ->
         model, Cmd.none
 
     | ToggleBurgerMenu, _ ->
