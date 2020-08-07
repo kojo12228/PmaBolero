@@ -4,21 +4,6 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "run server",
-            "command": "dotnet",
-            "type": "shell",
-            "args": [
-                "run",
-                "-p",
-                "src/PmaBolero.Server"
-            ],
-            "group": "none",
-            "presentation": {
-                "reveal": "always"
-            },
-            "problemMatcher": []
-        },
-        {
             "label": "build server",
             "command": "dotnet",
             "type": "shell",
