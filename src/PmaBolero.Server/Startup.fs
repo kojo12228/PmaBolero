@@ -10,6 +10,7 @@ open Bolero.Remoting.Server
 open Bolero.Server.RazorHost
 open PmaBolero
 open Bolero.Templating.Server
+open ElectronNET.API
 
 type Startup() =
 
@@ -49,6 +50,11 @@ type Startup() =
                 endpoints.MapFallbackToPage("/_Host") |> ignore)
         |> ignore
 
+        async {
+            do! Electron.WindowManager.CreateWindowAsync() |> Async.AwaitTask |> Async.Ignore
+        }
+        |> Async.RunSynchronously
+
 module Program =
 
     [<EntryPoint>]
@@ -56,6 +62,7 @@ module Program =
         WebHost
             .CreateDefaultBuilder(args)
             .UseStaticWebAssets()
+            .UseElectron(args)
             .UseStartup<Startup>()
             .Build()
             .Run()
