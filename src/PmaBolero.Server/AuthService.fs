@@ -57,7 +57,7 @@ type AuthService(ctx: IRemoteContext, env: IWebHostEnvironment) =
 
             addUser = fun (username, password) -> async {
                 if users |> Array.exists (fun u -> u.Username = username)
-                then return None
+                then return false
                 else
                     let newUser =
                         [| {
@@ -67,7 +67,7 @@ type AuthService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                         } |]
                     users <- Array.append users newUser
 
-                    return Some ()
+                    return true
             }
 
             signOut = fun () -> async {

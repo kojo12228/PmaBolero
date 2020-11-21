@@ -32,7 +32,7 @@ type Message =
     | SetPassword of string
     | SetPasswordRepeat of string
     | SendSignUp
-    | RecvSignUp of unit option
+    | RecvSignUp of bool
     | Error of exn
     | ClearError
     /// Handled within Main and causes no change in this model
@@ -49,9 +49,9 @@ let update remote message model =
 
     | SendSignUp ->
         model, Cmd.ofAsync remote.addUser (model.Username, model.Password) RecvSignUp Error
-    | RecvSignUp None ->
+    | RecvSignUp false ->
         { model with Error = Some "Username already exists." }, Cmd.none
-    | RecvSignUp (Some ()) ->
+    | RecvSignUp true ->
         { model with Error = None }, Cmd.ofMsg SignUpSuccess
 
     | Error RemoteUnauthorizedException ->
