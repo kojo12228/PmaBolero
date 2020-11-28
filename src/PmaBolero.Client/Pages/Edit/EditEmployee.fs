@@ -98,7 +98,7 @@ let update remoteEmployee remoteDepartment message model =
         ]
 
     | GetEmployee emplId ->
-        model, Cmd.ofAuthorized remoteEmployee.getEmployee emplId RecvEmployee Error
+        model, Cmd.OfAuthorized.either remoteEmployee.getEmployee emplId RecvEmployee Error
     | RecvEmployee (Some (Some empl)) ->
         {
             model with
@@ -117,7 +117,7 @@ let update remoteEmployee remoteDepartment message model =
                 LoadingStatus = LoadingComplete
         }, Cmd.none
     | GetDepartments ->
-        model, Cmd.ofAuthorized remoteDepartment.getDepartmentIds () RecvDepartments Error
+        model, Cmd.OfAuthorized.either remoteDepartment.getDepartmentIds () RecvDepartments Error
     | RecvDepartments (Some depts) ->
         {
             model with
@@ -155,7 +155,7 @@ let update remoteEmployee remoteDepartment message model =
             |}
 
         { model with LoadingStatus = LoadingHalf },
-        Cmd.ofAuthorized remoteEmployee.updateEmployee empl UpdateEmployeeResponse Error
+        Cmd.OfAuthorized.either remoteEmployee.updateEmployee empl UpdateEmployeeResponse Error
     | UpdateEmployeeResponse (Some (Some empl)) ->
         {
             model with
@@ -168,7 +168,7 @@ let update remoteEmployee remoteDepartment message model =
         }, Cmd.none
     | UpdateRole ->
         { model with LoadingStatus = LoadingHalf },
-        Cmd.ofAuthorized
+        Cmd.OfAuthorized.either
             remoteEmployee.changeRole
             (model.OriginalEmployee.Value.Id, stringToRole model.SelectedRole)
             UpdateRoleResponse
@@ -186,7 +186,7 @@ let update remoteEmployee remoteDepartment message model =
         | None -> model, Cmd.none
         | Some deptId ->
             { model with LoadingStatus = LoadingHalf },
-            Cmd.ofAuthorized
+            Cmd.OfAuthorized.either
                 remoteEmployee.transferToDepartment
                 (model.OriginalEmployee.Value.Id, deptId)
                 UpdateDepartmentResponse

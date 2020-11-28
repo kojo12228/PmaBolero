@@ -48,7 +48,7 @@ let update remote message model =
         { model with PasswordRepeat = pwr }, Cmd.none
 
     | SendSignUp ->
-        model, Cmd.ofAsync remote.addUser (model.Username, model.Password) RecvSignUp Error
+        model, Cmd.OfAsync.either remote.addUser (model.Username, model.Password) RecvSignUp Error
     | RecvSignUp false ->
         { model with Error = Some "Username already exists." }, Cmd.none
     | RecvSignUp true ->

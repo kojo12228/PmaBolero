@@ -74,7 +74,7 @@ let update remoteEmployee remoteDepartment message model =
     | InitMessage ->
         model, Cmd.ofMsg GetDepartments
     | GetDepartments ->
-        model, Cmd.ofAuthorized remoteDepartment.getDepartmentIds () RecvDepartments Error
+        model, Cmd.OfAuthorized.either remoteDepartment.getDepartmentIds () RecvDepartments Error
     | RecvDepartments (Some depts) ->
         {
             model with
@@ -122,7 +122,7 @@ let update remoteEmployee remoteDepartment message model =
                     Skills = Set.toArray model.Skills
                 |}
 
-            model, Cmd.ofAuthorized remoteEmployee.createEmployee empl SubmitEmployeeResponse Error
+            model, Cmd.OfAuthorized.either remoteEmployee.createEmployee empl SubmitEmployeeResponse Error
     | SubmitEmployeeResponse (Some (Some emplId)) ->
         model, Cmd.ofMsg (emplId |> sprintf "/employee/%d" |> Redirect)
     | SubmitEmployeeResponse (Some None) ->

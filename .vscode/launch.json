@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build server",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceRoot}/src/PmaBolero.Server/bin/Debug/netcoreapp3.1/PmaBolero.Server.dll",
+            "program": "${workspaceRoot}/src/PmaBolero.Server/bin/Debug/net5.0/PmaBolero.Server.dll",
             "args": [],
             "cwd": "${workspaceRoot}/src/PmaBolero.Server",
             // For more information about the 'console' field, see https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md#console-terminal-window

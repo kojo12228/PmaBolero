@@ -32,7 +32,7 @@ let update getData message model =
     | InitMessage ->
         { model with IsLoading = true }, Cmd.ofMsg GetData
     | GetData ->
-        model, Cmd.ofAuthorized getData () RecvData Error
+        model, Cmd.OfAuthorized.either getData () RecvData Error
     | RecvData (Some data) ->
         { model with Data = data; IsLoading = false }, Cmd.none
     | RecvData None ->

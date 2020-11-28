@@ -41,7 +41,7 @@ let update remote (message: Message) (model: Model) =
     | InitMessage role ->
         { model with SignInRole = role}, Cmd.ofMsg (TilesMessage ViewGroup.InitMessage)
     | DeleteEmployee emplId ->
-        model, Cmd.ofAuthorized remote.deleteEmployee emplId DeleteReturn (TilesMessage << ViewGroup.Error)
+        model, Cmd.OfAuthorized.either remote.deleteEmployee emplId DeleteReturn (TilesMessage << ViewGroup.Error)
     | DeleteReturn _ ->
         model, Cmd.ofMsg (TilesMessage ViewGroup.InitMessage)
     | TilesMessage msg ->

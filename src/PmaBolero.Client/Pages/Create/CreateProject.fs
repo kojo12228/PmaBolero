@@ -72,7 +72,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
     | InitMessage ->
         model, Cmd.ofMsg GetProjectManagers
     | GetProjectManagers ->
-        model, Cmd.ofAuthorized remoteEmployee.getProjectManagers () RecvProjectManagers Error
+        model, Cmd.OfAuthorized.either remoteEmployee.getProjectManagers () RecvProjectManagers Error
     | RecvProjectManagers (Some pms) ->
         {
             model with
@@ -80,7 +80,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
                 IsLoading = {| model.IsLoading with Pms = false |}
         }, Cmd.ofMsg GetDevelopers
     | GetDevelopers ->
-        model, Cmd.ofAuthorized remoteEmployee.getDevelopers () RecvDevelopers Error
+        model, Cmd.OfAuthorized.either remoteEmployee.getDevelopers () RecvDevelopers Error
     | RecvDevelopers (Some devs) ->
         {
             model with
@@ -88,7 +88,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
                 IsLoading = {| model.IsLoading with Devs = false |}
         }, Cmd.ofMsg GetDepartments
     | GetDepartments ->
-        model, Cmd.ofAuthorized remoteDepartment.getDepartmentIds () RecvDepartments Error
+        model, Cmd.OfAuthorized.either remoteDepartment.getDepartmentIds () RecvDepartments Error
     | RecvDepartments (Some depts) ->
         {
             model with
@@ -132,7 +132,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
                 SkillRequirements = Set.toArray model.SkillsRequired
             |}
 
-        model, Cmd.ofAuthorized remoteProject.createProject project SubmitProjectReponse Error
+        model, Cmd.OfAuthorized.either remoteProject.createProject project SubmitProjectReponse Error
     | SubmitProjectReponse (Some (Some projId)) ->
         initModel, Cmd.ofMsg (string projId |> sprintf "/project/%s" |> Redirect)
     | SubmitProjectReponse (Some None) ->

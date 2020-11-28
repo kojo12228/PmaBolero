@@ -94,7 +94,7 @@ let initModel =
     }
 
 let defaultModel = function
-    | Home -> ()
+    | Home -> Router.definePageModel { Model = () } ()
 
     | SignIn model -> Router.definePageModel model SignIn.initModel
     | SignUp model -> Router.definePageModel model SignUp.initModel
@@ -208,7 +208,7 @@ let update remotes (nm: NavigationManager) js message model =
 
         { model with Page = page; NavMenuOpen = false }, cmd
     | SetTitle title, _ ->
-        model, Cmd.ofJS js "setTitle" [| title |] SetTitleSuccess Error
+        model, Cmd.OfJS.either js "setTitle" [| title |] SetTitleSuccess Error
     | SetTitleSuccess _, _ ->
         model, Cmd.none
 
@@ -216,16 +216,16 @@ let update remotes (nm: NavigationManager) js message model =
         { model with NavMenuOpen = not model.NavMenuOpen }, Cmd.none
 
     | SendSignOut, _ ->
-        model, Cmd.ofAsync remotes.Auth.signOut () (fun () -> RecvSignOut) Error
+        model, Cmd.OfAsync.either remotes.Auth.signOut () (fun () -> RecvSignOut) Error
     | RecvSignOut, _ ->
         { model with IsSignedInAs = None}, Cmd.ofMsg (Redirect "/login")
     | GetSignedInAs, _ ->
-        model, Cmd.ofAuthorized remotes.Auth.getUser () RecvSignedInAs Error
+        model, Cmd.OfAuthorized.either remotes.Auth.getUser () RecvSignedInAs Error
     | RecvSignedInAs user, _ ->
         { model with IsSignedInAs = user; InitialSignInChecked = true }, Cmd.ofMsg (SetPage model.Page)
 
     | Redirect url, _ ->
-        let cmd = Cmd.performFunc (fun url -> nm.NavigateTo(url, false)) url RedirectSuccess
+        let cmd = Cmd.OfFunc.perform (fun url -> nm.NavigateTo(url, false)) url RedirectSuccess
         model, cmd
     | RedirectSuccess _, _ ->
         model, Cmd.none

@@ -115,7 +115,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
             { model with Error = Some "Unexpected error, sign in information unavailable" }, Cmd.none
 
     | GetProject projId ->
-        model, Cmd.ofAuthorized remoteProject.getProject projId RecvProject Error
+        model, Cmd.OfAuthorized.either remoteProject.getProject projId RecvProject Error
     | RecvProject (Some (Some proj)) ->
         let updatedModel =
             {
@@ -139,7 +139,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
     | RecvProject (Some None) ->
         { model with Error = Some "No project exists with this ID" }, Cmd.none
     | GetDevelopers ->
-        model, Cmd.ofAuthorized remoteEmployee.getDevelopers () RecvDevelopers Error
+        model, Cmd.OfAuthorized.either remoteEmployee.getDevelopers () RecvDevelopers Error
     | RecvDevelopers (Some devs) ->
         {
             model with
@@ -151,7 +151,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
                     | _ -> LoadingEmpty
         }, Cmd.none
     | GetProjectManagers ->
-        model, Cmd.ofAuthorized remoteEmployee.getProjectManagers () RecvProjectManagers Error
+        model, Cmd.OfAuthorized.either remoteEmployee.getProjectManagers () RecvProjectManagers Error
     | RecvProjectManagers (Some pms) ->
         {
             model with
@@ -159,7 +159,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
                 LoadingStatus = loadingNextQuarter model.LoadingStatus
         }, Cmd.none
     | GetDepartments ->
-        model, Cmd.ofAuthorized remoteDepartment.getDepartmentIds () RecvDepartments Error
+        model, Cmd.OfAuthorized.either remoteDepartment.getDepartmentIds () RecvDepartments Error
     | RecvDepartments (Some depts) ->
         {
             model with
@@ -214,7 +214,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
                 |}
 
             { model with LoadingStatus = LoadingHalf },
-            Cmd.ofAuthorized remoteProject.updateProjectElevated updatedProject UpdateProjectResponse Error
+            Cmd.OfAuthorized.either remoteProject.updateProjectElevated updatedProject UpdateProjectResponse Error
         | Some Auth.ProjectManager ->
             let updatedProject =
                 {|
@@ -227,7 +227,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
                 |}
 
             { model with LoadingStatus = LoadingHalf },
-            Cmd.ofAuthorized remoteProject.updateProject updatedProject UpdateProjectResponse Error
+            Cmd.OfAuthorized.either remoteProject.updateProject updatedProject UpdateProjectResponse Error
         | _ ->
             { model with Error = Some "Unable to update project" }, Cmd.none
     | UpdateProjectResponse (Some (Some proj)) ->
@@ -251,7 +251,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
         match model.SelectedDept with
         | Some deptId ->
             { model with LoadingStatus = LoadingHalf },
-            Cmd.ofAuthorized remoteProject.assignToDepartment (model.OriginalProject.Value.Id, deptId) UpdateDepartmentResponse Error
+            Cmd.OfAuthorized.either remoteProject.assignToDepartment (model.OriginalProject.Value.Id, deptId) UpdateDepartmentResponse Error
         | None -> { model with Error = Some "Required to set a department" }, Cmd.none
     | UpdateDepartmentResponse (Some (Some proj)) ->
         {

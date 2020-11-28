@@ -33,7 +33,7 @@ let update getData message model =
     | InitMessage dataId ->
         { model with IsLoading = true }, Cmd.ofMsg (GetData dataId)
     | GetData dataId ->
-        model, Cmd.ofAuthorized getData dataId RecvData Error
+        model, Cmd.OfAuthorized.either getData dataId RecvData Error
 
     // Authorised and valid ID
     | RecvData (Some (Some data)) ->

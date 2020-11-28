@@ -45,7 +45,7 @@ let update remote message model =
         { model with Password = pw }, Cmd.none
 
     | SendSignIn ->
-        model, Cmd.ofAsync remote.signIn (model.Username, model.Password) RecvSignIn Error
+        model, Cmd.OfAsync.either remote.signIn (model.Username, model.Password) RecvSignIn Error
     | RecvSignIn None ->
         {
             model with
