@@ -1,11 +1,14 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+﻿
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
+    <UserSecretsId>fa2d8f5f-bfaf-44be-85e7-4d750ff2bab8</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Models/User.fs" />
     <Compile Include="Models/EmployeeData.fs" />
+    <Compile Include="Models\CosmoData.fs" />
+    <Compile Include="Repositories\CosmoDb\Backend.fs" />
     <Compile Include="Repositories/Mock/Users.fs" />
     <Compile Include="Repositories/Mock/Backend.fs" />
     <Compile Include="AuthService.fs" />
@@ -20,5 +23,6 @@
     <PackageReference Include="Bolero.HotReload.Server" Version="0.16.13" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="5.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.15.1" />
   </ItemGroup>
 </Project>

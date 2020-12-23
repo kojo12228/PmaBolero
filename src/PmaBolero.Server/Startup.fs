@@ -10,6 +10,8 @@ open Bolero.Remoting.Server
 open Bolero.Server.RazorHost
 open PmaBolero
 open Bolero.Templating.Server
+open Microsoft.Extensions.Logging
+open Microsoft.Extensions.Configuration
 
 type Startup() =
 
@@ -34,7 +36,7 @@ type Startup() =
         |> ignore
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-    member this.Configure(app: IApplicationBuilder, env: IWebHostEnvironment) =
+    member this.Configure(app: IApplicationBuilder, env: IWebHostEnvironment, logger: ILogger<Startup>, logFactory: ILoggerFactory, config: IConfiguration) =
         app
             .UseAuthentication()
             .UseRemoting()
@@ -48,6 +50,10 @@ type Startup() =
                 endpoints.MapBlazorHub() |> ignore
                 endpoints.MapFallbackToPage("/_Host") |> ignore)
         |> ignore
+
+        // manually injecting components into static class/F# module
+        Repositories.CosmoDb.Backend.logger <- logFactory.CreateLogger("CosmoDB Backend")
+        Repositories.CosmoDb.Backend.config <- config
 
 module Program =
 

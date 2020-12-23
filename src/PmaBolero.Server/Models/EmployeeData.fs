@@ -20,4 +20,8 @@ type Project =
         SkillRequirements: string[]
     }
 
-type Department = { Id: int; Name: string }
+type Department = 
+    {
+        Id: int
+        Name: string
+    }
