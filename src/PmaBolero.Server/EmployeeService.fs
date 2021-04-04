@@ -45,7 +45,7 @@ type EmployeeService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                     Backend.employees
                     |> Map.toArray
                     |> Array.map snd
-                    |> Array.map Backend.toClientEmployee
+                    |> Array.map Backend.toSharedEmployee
             }
 
             getProjectManagers = ctx.Authorize <| fun () -> async {
@@ -68,7 +68,7 @@ type EmployeeService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                 let employeeOpt = Map.tryFind employeeId Backend.employees
 
                 match employeeOpt with
-                | Some e -> return Some (Backend.toClientEmployee e)
+                | Some e -> return Some (Backend.toSharedEmployee e)
                 | None -> return None
             }
 
@@ -90,7 +90,7 @@ type EmployeeService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                         Backend.departmentEmployees <- Map.add newDeptId newDeptEmpls Backend.departmentEmployees
 
                         let employee = Map.find employeeId Backend.employees
-                        return Some (Backend.toClientEmployee employee)
+                        return Some (Backend.toSharedEmployee employee)
                     | _ -> return None
                 }
 
@@ -130,7 +130,7 @@ type EmployeeService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                         let newEmpl =
                             { e with Role = newRole }
                         Backend.employees <- Map.add employeeId newEmpl Backend.employees
-                        return Some (Backend.toClientEmployee e)
+                        return Some (Backend.toSharedEmployee e)
                     | None -> return None
                 }
 
@@ -147,7 +147,7 @@ type EmployeeService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                     Backend.employees <- Map.add empl.Id newEmpl Backend.employees
 
                     let employee = Map.find empl.Id Backend.employees
-                    return Some (Backend.toClientEmployee employee)
+                    return Some (Backend.toSharedEmployee employee)
                 | None ->
                     return None
             }

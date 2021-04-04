@@ -127,7 +127,7 @@ let mutable projectPM: Map<int, int option> =
         1, Some 3
     |] |> Map.ofArray
 
-let toClientEmployee (employee: Employee): EmployeeData.Employee =
+let toSharedEmployee (employee: Employee): PmaBolero.Shared.Models.Employee =
     let department =
         departmentEmployees
         |> Map.toList
@@ -165,7 +165,7 @@ let toClientEmployee (employee: Employee): EmployeeData.Employee =
         Skills = employee.Skills
     }
 
-let toClientProject (project: Project): EmployeeData.Project =
+let toSharedProject (project: Project): PmaBolero.Shared.Models.Project =
     let department =
         departmentProjects
         |> Map.findKey (fun _ projIds -> Set.contains project.Id projIds)
@@ -199,7 +199,7 @@ let toClientProject (project: Project): EmployeeData.Project =
         SkillRequirements = project.SkillRequirements
     }
 
-let toClientDepartment (dept: Department): EmployeeData.Department =
+let toSharedDepartment (dept: Department): PmaBolero.Shared.Models.Department =
     let deptEmployees =
         departmentEmployees
         |> Map.find dept.Id

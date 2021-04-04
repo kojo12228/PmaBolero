@@ -73,14 +73,14 @@ type ProjectService(ctx: IRemoteContext, env: IWebHostEnvironment) =
             return
                 Backend.projects
                 |> Map.toArray
-                |> Array.map (snd >> Backend.toClientProject)
+                |> Array.map (snd >> Backend.toSharedProject)
         }
 
         getProject = ctx.Authorize <| fun projectId -> async {
             return
                 Backend.projects
                 |> Map.tryFind projectId
-                |> Option.map Backend.toClientProject
+                |> Option.map Backend.toSharedProject
         }
 
         assignToDepartment =
@@ -105,7 +105,7 @@ type ProjectService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                     Backend.departmentProjects <- Map.add oldDeptId updatedOldDeptProjs Backend.departmentProjects
                     Backend.departmentProjects <- Map.add newDeptId updatedNewDeptProjs Backend.departmentProjects
 
-                    return Some (Backend.toClientProject proj)
+                    return Some (Backend.toSharedProject proj)
                 | _ -> return None
             }
 
@@ -138,7 +138,7 @@ type ProjectService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                         }
                     Backend.projectDevs <- Map.add proj.Id devs Backend.projectDevs
                     Backend.projects <- Map.add proj.Id proj Backend.projects
-                    return Some (Backend.toClientProject newProj)
+                    return Some (Backend.toSharedProject newProj)
                 | _ -> return None
             }
 
@@ -183,7 +183,7 @@ type ProjectService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                 Backend.projectDevs <- Map.add proj.Id devs Backend.projectDevs
                 Backend.projectPM <- Map.add proj.Id pmOpt Backend.projectPM
                 Backend.projects <- Map.add proj.Id proj Backend.projects
-                return Some (Backend.toClientProject newProj)
+                return Some (Backend.toSharedProject newProj)
             | _ -> return None
         }
 
