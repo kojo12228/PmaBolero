@@ -8,12 +8,14 @@ open Bolero.Remoting
 open Bolero.Remoting.Client
 open Bolero.Templating.Client
 
+open PmaBolero.Shared.Models
+
 open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
 
 type Model =
     {
-        SignInRole: Auth.Role option
+        SignInRole: Role option
         TileModel: ViewItem.Model<Project>
     }
 
@@ -32,7 +34,7 @@ let initModel: Model =
     }
 
 type Message =
-    | InitMessage of int * (Auth.Role option)
+    | InitMessage of int * (Role option)
     | TileMessage of ViewItem.Message<Project>
 
 let update remote message model =
@@ -114,7 +116,7 @@ let generateTile signInRole (project: Project) =
         .Id(string project.Id)
         .EditDisabled(
             match signInRole with
-            | Some Auth.Admin | Some Auth.ProjectManager -> false
+            | Some Admin | Some ProjectManager -> false
             | _ -> true
         )
         .Elt()

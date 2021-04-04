@@ -8,12 +8,14 @@ open Bolero.Remoting
 open Bolero.Remoting.Client
 open Bolero.Templating.Client
 
+open PmaBolero.Shared.Models
+
 open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
 
 type Model =
     { 
-        SignInRole: Auth.Role option
+        SignInRole: Role option
         TilesModel: ViewGroup.Model<Project>
     }
 
@@ -31,7 +33,7 @@ let initModel: Model =
     }
 
 type Message =
-    | InitMessage of Auth.Role option
+    | InitMessage of Role option
     | DeleteProject of int
     | DeleteReturn of int option option
     | TilesMessage of ViewGroup.Message<Project>
@@ -99,12 +101,12 @@ let generateTile signInRole dispatch (project: Project) =
         .Devs(populateDevs project.DeveloperIds)
         .EditDisable(
             match signInRole with
-            | Some Auth.Admin | Some Auth.ProjectManager -> false
+            | Some Admin | Some ProjectManager -> false
             | _ -> true
         )
         .DeleteDisable(
             match signInRole with
-            | Some Auth.Admin -> false
+            | Some Admin -> false
             | _ -> true
         )
         .DeleteClick(fun _ -> dispatch (DeleteProject project.Id))

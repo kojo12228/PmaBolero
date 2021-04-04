@@ -1,6 +1,6 @@
 namespace PmaBolero.Server.Repositories.Mock
 
-open PmaBolero.Client.Models.Auth
+open PmaBolero.Shared.Models
 open PmaBolero.Server.Models
 
 module UsersRepository =

@@ -4,6 +4,7 @@ open System
 open Microsoft.AspNetCore.Hosting
 open Bolero.Remoting.Server
 
+open PmaBolero.Shared.Models
 open PmaBolero.Server.Models.EmployeeDataInternal
 open PmaBolero.Client.Models
 open PmaBolero.Server.Repositories.Mock
@@ -51,7 +52,7 @@ type EmployeeService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                 return
                     Backend.employees
                     |> Map.toArray
-                    |> Array.filter (fun (_, e) -> e.Role = Auth.ProjectManager)
+                    |> Array.filter (fun (_, e) -> e.Role = ProjectManager)
                     |> Array.map (fun (_, e) -> e.Id, e.FullName)
             }
 
@@ -59,7 +60,7 @@ type EmployeeService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                 return
                     Backend.employees
                     |> Map.toArray
-                    |> Array.filter (fun (_, e) -> e.Role = Auth.Developer)
+                    |> Array.filter (fun (_, e) -> e.Role = Developer)
                     |> Array.map (fun (_, e) -> e.Id, e.FullName)
             }
 
@@ -101,7 +102,7 @@ type EmployeeService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                     | Some e ->
                         match e.Role, e.Role <> newRole with
                         // If was PM, and not PM anymore, then remove as PM
-                        | Auth.ProjectManager, true ->
+                        | ProjectManager, true ->
                             let pmProjects =
                                 Backend.projectPM
                                 |> Map.filter (fun _ pmIdOpt ->
@@ -114,7 +115,7 @@ type EmployeeService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                             for pmProjId in pmProjects do
                                 Backend.projectPM <- Map.remove pmProjId Backend.projectPM
                         // If was dev and not dev anymore, then remove as dev from projects
-                        | Auth.Developer, true ->
+                        | Developer, true ->
                             let devProjects =
                                 Backend.projectDevs
                                 |> Map.filter (fun _ devIds -> Set.contains employeeId devIds)
@@ -158,12 +159,12 @@ type EmployeeService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                 | Some e ->
                     // Remove employee from projects
                     match e.Role with
-                    | Auth.Developer ->
+                    | Developer ->
                         let newProjDev =
                             Backend.projectDevs
                             |> Map.map (fun _ emplIds -> Set.remove employeeId emplIds)
                         Backend.projectDevs <- newProjDev
-                    | Auth.ProjectManager ->
+                    | ProjectManager ->
                         let newProjPms =
                             Backend.projectPM
                             |> Map.map (fun _ pmIdOpt ->

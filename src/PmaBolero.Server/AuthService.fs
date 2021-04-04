@@ -8,6 +8,7 @@ open Bolero.Remoting
 open Bolero.Remoting.Server
 open PmaBolero
 
+open PmaBolero.Shared.Models
 open PmaBolero.Server.Models
 open PmaBolero.Client.Models
 open PmaBolero.Server.Repositories.Mock
@@ -63,7 +64,7 @@ type AuthService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                         [| {
                             Username = username
                             Password = password
-                            Role = Auth.Role.Developer
+                            Role = Developer
                         } |]
                     users <- Array.append users newUser
 

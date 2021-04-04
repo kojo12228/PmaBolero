@@ -1,6 +1,6 @@
 namespace PmaBolero.Server.Models
 
-open PmaBolero.Client.Models.Auth
+open PmaBolero.Shared.Models
 
 type User =
     {

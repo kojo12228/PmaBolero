@@ -9,6 +9,8 @@ open Bolero.Remoting.Client
 open Bolero.Templating.Client
 open System.Text.RegularExpressions
 
+open PmaBolero.Shared.Models
+
 open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
 open PmaBolero.Client.Helpers.ErrorNotification
@@ -64,9 +66,9 @@ type Message =
 
 let private roleMap =
     [ 
-        "Admin", Auth.Admin
-        "Developer", Auth.Developer
-        "ProjectManager", Auth.ProjectManager
+        "Admin", Admin
+        "Developer", Developer
+        "ProjectManager", ProjectManager
     ] |> Map.ofList
 
 let update remoteEmployee remoteDepartment message model =

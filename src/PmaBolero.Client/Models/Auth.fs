@@ -3,15 +3,7 @@ module PmaBolero.Client.Models.Auth
 open Bolero.Remoting
 open Bolero.Remoting.Client
 
-type Role =
-    | Admin
-    | ProjectManager
-    | Developer
-    override this.ToString() =
-        match this with
-        | Admin -> "Admin"
-        | ProjectManager -> "Project Manager"
-        | Developer -> "Developer"
+open PmaBolero.Shared.Models
 
 let roleToStringMap =
     [

@@ -9,6 +9,8 @@ open Bolero.Remoting.Client
 open Bolero.Templating.Client
 open Microsoft.AspNetCore.Components
 
+open PmaBolero.Shared.Models
+
 open PmaBolero.Client
 open PmaBolero.Client.Pages.Auth
 open PmaBolero.Client.Models.Auth

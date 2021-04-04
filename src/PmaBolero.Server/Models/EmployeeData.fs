@@ -1,5 +1,7 @@
 module PmaBolero.Server.Models.EmployeeDataInternal
 
+open PmaBolero.Shared.Models
+
 open PmaBolero.Client.Models
 
 type Employee =
@@ -7,7 +9,7 @@ type Employee =
         Id: int
         Email: string
         FullName: string
-        Role: Auth.Role
+        Role: Role
         Skills: string[]
     }
 
@@ -16,7 +18,7 @@ type Project =
         Id: int
         ProjectName: string
         Description: string
-        Status: EmployeeData.ProjectStatus
+        Status: ProjectStatus
         SkillRequirements: string[]
     }
 

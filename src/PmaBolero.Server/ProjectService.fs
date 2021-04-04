@@ -4,6 +4,8 @@ open System
 open Microsoft.AspNetCore.Hosting
 open Bolero.Remoting.Server
 
+open PmaBolero.Shared.Models
+
 open PmaBolero.Server.Models.EmployeeDataInternal
 open PmaBolero.Client.Models
 open PmaBolero.Server.Repositories.Mock
@@ -25,13 +27,13 @@ type ProjectService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                 | Some pmId ->
                     Backend.employees
                     |> Map.tryFind pmId
-                    |> Option.filter (fun pm -> pm.Role = Auth.ProjectManager)
+                    |> Option.filter (fun pm -> pm.Role = ProjectManager)
                     |> Option.isSome
 
             let allDevIdsAreDevs() =
                 newProj.DeveloperIds
                 |> Array.map (fun devId -> Map.tryFind devId Backend.employees)
-                |> Array.map (fun devOpt -> Option.filter (fun dev -> dev.Role = Auth.Developer) devOpt)
+                |> Array.map (fun devOpt -> Option.filter (fun dev -> dev.Role = Developer) devOpt)
                 |> Array.forall Option.isSome
 
             if (validDeptId() || pmIdIsPm() || allDevIdsAreDevs()) |> not
@@ -42,7 +44,7 @@ type ProjectService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                         Id = newProjId
                         ProjectName = newProj.ProjectName
                         Description = newProj.Description
-                        Status = EmployeeData.Pending
+                        Status = Pending
                         SkillRequirements = newProj.SkillRequirements
                     }
 
@@ -116,7 +118,7 @@ type ProjectService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                     |> Array.forall (fun devId ->
                         let devOpt = Map.tryFind devId Backend.employees
                         match devOpt with
-                        | Some dev -> dev.Role = Auth.Developer
+                        | Some dev -> dev.Role = Developer
                         | None -> false)
 
                 let newProjDevsSet = 
@@ -148,7 +150,7 @@ type ProjectService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                 |> Array.forall (fun devId ->
                     let devOpt = Map.tryFind devId Backend.employees
                     match devOpt with
-                    | Some dev -> dev.Role = Auth.Developer
+                    | Some dev -> dev.Role = Developer
                     | None -> false)
 
             let newProjDevsSet = 
@@ -162,7 +164,7 @@ type ProjectService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                     let pmOpt = Map.tryFind pmId Backend.employees
                     match pmOpt with
                     | Some pm ->
-                        if pm.Role = Auth.ProjectManager
+                        if pm.Role = ProjectManager
                         then Some <| Some pmId
                         else None
                     | None -> None

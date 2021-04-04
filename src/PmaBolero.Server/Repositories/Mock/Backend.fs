@@ -1,5 +1,6 @@
 module PmaBolero.Server.Repositories.Mock.Backend
 
+open PmaBolero.Shared.Models
 open PmaBolero.Server.Models.EmployeeDataInternal
 open PmaBolero.Client.Models
 
@@ -9,28 +10,28 @@ let mutable employees: Map<int, Employee> =
             Id = 0
             Email = "adam.admin@pma-bolero.co.uk"
             FullName = "Adam Admin"
-            Role = Auth.Admin
+            Role = Admin
             Skills = [||]
         }
         {
             Id = 1
             Email = "chris.lyons@pma-bolero.co.uk"
             FullName = "Chris Lyons"
-            Role = Auth.Developer
+            Role = Developer
             Skills = [| "C#"; "SQL" |]
         }
         {
             Id = 2
             Email = "helen.apex@pma-bolero.co.uk"
             FullName = "Helen Apex"
-            Role = Auth.ProjectManager
+            Role = ProjectManager
             Skills = [| "C#"; "Java" |]
         }
         {
             Id = 3
             Email = "laura.dawkins@pma-bolero.co.uk"
             FullName = "Laura Dawkins"
-            Role = Auth.ProjectManager
+            Role = ProjectManager
             Skills = [| "C#" |]
         }
     |]
@@ -43,14 +44,14 @@ let mutable projects: Map<int, Project> =
             Id = 0
             ProjectName = "Migration To Azure"
             Description = "Planning and implementation of move from private cloud to Azure for streaming"
-            Status = EmployeeData.Complete
+            Status = Complete
             SkillRequirements = [| "C#" |]
         }
         {
             Id = 1
             ProjectName = "Streaming APAC Launch"
             Description = ""
-            Status = EmployeeData.Pending
+            Status = Pending
             SkillRequirements = [| "C#" |]
         }
     |]
@@ -137,21 +138,21 @@ let toClientEmployee (employee: Employee): EmployeeData.Employee =
 
     let projects =
         match employee.Role with
-        | Auth.Developer ->
+        | Developer ->
             projectDevs
             |> Map.toArray
             |> Array.filter (fun (proj, empls) -> Set.contains employee.Id empls)
             |> Array.map (fun (projId, _) -> 
                 let proj = Map.find projId projects
                 projId, proj.ProjectName)
-        | Auth.ProjectManager ->
+        | ProjectManager ->
             projectPM
             |> Map.toArray
             |> Array.filter (fun (proj, pm) -> employee.Id = pm.Value)
             |> Array.map (fun (projId, _) -> 
                 let proj = Map.find projId projects
                 projId, proj.ProjectName)
-        | Auth.Admin ->
+        | Admin ->
             [||]
 
     {

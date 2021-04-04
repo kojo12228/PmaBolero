@@ -1,7 +1,8 @@
 module PmaBolero.Client.Models.EmployeeData
 
 open Bolero.Remoting
-open Bolero.Remoting.Client
+
+open PmaBolero.Shared.Models
 
 type Employee =
     {
@@ -9,15 +10,10 @@ type Employee =
         Email: string
         FullName: string
         DepartmentID: (int * string)
-        Role: Auth.Role
+        Role: Role
         ProjectIds: (int * string) array
         Skills: string array
     }
-
-type ProjectStatus =
-    | Pending
-    | Active
-    | Complete
 
 type Project =
     {
@@ -44,14 +40,14 @@ type Department =
 type EmployeeService =
     {
         createEmployee:
-            {| Email: string; FullName: string; DepartmentId: int; Role: Auth.Role; Skills: string[] |}
+            {| Email: string; FullName: string; DepartmentId: int; Role: Role; Skills: string[] |}
             -> Async<option<int>>
         getEmployees: unit -> Async<Employee[]>
         getProjectManagers: unit -> Async<(int * string) []>
         getDevelopers: unit -> Async<(int * string) []>
         getEmployee: int -> Async<option<Employee>>
         transferToDepartment: int * int -> Async<option<Employee>>
-        changeRole: int * Auth.Role -> Async<option<Employee>>
+        changeRole: int * Role -> Async<option<Employee>>
         updateEmployee:
             {| Id: int; FullName: string; Skills: string[] |}
             -> Async<option<Employee>>

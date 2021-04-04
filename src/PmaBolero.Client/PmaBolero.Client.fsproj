@@ -25,6 +25,7 @@
     <Compile Include="Startup.fs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\PmaBolero.Shared\PmaBolero.Shared.fsproj" />
     <PackageReference Include="Bolero" Version="0.16.26" />
     <PackageReference Include="Bolero.Build" Version="0.16.26" />
     <PackageReference Include="Bolero.HotReload" Version="0.16.13" />

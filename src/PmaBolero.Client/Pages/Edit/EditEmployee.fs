@@ -9,6 +9,8 @@ open Bolero.Remoting.Client
 open Bolero.Templating.Client
 open System.Text.RegularExpressions
 
+open PmaBolero.Shared.Models
+
 open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
 open PmaBolero.Client.Helpers.ErrorNotification
@@ -78,16 +80,16 @@ type Message =
 
 let private stringToRole str =
     match str with
-    | "Admin" -> Auth.Admin
-    | "Developer" -> Auth.Developer
-    | "ProjectManager" -> Auth.ProjectManager
-    | _ -> Auth.Developer
+    | "Admin" -> Admin
+    | "Developer" -> Developer
+    | "ProjectManager" -> ProjectManager
+    | _ -> Developer
 
 let private roleToString role =
     match role with
-    | Auth.Admin -> "Admin"
-    | Auth.Developer -> "Developer"
-    | Auth.ProjectManager -> "ProjectManager"
+    | Admin -> "Admin"
+    | Developer -> "Developer"
+    | ProjectManager -> "ProjectManager"
 
 let update remoteEmployee remoteDepartment message model =
     match message with

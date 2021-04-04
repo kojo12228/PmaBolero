@@ -8,6 +8,8 @@ open Bolero.Remoting
 open Bolero.Remoting.Client
 open Bolero.Templating.Client
 
+open PmaBolero.Shared.Models
+
 open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
 
@@ -16,7 +18,7 @@ open PmaBolero.Client.Helpers.ProgressBar
 
 type Model =
     {
-        SignInRole: Auth.Role option
+        SignInRole: Role option
         OriginalProject: Project option
         Name: string
         Description: string
@@ -56,7 +58,7 @@ let initModel =
     }
 
 type Message =
-    | InitMessage of int * (Auth.Role option)
+    | InitMessage of int * (Role option)
 
     // Get for both Admin and PM
     | GetProject of int
@@ -95,7 +97,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
     match message with
     | InitMessage (projId, signInRole) ->
         match signInRole with
-        | Some Auth.Admin ->
+        | Some Admin ->
             { model with SignInRole = signInRole },
             Cmd.batch [
                 Cmd.ofMsg (GetProject projId)
@@ -103,13 +105,13 @@ let update remoteProject remoteEmployee remoteDepartment message model =
                 Cmd.ofMsg GetProjectManagers
                 Cmd.ofMsg GetDepartments
             ]
-        | Some Auth.ProjectManager ->
+        | Some ProjectManager ->
             { model with SignInRole = signInRole },
             Cmd.batch [
                 Cmd.ofMsg (GetProject projId)
                 Cmd.ofMsg GetDevelopers
             ]
-        | Some Auth.Developer ->
+        | Some Developer ->
             { model with Error = Some "You do not have permission to edit this project" }, Cmd.none
         | None ->
             { model with Error = Some "Unexpected error, sign in information unavailable" }, Cmd.none
@@ -130,8 +132,8 @@ let update remoteProject remoteEmployee remoteDepartment message model =
                     SelectedPm = proj.ProjectManagerId |> Option.map fst
                     LoadingStatus =
                         match model.SignInRole with
-                        | Some Auth.Admin -> loadingNextQuarter model.LoadingStatus
-                        | Some Auth.ProjectManager -> loadingNextHalf model.LoadingStatus
+                        | Some Admin -> loadingNextQuarter model.LoadingStatus
+                        | Some ProjectManager -> loadingNextHalf model.LoadingStatus
                         | _ -> LoadingEmpty
             }
 
@@ -146,8 +148,8 @@ let update remoteProject remoteEmployee remoteDepartment message model =
                 Developers = devs
                 LoadingStatus =
                     match model.SignInRole with
-                    | Some Auth.Admin -> loadingNextQuarter model.LoadingStatus
-                    | Some Auth.ProjectManager -> loadingNextHalf model.LoadingStatus
+                    | Some Admin -> loadingNextQuarter model.LoadingStatus
+                    | Some ProjectManager -> loadingNextHalf model.LoadingStatus
                     | _ -> LoadingEmpty
         }, Cmd.none
     | GetProjectManagers ->
@@ -201,7 +203,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
             | _ -> Pending
 
         match model.SignInRole with
-        | Some Auth.Admin ->
+        | Some Admin ->
             let updatedProject =
                 {|
                     Id = model.OriginalProject.Value.Id
@@ -215,7 +217,7 @@ let update remoteProject remoteEmployee remoteDepartment message model =
 
             { model with LoadingStatus = LoadingHalf },
             Cmd.OfAuthorized.either remoteProject.updateProjectElevated updatedProject UpdateProjectResponse Error
-        | Some Auth.ProjectManager ->
+        | Some ProjectManager ->
             let updatedProject =
                 {|
                     Id = model.OriginalProject.Value.Id
@@ -305,7 +307,7 @@ let viewMainEditBox model dispatch =
         .Status(model.Status, fun status -> dispatch (SetStatus status))
         .ProjectManagerField(
             cond model.SignInRole <| function
-            | Some Auth.Admin ->
+            | Some Admin ->
                 EditProjectTemplate
                     .PmField()
                     .ProjectManager(
@@ -404,7 +406,7 @@ let view model dispatch =
             cond model.LoadingStatus <| function
             | LoadingComplete ->
                 cond model.SignInRole <| function
-                | Some Auth.Admin ->
+                | Some Admin ->
                     viewDepartmentBox model dispatch
                 | _ -> empty
             | _ -> empty

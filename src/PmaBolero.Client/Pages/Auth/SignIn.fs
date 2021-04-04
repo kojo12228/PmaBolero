@@ -8,6 +8,8 @@ open Bolero.Remoting
 open Bolero.Remoting.Client
 open Bolero.Templating.Client
 
+open PmaBolero.Shared.Models
+
 open PmaBolero.Client.Models.Auth
 open PmaBolero.Client.Helpers.ErrorNotification
 
