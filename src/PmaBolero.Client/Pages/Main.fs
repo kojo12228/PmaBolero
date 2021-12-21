@@ -240,7 +240,11 @@ let update remotes (nm: NavigationManager) js message model =
                     IsSignedInAs = None
         }, Cmd.none
     | Error exn, _ ->
-        { model with Error = Some exn.Message }, Cmd.none
+#if DEBUG
+        { model with Error = Some $"{exn}" }, Cmd.none
+#else
+        model, Cmd.none
+#endif
     | ClearError, _ -> 
         { model with Error = None }, Cmd.none
     | ClearSuccess, _ ->
