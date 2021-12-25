@@ -33,6 +33,38 @@
                 "reveal": "always"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "build server release",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "src/PmaBolero.Server",
+                "--configuration",
+                "Release"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "build client release",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "src/PmaBolero.Client",
+                "--configuration",
+                "Release"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": []
         }
     ]
 }

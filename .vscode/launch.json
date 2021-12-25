@@ -19,6 +19,20 @@
             "internalConsoleOptions": "openOnSessionStart"
         },
         {
+            "name": "Release Server Launch (console)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build server release",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceRoot}/src/PmaBolero.Server/bin/Release/net6.0/PmaBolero.Server.dll",
+            "args": [],
+            "cwd": "${workspaceRoot}/src/PmaBolero.Server",
+            // For more information about the 'console' field, see https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md#console-terminal-window
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach",
