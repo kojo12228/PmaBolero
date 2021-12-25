@@ -5,6 +5,20 @@
    "version": "0.2.0",
    "configurations": [
         {
+            "name": "Client Launch (console)",
+            "type": "blazorwasm",
+            "request": "launch",
+            "preLaunchTask": "build client",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceRoot}/src/PmaBolero.Client/bin/Debug/net6.0/PmaBolero.Client.dll",
+            "args": [],
+            "cwd": "${workspaceRoot}/src/PmaBolero.Client",
+            // For more information about the 'console' field, see https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md#console-terminal-window
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
             "name": "Server Launch (console)",
             "type": "coreclr",
             "request": "launch",
