@@ -11,6 +11,21 @@ open Microsoft.AspNetCore.Components.Web
 
 type HelperTemplate = Template<"wwwroot/helpers.html">
 
+module Forms =
+    let inputWithLabel labelText inputType setValue =
+        div [ attr.``class`` "field"] [
+            label [ attr.``class`` "label" ] [
+                text labelText
+            ]
+            div [ attr.``class`` "control" ] [
+                input [
+                    attr.``class`` "input"
+                    attr.``type`` "text"
+                    on.change (fun e -> setValue (unbox e.Value))
+                ]
+            ]
+        ]
+
 module ErrorNotification =
     let private errorNotif (msg: string) hideEvent level =
         let event = Action<MouseEventArgs>(hideEvent)

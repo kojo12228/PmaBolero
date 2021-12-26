@@ -4,9 +4,9 @@
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Models/Auth.fs" />
-    <Compile Include="Models/EmployeeData.fs" />
-    <Compile Include="Helpers/InterfaceHelpers.fs" />
+    <Compile Include="Models\Auth.fs" />
+    <Compile Include="Models\EmployeeData.fs" />
+    <Compile Include="Helpers\InterfaceHelpers.fs" />
     <Compile Include="Pages\Auth\SignIn.fs" />
     <Compile Include="Pages\Auth\SignUp.fs" />
     <Compile Include="Pages\ViewGroup\ViewGroup.fs" />

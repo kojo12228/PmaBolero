@@ -2,19 +2,15 @@ module PmaBolero.Client.Pages.Create.Employee
 
 open System
 open Elmish
-open Bolero
 open Bolero.Html
-open Bolero.Remoting
 open Bolero.Remoting.Client
-open Bolero.Templating.Client
 open System.Text.RegularExpressions
 
 open PmaBolero.Shared.Models
 
-open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
 open PmaBolero.Client.Helpers.ErrorNotification
-open PmaBolero.Client.Helpers.ProgressBar
+open PmaBolero.Client.Helpers.Forms
 
 type Model =
     {
@@ -140,26 +136,10 @@ let update remoteEmployee remoteDepartment message model =
     | ClearError ->
         { model with Error = None }, Cmd.none
 
-type CreateEmployeeTemplate = Template<"wwwroot/createemployee.html">
-
 let optionIntToString optInt =
     match optInt with
     | Some i -> string i
     | None -> ""
-
-let inputWithLabel labelText inputType setValue =
-    div [ attr.``class`` "field"] [
-        label [ attr.``class`` "label" ] [
-            text labelText
-        ]
-        div [ attr.``class`` "control" ] [
-            input [
-                attr.``class`` "input"
-                attr.``type`` "text"
-                on.change (fun e -> setValue (unbox e.Value))
-            ]
-        ]
-    ]
 
 let nameFields dispatch =
     div [ attr.``class`` "columns" ] [
