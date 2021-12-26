@@ -1,15 +1,6 @@
 namespace PmaBolero.Client.Helpers
 
-open System
-open Elmish
-open Bolero
 open Bolero.Html
-open Bolero.Remoting
-open Bolero.Remoting.Client
-open Bolero.Templating.Client
-open Microsoft.AspNetCore.Components.Web
-
-type HelperTemplate = Template<"wwwroot/helpers.html">
 
 module Forms =
     let inputWithLabel labelText inputType setValue =
@@ -28,14 +19,14 @@ module Forms =
 
 module ErrorNotification =
     let private errorNotif (msg: string) hideEvent level =
-        let event = Action<MouseEventArgs>(hideEvent)
-    
-        HelperTemplate
-            .ErrorNotification()
-            .Level(level)
-            .Text(msg)
-            .Hide(event)
-            .Elt()
+        div [ attr.classes [ "notification"; level ] ] [
+            button [
+                attr.``class`` "delete"
+                on.click hideEvent
+            ] [
+                text msg
+            ]
+        ]
 
     let errorNotifWarning msg hideEvent =
         errorNotif msg hideEvent "is-warning"
@@ -48,9 +39,9 @@ module ErrorNotification =
 
 module ProgressBar =
     let createIndeterminateBar() =
-        HelperTemplate
-            .IndeterminateProgressBar()
-            .Elt()
+        progress [ attr.classes [ "progress"; "is-medium"; "is-dark" ] ] [
+            text "45%"
+        ]
 
     type LoadingStatus =
     | LoadingEmpty
@@ -84,7 +75,11 @@ module ProgressBar =
         | LoadingComplete -> LoadingComplete
 
     let createDeterminateBar (value: LoadingStatus) =
-        HelperTemplate
-            .DeterminateProgressBar()
-            .BarValue(loadingToVal value)
-            .Elt()
+        let barValue = loadingToVal value
+        progress [
+            attr.classes [ "progress"; "is-medium"; "is-dark" ]
+            attr.value barValue
+            attr.max "100"
+        ] [
+            text $"{barValue}%%"
+        ]
