@@ -147,50 +147,149 @@ let optionIntToString optInt =
     | Some i -> string i
     | None -> ""
 
-let view model dispatch =
-    // fsharplint:disable CanBeReplacedWithComposition
+let inputWithLabel labelText inputType setValue =
+    div [ attr.``class`` "field"] [
+        label [ attr.``class`` "label" ] [
+            text labelText
+        ]
+        div [ attr.``class`` "control" ] [
+            input [
+                attr.``class`` "input"
+                attr.``type`` "text"
+                on.change (fun e -> setValue (unbox e.Value))
+            ]
+        ]
+    ]
 
-    CreateEmployeeTemplate
-        .CreateEmployee()
-        .FirstName(model.FirstName, fun fn -> dispatch (SetFirstName fn))
-        .LastName(model.LastName, fun ln -> dispatch (SetLastName ln))
-        .Email(model.Email, fun em -> dispatch (SetEmail em))
-        .Department(
-            optionIntToString model.SelectedDept,
-            fun deptIdStr -> dispatch (SetDepartment (int deptIdStr))
+let nameFields dispatch =
+    div [ attr.``class`` "columns" ] [
+        div [ attr.``class`` "column" ] [
+            inputWithLabel "First Name" "text" (dispatch << SetFirstName)
+        ]
+        div [ attr.``class`` "column" ] [
+            inputWithLabel "Last Name" "text" (dispatch << SetLastName)
+        ]
+    ]
+
+let departmentFields model dispatch =
+    div [ attr.``class`` "field"] [
+        label [ attr.``class`` "label" ] [
+            text "Department"
+        ]
+        div [ 
+            attr.``class`` (if model.DeptIsLoading then "select is-loading" else "select")
+        ] [
+            select [
+                on.change (fun e -> dispatch (SetDepartment (unbox e.Value)))
+            ] [
+                forEach model.Departments (fun (id, name) ->
+                    option [ attr.value id ] [ text name ]
+                )
+            ]
+        ]
+    ]
+
+let roleField dispatch =
+    div [ attr.``class`` "field"] [
+        label [ attr.``class`` "label" ] [
+            text "Role"
+        ]
+        div [ 
+            attr.``class`` "select"
+        ] [
+            select [
+                on.change (fun e -> dispatch (SetRole (unbox e.Value)))
+            ] [
+                option [
+                    attr.``default`` true
+                    attr.value "Developer"
+                ] [ text "Developer"]
+                option [ attr.value "ProjectManager" ] [
+                    text "Project Manager"
+                ]
+                option [ attr.value "Admin" ] [
+                    text "Admin"
+                ]
+            ]
+        ]
+    ]
+
+let skillsField dispatch =
+    div [ attr.classes [ "field"; "has-addons" ] ] [
+        div [ attr.classes [ "control"; "is-expanded" ] ] [
+            input [
+                attr.``class`` "input"
+                attr.``type`` "text"
+                attr.placeholder "Skill"
+                on.change (fun e -> dispatch (SetSkillField (unbox e.Value)))
+            ]
+        ]
+        div [ attr.``class`` "control" ] [
+            button [
+                attr.``class`` "button"
+                attr.``type`` "button"
+                on.click (fun _ -> dispatch AddSkill)
+            ] [ text "Add Skill" ]
+        ]
+    ]
+
+let skillTags model dispatch =
+    div [ attr.``class`` "tags" ] [
+        forEach model.Skills (fun skill -> 
+            span [ attr.classes [ "tag"; "is-medium"; "is-rounded" ] ] [
+                text skill
+                button [
+                    attr.classes [ "delete"; "is-small" ]
+                    attr.``type`` "button"
+                    on.click (fun _ -> dispatch <| RemoveSkill skill)
+                ] [ ]
+            ]
         )
-        .DeptOptions(
-            forEach model.Departments <| (fun (deptId, deptName) ->
-                CreateEmployeeTemplate
-                    .DeptItem()
-                    .DeptId(deptId)
-                    .Name(deptName)
-                    .Elt()
-            )
-        )
-        .DeptIsLoading(if model.DeptIsLoading then "is-loading" else "")
-        .Role(model.SelectedRole, fun r -> dispatch (SetRole r))
-        .SkillField(model.SkillField,fun sk -> dispatch (SetSkillField sk))
-        .AddSkillClick(fun _ -> dispatch AddSkill)
-        .SkillTags(
-            forEach model.Skills <| (fun skill ->
-                CreateEmployeeTemplate
-                    .SkillTag()
-                    .Skill(skill)
-                    .DeleteSkill(fun _ -> dispatch (RemoveSkill skill))
-                    .Elt()
-            )
-        )
-        .DisabledSubmit(
-            String.IsNullOrEmpty model.FirstName ||
-            String.IsNullOrEmpty model.LastName ||
-            Regex.IsMatch(model.Email, @"(@)(.+)$") |> not ||
-            Option.isNone model.SelectedDept
-        )
-        .SubmitEmployee(fun _ -> dispatch SubmitEmployee)
-        .ErrorNotification(
-            cond model.Error <| function
-            | None -> empty
-            | Some msg -> errorNotifDanger msg (fun _ -> dispatch ClearError)
-        )
-        .Elt()
+    ]
+
+let submitButton model =
+    div [ attr.``class`` "field" ] [
+        div [ attr.``class`` "control" ] [
+            input [
+                attr.classes [ "button"; "is-primary" ]
+                attr.``type`` "submit"
+                attr.value "Create"
+                attr.disabled (
+                    if 
+                        String.IsNullOrEmpty model.FirstName ||
+                        String.IsNullOrEmpty model.LastName ||
+                        Regex.IsMatch(model.Email, @"(@)(.+)$") |> not ||
+                        Option.isNone model.SelectedDept
+                    then true
+                    else false
+                )
+            ]
+        ]
+    ]
+
+let view model dispatch =
+    concat [
+        p [ attr.``class`` "title" ] []
+
+        div [ attr.``class`` "box" ] [
+            form [ on.submit (fun _ -> dispatch SubmitEmployee)] [
+                nameFields dispatch
+
+                inputWithLabel "Email" "email" (dispatch << SetEmail)
+
+                departmentFields model dispatch
+
+                roleField dispatch
+
+                skillsField dispatch
+
+                skillTags model dispatch
+
+                submitButton model
+            ]
+        ]
+
+        cond model.Error <| function
+        | None -> empty
+        | Some msg -> errorNotifDanger msg (fun _ -> dispatch ClearError)
+    ]
