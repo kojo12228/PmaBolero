@@ -3,7 +3,7 @@ namespace PmaBolero.Client.Helpers
 open Bolero.Html
 
 module Forms =
-    let inputWithLabel labelText inputType setValue =
+    let inputWithLabel labelText (inputType: string) inputValue setValue =
         div [ attr.``class`` "field"] [
             label [ attr.``class`` "label" ] [
                 text labelText
@@ -11,8 +11,8 @@ module Forms =
             div [ attr.``class`` "control" ] [
                 input [
                     attr.``class`` "input"
-                    attr.``type`` "text"
-                    on.change (fun e -> setValue (unbox e.Value))
+                    attr.``type`` inputType
+                    bind.input.string inputValue setValue
                 ]
             ]
         ]

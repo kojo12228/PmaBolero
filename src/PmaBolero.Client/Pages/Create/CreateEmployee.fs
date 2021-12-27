@@ -141,13 +141,13 @@ let optionIntToString optInt =
     | Some i -> string i
     | None -> ""
 
-let nameFields dispatch =
+let nameFields model dispatch =
     div [ attr.``class`` "columns" ] [
         div [ attr.``class`` "column" ] [
-            inputWithLabel "First Name" "text" (dispatch << SetFirstName)
+            inputWithLabel "First Name" "text" model.FirstName (dispatch << SetFirstName)
         ]
         div [ attr.``class`` "column" ] [
-            inputWithLabel "Last Name" "text" (dispatch << SetLastName)
+            inputWithLabel "Last Name" "text" model.LastName (dispatch << SetLastName)
         ]
     ]
 
@@ -253,9 +253,9 @@ let view model dispatch =
 
         div [ attr.``class`` "box" ] [
             form [ on.submit (fun _ -> dispatch SubmitEmployee)] [
-                nameFields dispatch
+                nameFields model dispatch
 
-                inputWithLabel "Email" "email" (dispatch << SetEmail)
+                inputWithLabel "Email" "email" model.Email (dispatch << SetEmail)
 
                 departmentFields model dispatch
 
