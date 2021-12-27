@@ -11,6 +11,7 @@ open Bolero.Templating.Client
 open PmaBolero.Client.Models.EmployeeData
 open PmaBolero.Client.Helpers.ErrorNotification
 open PmaBolero.Client.Helpers.ProgressBar
+open PmaBolero.Client.Helpers.Forms
 
 type Model =
     {
@@ -146,8 +147,6 @@ let update remoteProject remoteEmployee remoteDepartment message model =
         { model with Error = None }, Cmd.none
     | Redirect _ -> model, Cmd.none
 
-type CreateProjectTemplate = Template<"wwwroot/createproject.html">
-
 let tryInt iStr =
     match iStr with
     | "" -> None
@@ -158,77 +157,171 @@ let optionIntToString optInt =
     | Some i -> string i
     | None -> ""
 
-let view model dispatch =
-    // fsharplint:disable CanBeReplacedWithComposition
+let titleField model dispatch =
+    inputWithLabel "Project Text" "text" model.Name (dispatch << SetName)
 
-    CreateProjectTemplate
-        .CreateProject()
-        .Name(model.Name, fun name -> dispatch (SetName name))
-        .Description(model.Description, fun desc -> dispatch (SetDescription desc))
-        .Department(
-            optionIntToString model.SelectedDept,
-            fun deptIdStr -> dispatch (SetDepartment (int deptIdStr))
-        )
-        .DeptOptions(
-            forEach model.Departments <| (fun (deptId, deptName) ->
-                CreateProjectTemplate
-                    .DeptItem()
-                    .DeptId(deptId)
-                    .Name(deptName)
-                    .Elt()
+let descriptionField model dispatch =
+    div [ attr.``class`` "field" ] [
+        label [ attr.``class`` "label" ] [ text "Description" ]
+
+        div [ attr.``class`` "control" ] [
+            textarea [
+                attr.``class`` "textarea"
+                bind.input.string model.Description (dispatch << SetDescription)
+            ] []
+        ]
+    ]
+
+let departmentField model dispatch =
+    div [ attr.``class`` "field" ] [
+        label [ attr.``class`` "label" ] [ text "Department" ]
+
+        div [ attr.``class`` "control" ] [
+            div [
+                attr.classes [
+                    "select"
+                    if model.IsLoading.Departments then "is-loading" else ""
+                ]
+            ] [
+                select [
+                    on.change (fun e -> dispatch (SetDepartment (unbox e.Value)))
+                ] [
+                    forEach model.Departments (fun (id, dept) ->
+                        option [ attr.value id ] [ text dept ]
+                    )
+                ]
+            ]
+        ]
+    ]
+
+let projectManagerField model dispatch =
+    div [ attr.``class`` "field" ] [
+        label [ attr.``class`` "label" ] [ text "Project Manager" ]
+
+        div [ attr.``class`` "control" ] [
+            div [
+                attr.classes [
+                    "select"
+                    if model.IsLoading.Departments then "is-loading" else ""
+                ]
+            ] [
+                select [
+                    on.change (fun e -> dispatch (SetProjectManager (unbox e.Value)))
+                ] [
+                    option [
+                        attr.``default`` true
+                        attr.label " "
+                    ] []
+
+                    forEach model.ProjectManagers (fun (id, pm) ->
+                        option [ attr.value id ] [ text pm ]
+                    )
+                ]
+            ]
+        ]
+    ]
+
+let developersField model dispatch =
+    div [ ] [
+        label [ attr.``class`` "label" ] [ text "Developers" ]
+
+        cond model.IsLoading.Devs <| function
+        | true -> createIndeterminateBar()
+        | false ->
+            forEach model.Developers (fun (id, dev) ->
+                div [ attr.``class`` "field" ] [
+                    div [ attr.``class`` "control" ] [
+                        label [ attr.``class`` "checkbox" ] [
+                            input [
+                                attr.``type`` "checkbox"
+                                bind.``checked``
+                                    (Set.contains id model.SelectedDevs)
+                                    (fun selected ->
+                                        match selected with
+                                        | true -> dispatch (AddDev id)
+                                        | false -> dispatch (RemoveDev id)
+                                    )
+                            ]
+                            text dev
+                        ]
+                    ]
+                ]
             )
+    ]
+
+let skillsFields model dispatch =
+    div [ attr.classes [ "field"; "has-addons" ] ] [
+        div [ attr.classes [ "control"; "is-expanded" ] ] [
+            input [
+                attr.``class`` "input"
+                attr.``type`` "text"
+                bind.input.string model.SkillField (dispatch << SetSkillField)
+            ]
+        ]
+
+        div [ attr.``class`` "control" ] [
+            button [
+                attr.``class`` "button"
+                attr.``type`` "button"
+                on.click (fun _ -> dispatch AddSkill)
+            ] [
+                text "Add Skill"
+            ]
+        ]
+    ]
+
+let skillsTags model dispatch =
+    div [ attr.``class`` "tags" ] [
+        forEach model.SkillsRequired (fun skill ->
+            span [ attr.classes [ "tag"; "is-medium"; "is-rounded" ] ] [
+                text skill
+
+                button [
+                    attr.classes [ "delete"; "is-small" ]
+                    attr.``type`` "button"
+                    on.click (fun _ -> dispatch (RemoveSkill skill))
+                ] []
+            ]
         )
-        .DeptIsLoading(if model.IsLoading.Departments then "is-loading" else "")
-        .ProjectManager(
-            optionIntToString model.SelectedPm,
-            fun pmId -> dispatch (SetProjectManager (tryInt pmId))
-        )
-        .PmOptions(
-            forEach model.ProjectManagers <| (fun (pmId, pmName) ->
-                CreateProjectTemplate
-                    .PmItem()
-                    .PmId(pmId)
-                    .Name(pmName)
-                    .Elt()
-            )
-        )
-        .PmIsLoading(if model.IsLoading.Pms then "is-loading" else "")
-        .DevOptions(
-            cond model.IsLoading.Devs <| function
-            | true -> createIndeterminateBar()
-            | false ->
-                forEach model.Developers <| (fun (devId, devName) ->
-                    CreateProjectTemplate
-                        .DevItem()
-                        .DevName(devName)
-                        .DevCheckbox(
-                            Set.contains devId model.SelectedDevs,
-                            fun selected ->
-                                match selected with
-                                | true -> dispatch (AddDev devId)
-                                | false -> dispatch (RemoveDev devId)
-                        )
-                        .Elt()
-            )
-        )
-        .SkillField(model.SkillField,fun sk -> dispatch (SetSkillField sk))
-        .AddSkillClick(fun _ -> dispatch AddSkill)
-        .SkillTags(
-            forEach model.SkillsRequired <| (fun skill ->
-                CreateProjectTemplate
-                    .SkillTag()
-                    .Skill(skill)
-                    .DeleteSkill(fun _ -> dispatch (RemoveSkill skill))
-                    .Elt()
-            )
-        )
-        .DisabledSubmit(
-            String.IsNullOrEmpty model.Name
-        )
-        .SubmitProject(fun _ -> dispatch SubmitProject)
-        .ErrorNotification(
-            cond model.Error <| function
-            | None -> empty
-            | Some msg -> errorNotifDanger msg (fun _ -> dispatch ClearError)
-        )
-        .Elt()
+    ]
+
+let submitButton model =
+    div [ attr.``class`` "field" ] [
+        div [ attr.``class`` "control" ] [
+            input [
+                attr.classes [ "button"; "is-primary" ]
+                attr.``type`` "submit"
+                attr.value "Submit New Project"
+                attr.disabled (String.IsNullOrEmpty model.Name)
+            ]
+        ]
+    ]
+
+let view model dispatch =
+    concat [
+        p [ attr.``class`` "title" ] [ text "Create New Project" ]
+
+        div [ attr.``class`` "box" ] [
+            form [ on.submit (fun _ -> dispatch SubmitProject) ] [
+                titleField model dispatch
+
+                descriptionField model dispatch
+
+                departmentField model dispatch
+
+                projectManagerField model dispatch
+
+                developersField model dispatch
+
+                skillsFields model dispatch
+
+                skillsTags model dispatch
+
+                submitButton model
+
+                cond model.Error <| function
+                | None -> empty
+                | Some msg -> errorNotifDanger msg (fun _ -> dispatch ClearError)
+            ]
+        ]
+    ]
