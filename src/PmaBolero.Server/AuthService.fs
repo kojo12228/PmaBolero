@@ -20,58 +20,63 @@ type AuthService(ctx: IRemoteContext, env: IWebHostEnvironment) =
     let mutable users = UsersRepository.users
 
     override this.Handler =
-        {
-            signIn = fun (username, password) -> async {
-                let matchedUser =
-                    users
-                    |> Array.tryFind (fun u ->
-                            u.Username = username &&
-                            u.Password = password
-                        )
-                match matchedUser with
-                | Some user ->
-                    let roleStr = Map.find user.Role Auth.roleToStringMap
-                    let claims = [Claim(ClaimTypes.Role, roleStr)]
-                    do! ctx.HttpContext.AsyncSignIn(user.Username, TimeSpan.FromDays(365.), claims = claims)
-                    return Some (user.Username, user.Role)
-                | None ->
-                    return None
-            }
+        { signIn =
+            fun (username, password) ->
+                async {
+                    let matchedUser =
+                        users
+                        |> Array.tryFind (fun u -> u.Username = username && u.Password = password)
 
-            getUser = ctx.Authorize <| fun () -> async {
-                let user =
-                    users
-                    |> Array.find (fun u -> u.Username = ctx.HttpContext.User.Identity.Name)
-                return (user.Username, user.Role)
-            }
+                    match matchedUser with
+                    | Some user ->
+                        let roleStr = Map.find user.Role Auth.roleToStringMap
+                        let claims = [ Claim(ClaimTypes.Role, roleStr) ]
+                        do! ctx.HttpContext.AsyncSignIn(user.Username, TimeSpan.FromDays(365.), claims = claims)
+                        return Some(user.Username, user.Role)
+                    | None -> return None
+                }
 
-            getUsername = ctx.Authorize <| fun () -> async {
-                return ctx.HttpContext.User.Identity.Name
-            }
+          getUser =
+              ctx.Authorize
+              <| fun () ->
+                  async {
+                      let user =
+                          users
+                          |> Array.find (fun u -> u.Username = ctx.HttpContext.User.Identity.Name)
 
-            getRole = ctx.Authorize <| fun () -> async {
-                let user =
-                    users
-                    |> Array.find (fun u -> u.Username = ctx.HttpContext.User.Identity.Name)
-                return user.Role
-            }
+                      return (user.Username, user.Role)
+                  }
 
-            addUser = fun (username, password) -> async {
-                if users |> Array.exists (fun u -> u.Username = username)
-                then return false
-                else
-                    let newUser =
-                        [| {
-                            Username = username
-                            Password = password
-                            Role = Developer
-                        } |]
-                    users <- Array.append users newUser
+          getUsername =
+              ctx.Authorize
+              <| fun () -> async { return ctx.HttpContext.User.Identity.Name }
 
-                    return true
-            }
+          getRole =
+              ctx.Authorize
+              <| fun () ->
+                  async {
+                      let user =
+                          users
+                          |> Array.find (fun u -> u.Username = ctx.HttpContext.User.Identity.Name)
 
-            signOut = fun () -> async {
-                return! ctx.HttpContext.AsyncSignOut()
-            }
-        }
+                      return user.Role
+                  }
+
+          addUser =
+              fun (username, password) ->
+                  async {
+                      if users
+                         |> Array.exists (fun u -> u.Username = username) then
+                          return false
+                      else
+                          let newUser =
+                              [| { Username = username
+                                   Password = password
+                                   Role = Developer } |]
+
+                          users <- Array.append users newUser
+
+                          return true
+                  }
+
+          signOut = fun () -> async { return! ctx.HttpContext.AsyncSignOut() } }

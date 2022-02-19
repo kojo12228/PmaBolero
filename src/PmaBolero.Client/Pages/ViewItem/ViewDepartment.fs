@@ -15,14 +15,12 @@ open PmaBolero.Client.Models.EmployeeData
 type Model = ViewItem.Model<Department>
 
 let initModel: Model =
-    {
-        DataType = "Departments"
-        UrlPrefix = "department"
-        IsLoading = true
-        Data = None
-        AuthorisationFailure = false
-        Error = None
-    }
+    { DataType = "Departments"
+      UrlPrefix = "department"
+      IsLoading = true
+      Data = None
+      AuthorisationFailure = false
+      Error = None }
 
 type Message =
     | InitMessage of int
@@ -50,8 +48,7 @@ let populateProjects (projects: (int * string) []) =
                     .ProjectItem()
                     .Id(string projId)
                     .Name(projName)
-                    .Elt()
-            )
+                    .Elt())
         )
         .Elt()
 
@@ -64,8 +61,7 @@ let populateEmployees (employees: (int * string) []) =
                     .EmployeeItem()
                     .Id(string emplId)
                     .Name(emplName)
-                    .Elt()
-            )
+                    .Elt())
         )
         .Elt()
 
@@ -73,20 +69,16 @@ let generateTile (dept: Department) =
     ViewDepartmentPage
         .Tile()
         .Projects(
-            cond (Array.isEmpty dept.Projects) <| function
-            | false -> populateProjects dept.Projects
-            | true ->
-                ViewDepartmentPage
-                    .NoProjects()
-                    .Elt()
+            cond (Array.isEmpty dept.Projects)
+            <| function
+                | false -> populateProjects dept.Projects
+                | true -> ViewDepartmentPage.NoProjects().Elt()
         )
         .Employees(
-            cond (Array.isEmpty dept.Employees) <| function
-            | false -> populateEmployees dept.Employees
-            | true ->
-                ViewDepartmentPage
-                    .NoEmployees()
-                    .Elt()
+            cond (Array.isEmpty dept.Employees)
+            <| function
+                | false -> populateEmployees dept.Employees
+                | true -> ViewDepartmentPage.NoEmployees().Elt()
         )
         .Elt()
 

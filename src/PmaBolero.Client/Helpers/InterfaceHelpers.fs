@@ -4,51 +4,46 @@ open Bolero.Html
 
 module Forms =
     let inputWithLabel labelText (inputType: string) inputValue setValue =
-        div [ attr.``class`` "field"] [
+        div [ attr.``class`` "field" ] [
             label [ attr.``class`` "label" ] [
                 text labelText
             ]
             div [ attr.``class`` "control" ] [
-                input [
-                    attr.``class`` "input"
-                    attr.``type`` inputType
-                    bind.input.string inputValue setValue
-                ]
+                input [ attr.``class`` "input"
+                        attr.``type`` inputType
+                        bind.input.string inputValue setValue ]
             ]
         ]
 
 module ErrorNotification =
     let private errorNotif (msg: string) hideEvent level =
         div [ attr.classes [ "notification"; level ] ] [
-            button [
-                attr.``class`` "delete"
-                on.click hideEvent
-            ] [
+            button [ attr.``class`` "delete"
+                     on.click hideEvent ] [
                 text msg
             ]
         ]
 
-    let errorNotifWarning msg hideEvent =
-        errorNotif msg hideEvent "is-warning"
+    let errorNotifWarning msg hideEvent = errorNotif msg hideEvent "is-warning"
 
-    let errorNotifDanger msg hideEvent =
-        errorNotif msg hideEvent "is-danger"
+    let errorNotifDanger msg hideEvent = errorNotif msg hideEvent "is-danger"
 
-    let errorNotifSuccess msg hideEvent =
-        errorNotif msg hideEvent "is-success"
+    let errorNotifSuccess msg hideEvent = errorNotif msg hideEvent "is-success"
 
 module ProgressBar =
-    let createIndeterminateBar() =
-        progress [ attr.classes [ "progress"; "is-medium"; "is-dark" ] ] [
+    let createIndeterminateBar () =
+        progress [ attr.classes [ "progress"
+                                  "is-medium"
+                                  "is-dark" ] ] [
             text "45%"
         ]
 
     type LoadingStatus =
-    | LoadingEmpty
-    | LoadingQuarter
-    | LoadingHalf
-    | LoadingThreeQuarter
-    | LoadingComplete
+        | LoadingEmpty
+        | LoadingQuarter
+        | LoadingHalf
+        | LoadingThreeQuarter
+        | LoadingComplete
 
     let private loadingToVal load =
         match load with
@@ -76,10 +71,11 @@ module ProgressBar =
 
     let createDeterminateBar (value: LoadingStatus) =
         let barValue = loadingToVal value
-        progress [
-            attr.classes [ "progress"; "is-medium"; "is-dark" ]
-            attr.value barValue
-            attr.max "100"
-        ] [
+
+        progress [ attr.classes [ "progress"
+                                  "is-medium"
+                                  "is-dark" ]
+                   attr.value barValue
+                   attr.max "100" ] [
             text $"{barValue}%%"
         ]

@@ -17,45 +17,41 @@ open PmaBolero.Client.Helpers
 open PmaBolero.Client.Helpers.ProgressBar
 
 type Model =
-    {
-        SignInRole: Role option
-        OriginalProject: Project option
-        Name: string
-        Description: string
-        Status: string
-        Developers: (int * string) []
-        SelectedDevs: int Set
-        SkillField: string
-        SkillsRequired: string Set
-        // Only if the sign in user is admin
-        Departments: (int * string) []
-        SelectedDept: int option
-        ProjectManagers: (int * string) []
-        SelectedPm: int option
-        LoadingStatus: LoadingStatus
-        Error: string option
-        Success: string option
-    }
+    { SignInRole: Role option
+      OriginalProject: Project option
+      Name: string
+      Description: string
+      Status: string
+      Developers: (int * string) []
+      SelectedDevs: int Set
+      SkillField: string
+      SkillsRequired: string Set
+      // Only if the sign in user is admin
+      Departments: (int * string) []
+      SelectedDept: int option
+      ProjectManagers: (int * string) []
+      SelectedPm: int option
+      LoadingStatus: LoadingStatus
+      Error: string option
+      Success: string option }
 
 let initModel =
-    {
-        SignInRole = None
-        OriginalProject = None
-        Name = ""
-        Description = ""
-        Status = ""
-        Developers = [||]
-        SelectedDevs = Set.empty
-        SkillField = ""
-        SkillsRequired = Set.empty
-        Departments = [||]
-        SelectedDept = None
-        ProjectManagers = [||]
-        SelectedPm = None
-        LoadingStatus = LoadingEmpty
-        Error = None
-        Success = None
-    }
+    { SignInRole = None
+      OriginalProject = None
+      Name = ""
+      Description = ""
+      Status = ""
+      Developers = [||]
+      SelectedDevs = Set.empty
+      SkillField = ""
+      SkillsRequired = Set.empty
+      Departments = [||]
+      SelectedDept = None
+      ProjectManagers = [||]
+      SelectedPm = None
+      LoadingStatus = LoadingEmpty
+      Error = None
+      Success = None }
 
 type Message =
     | InitMessage of int * (Role option)
@@ -99,100 +95,81 @@ let update remoteProject remoteEmployee remoteDepartment message model =
         match signInRole with
         | Some Admin ->
             { model with SignInRole = signInRole },
-            Cmd.batch [
-                Cmd.ofMsg (GetProject projId)
-                Cmd.ofMsg GetDevelopers
-                Cmd.ofMsg GetProjectManagers
-                Cmd.ofMsg GetDepartments
-            ]
+            Cmd.batch [ Cmd.ofMsg (GetProject projId)
+                        Cmd.ofMsg GetDevelopers
+                        Cmd.ofMsg GetProjectManagers
+                        Cmd.ofMsg GetDepartments ]
         | Some ProjectManager ->
             { model with SignInRole = signInRole },
-            Cmd.batch [
-                Cmd.ofMsg (GetProject projId)
-                Cmd.ofMsg GetDevelopers
-            ]
-        | Some Developer ->
-            { model with Error = Some "You do not have permission to edit this project" }, Cmd.none
-        | None ->
-            { model with Error = Some "Unexpected error, sign in information unavailable" }, Cmd.none
+            Cmd.batch [ Cmd.ofMsg (GetProject projId)
+                        Cmd.ofMsg GetDevelopers ]
+        | Some Developer -> { model with Error = Some "You do not have permission to edit this project" }, Cmd.none
+        | None -> { model with Error = Some "Unexpected error, sign in information unavailable" }, Cmd.none
 
-    | GetProject projId ->
-        model, Cmd.OfAuthorized.either remoteProject.getProject projId RecvProject Error
+    | GetProject projId -> model, Cmd.OfAuthorized.either remoteProject.getProject projId RecvProject Error
     | RecvProject (Some (Some proj)) ->
         let updatedModel =
-            {
-                model with
-                    OriginalProject = Some proj
-                    Name = proj.Name
-                    Description = proj.Description
-                    Status = string proj.Status
-                    SelectedDevs = proj.DeveloperIds |> Array.map fst |> Set.ofArray
-                    SkillsRequired = proj.SkillRequirements |> Set.ofArray
-                    SelectedDept = proj.DepartmentId |> fst |> Some
-                    SelectedPm = proj.ProjectManagerId |> Option.map fst
-                    LoadingStatus =
-                        match model.SignInRole with
-                        | Some Admin -> loadingNextQuarter model.LoadingStatus
-                        | Some ProjectManager -> loadingNextHalf model.LoadingStatus
-                        | _ -> LoadingEmpty
-            }
-
-        updatedModel, Cmd.none
-    | RecvProject (Some None) ->
-        { model with Error = Some "No project exists with this ID" }, Cmd.none
-    | GetDevelopers ->
-        model, Cmd.OfAuthorized.either remoteEmployee.getDevelopers () RecvDevelopers Error
-    | RecvDevelopers (Some devs) ->
-        {
-            model with
-                Developers = devs
+            { model with
+                OriginalProject = Some proj
+                Name = proj.Name
+                Description = proj.Description
+                Status = string proj.Status
+                SelectedDevs = proj.DeveloperIds |> Array.map fst |> Set.ofArray
+                SkillsRequired = proj.SkillRequirements |> Set.ofArray
+                SelectedDept = proj.DepartmentId |> fst |> Some
+                SelectedPm = proj.ProjectManagerId |> Option.map fst
                 LoadingStatus =
                     match model.SignInRole with
                     | Some Admin -> loadingNextQuarter model.LoadingStatus
                     | Some ProjectManager -> loadingNextHalf model.LoadingStatus
-                    | _ -> LoadingEmpty
-        }, Cmd.none
+                    | _ -> LoadingEmpty }
+
+        updatedModel, Cmd.none
+    | RecvProject (Some None) -> { model with Error = Some "No project exists with this ID" }, Cmd.none
+    | GetDevelopers -> model, Cmd.OfAuthorized.either remoteEmployee.getDevelopers () RecvDevelopers Error
+    | RecvDevelopers (Some devs) ->
+        { model with
+            Developers = devs
+            LoadingStatus =
+                match model.SignInRole with
+                | Some Admin -> loadingNextQuarter model.LoadingStatus
+                | Some ProjectManager -> loadingNextHalf model.LoadingStatus
+                | _ -> LoadingEmpty },
+        Cmd.none
     | GetProjectManagers ->
         model, Cmd.OfAuthorized.either remoteEmployee.getProjectManagers () RecvProjectManagers Error
     | RecvProjectManagers (Some pms) ->
-        {
-            model with
-                ProjectManagers = pms
-                LoadingStatus = loadingNextQuarter model.LoadingStatus
-        }, Cmd.none
-    | GetDepartments ->
-        model, Cmd.OfAuthorized.either remoteDepartment.getDepartmentIds () RecvDepartments Error
+        { model with
+            ProjectManagers = pms
+            LoadingStatus = loadingNextQuarter model.LoadingStatus },
+        Cmd.none
+    | GetDepartments -> model, Cmd.OfAuthorized.either remoteDepartment.getDepartmentIds () RecvDepartments Error
     | RecvDepartments (Some depts) ->
-        {
-            model with
-                Departments = depts
-                LoadingStatus = loadingNextQuarter model.LoadingStatus
-        }, Cmd.none
-    | RecvProject None | RecvDevelopers None
-    | RecvDepartments None | RecvProjectManagers None ->
-        { model with Error = Some "Unable to get data due to authentication error" }, Cmd.none
+        { model with
+            Departments = depts
+            LoadingStatus = loadingNextQuarter model.LoadingStatus },
+        Cmd.none
+    | RecvProject None
+    | RecvDevelopers None
+    | RecvDepartments None
+    | RecvProjectManagers None -> { model with Error = Some "Unable to get data due to authentication error" }, Cmd.none
 
-    | SetName name ->
-        { model with Name = name }, Cmd.none
-    | SetDescription desc ->
-        { model with Description = desc }, Cmd.none
-    | SetStatus status ->
-        { model with Status = status }, Cmd.none
-    | AddDev devId ->
-        { model with SelectedDevs = Set.add devId model.SelectedDevs }, Cmd.none
-    | RemoveDev devId ->
-        { model with SelectedDevs = Set.remove devId model.SelectedDevs }, Cmd.none
-    | SetSkillField skillStr ->
-        { model with SkillField = skillStr }, Cmd.none
+    | SetName name -> { model with Name = name }, Cmd.none
+    | SetDescription desc -> { model with Description = desc }, Cmd.none
+    | SetStatus status -> { model with Status = status }, Cmd.none
+    | AddDev devId -> { model with SelectedDevs = Set.add devId model.SelectedDevs }, Cmd.none
+    | RemoveDev devId -> { model with SelectedDevs = Set.remove devId model.SelectedDevs }, Cmd.none
+    | SetSkillField skillStr -> { model with SkillField = skillStr }, Cmd.none
     | AddSkill ->
         let newSkills = Set.add model.SkillField model.SkillsRequired
-        { model with SkillsRequired = newSkills; SkillField = "" }, Cmd.none
-    | RemoveSkill skill ->
-        { model with SkillsRequired = Set.remove skill model.SkillsRequired }, Cmd.none
-    | SetProjectManager projId ->
-        { model with SelectedPm = projId }, Cmd.none
-    | SetDepartment dept ->
-        { model with SelectedDept = Some dept }, Cmd.none
+
+        { model with
+            SkillsRequired = newSkills
+            SkillField = "" },
+        Cmd.none
+    | RemoveSkill skill -> { model with SkillsRequired = Set.remove skill model.SkillsRequired }, Cmd.none
+    | SetProjectManager projId -> { model with SelectedPm = projId }, Cmd.none
+    | SetDepartment dept -> { model with SelectedDept = Some dept }, Cmd.none
 
     | UpdateProject ->
         let statusResolver statusStr =
@@ -205,84 +182,78 @@ let update remoteProject remoteEmployee remoteDepartment message model =
         match model.SignInRole with
         | Some Admin ->
             let updatedProject =
-                {|
-                    Id = model.OriginalProject.Value.Id
-                    ProjectName = model.Name
-                    Description = model.Description
-                    Status = statusResolver model.Status
-                    ProjectManagerId = model.SelectedPm
-                    DeveloperIds = model.SelectedDevs |> Set.toArray
-                    SkillRequirements = model.SkillsRequired |> Set.toArray
-                |}
+                {| Id = model.OriginalProject.Value.Id
+                   ProjectName = model.Name
+                   Description = model.Description
+                   Status = statusResolver model.Status
+                   ProjectManagerId = model.SelectedPm
+                   DeveloperIds = model.SelectedDevs |> Set.toArray
+                   SkillRequirements = model.SkillsRequired |> Set.toArray |}
 
             { model with LoadingStatus = LoadingHalf },
             Cmd.OfAuthorized.either remoteProject.updateProjectElevated updatedProject UpdateProjectResponse Error
         | Some ProjectManager ->
             let updatedProject =
-                {|
-                    Id = model.OriginalProject.Value.Id
-                    ProjectName = model.Name
-                    Description = model.Description
-                    Status = statusResolver model.Status
-                    DeveloperIds = model.SelectedDevs |> Set.toArray
-                    SkillRequirements = model.SkillsRequired |> Set.toArray
-                |}
+                {| Id = model.OriginalProject.Value.Id
+                   ProjectName = model.Name
+                   Description = model.Description
+                   Status = statusResolver model.Status
+                   DeveloperIds = model.SelectedDevs |> Set.toArray
+                   SkillRequirements = model.SkillsRequired |> Set.toArray |}
 
             { model with LoadingStatus = LoadingHalf },
             Cmd.OfAuthorized.either remoteProject.updateProject updatedProject UpdateProjectResponse Error
-        | _ ->
-            { model with Error = Some "Unable to update project" }, Cmd.none
+        | _ -> { model with Error = Some "Unable to update project" }, Cmd.none
     | UpdateProjectResponse (Some (Some proj)) ->
         let updatedModel =
-            {
-                model with
-                    OriginalProject = Some proj
-                    Name = proj.Name
-                    Description = proj.Description
-                    Status = string proj.Status
-                    SelectedDevs = proj.DeveloperIds |> Array.map fst |> Set.ofArray
-                    SkillsRequired = proj.SkillRequirements |> Set.ofArray
-                    SelectedDept = proj.DepartmentId |> fst |> Some
-                    SelectedPm = proj.ProjectManagerId |> Option.map fst
-                    LoadingStatus = LoadingComplete
-                    Success = Some "Project successfully updated"
-            }
+            { model with
+                OriginalProject = Some proj
+                Name = proj.Name
+                Description = proj.Description
+                Status = string proj.Status
+                SelectedDevs = proj.DeveloperIds |> Array.map fst |> Set.ofArray
+                SkillsRequired = proj.SkillRequirements |> Set.ofArray
+                SelectedDept = proj.DepartmentId |> fst |> Some
+                SelectedPm = proj.ProjectManagerId |> Option.map fst
+                LoadingStatus = LoadingComplete
+                Success = Some "Project successfully updated" }
 
         updatedModel, Cmd.none
     | UpdateDepartment ->
         match model.SelectedDept with
         | Some deptId ->
             { model with LoadingStatus = LoadingHalf },
-            Cmd.OfAuthorized.either remoteProject.assignToDepartment (model.OriginalProject.Value.Id, deptId) UpdateDepartmentResponse Error
+            Cmd.OfAuthorized.either
+                remoteProject.assignToDepartment
+                (model.OriginalProject.Value.Id, deptId)
+                UpdateDepartmentResponse
+                Error
         | None -> { model with Error = Some "Required to set a department" }, Cmd.none
     | UpdateDepartmentResponse (Some (Some proj)) ->
-        {
-            model with
-                OriginalProject = Some proj
-                SelectedDept = proj.DepartmentId |> fst |> Some
-                Success = Some "Project successfully updated"
-                LoadingStatus = LoadingComplete
-        }, Cmd.none
-    | UpdateProjectResponse (Some None) | UpdateDepartmentResponse (Some None) ->
-        {
-            model with
-                Error = Some "Unable to updated project at this time."
-                LoadingStatus = LoadingComplete
-        }, Cmd.none
-    | UpdateProjectResponse None | UpdateDepartmentResponse (None) ->
-        {
-            model with
-                Error = Some "Unable to send data due to authentication error"
-                LoadingStatus = LoadingComplete
+        { model with
+            OriginalProject = Some proj
+            SelectedDept = proj.DepartmentId |> fst |> Some
+            Success = Some "Project successfully updated"
+            LoadingStatus = LoadingComplete },
+        Cmd.none
+    | UpdateProjectResponse (Some None)
+    | UpdateDepartmentResponse (Some None) ->
+        { model with
+            Error = Some "Unable to updated project at this time."
+            LoadingStatus = LoadingComplete },
+        Cmd.none
+    | UpdateProjectResponse None
+    | UpdateDepartmentResponse (None) ->
+        { model with
+            Error = Some "Unable to send data due to authentication error"
+            LoadingStatus = LoadingComplete
 
-        }, Cmd.none
+         },
+        Cmd.none
 
-    | Error e ->
-        { model with Error = Some e.Message }, Cmd.none
-    | ClearError ->
-        { model with Error = None }, Cmd.none
-    | ClearSuccess ->
-        { model with Success = None }, Cmd.none
+    | Error e -> { model with Error = Some e.Message }, Cmd.none
+    | ClearError -> { model with Error = None }, Cmd.none
+    | ClearSuccess -> { model with Success = None }, Cmd.none
 
 type EditProjectTemplate = Template<"wwwroot/editproject.html">
 
@@ -290,7 +261,7 @@ type EditProjectTemplate = Template<"wwwroot/editproject.html">
 let tryInt iStr =
     match iStr with
     | "" -> None
-    | i -> Some (int i)
+    | i -> Some(int i)
 
 let optionIntToString optInt =
     match optInt with
@@ -302,32 +273,34 @@ let optionIntToString optInt =
 let viewMainEditBox model dispatch =
     EditProjectTemplate
         .MainEditProjectBox()
-        .Name(model.Name, fun name -> dispatch (SetName name))
-        .Description(model.Description, fun desc -> dispatch (SetDescription desc))
-        .Status(model.Status, fun status -> dispatch (SetStatus status))
+        .Name(model.Name, (fun name -> dispatch (SetName name)))
+        .Description(model.Description, (fun desc -> dispatch (SetDescription desc)))
+        .Status(model.Status, (fun status -> dispatch (SetStatus status)))
         .ProjectManagerField(
-            cond model.SignInRole <| function
-            | Some Admin ->
-                EditProjectTemplate
-                    .PmField()
-                    .ProjectManager(
-                        optionIntToString model.SelectedPm,
-                        fun pmId -> dispatch (SetProjectManager (tryInt pmId))
-                    )
-                    .PmOptions(
-                        forEach model.ProjectManagers <| (fun (pmId, pmName) ->
-                            EditProjectTemplate
-                                .PmItem()
-                                .PmId(pmId)
-                                .Name(pmName)
-                                .Elt()
+            cond model.SignInRole
+            <| function
+                | Some Admin ->
+                    EditProjectTemplate
+                        .PmField()
+                        .ProjectManager(
+                            optionIntToString model.SelectedPm,
+                            fun pmId -> dispatch (SetProjectManager(tryInt pmId))
                         )
-                    )
-                    .Elt()
-            | _ -> empty
+                        .PmOptions(
+                            forEach model.ProjectManagers
+                            <| (fun (pmId, pmName) ->
+                                EditProjectTemplate
+                                    .PmItem()
+                                    .PmId(pmId)
+                                    .Name(pmName)
+                                    .Elt())
+                        )
+                        .Elt()
+                | _ -> empty
         )
         .DevOptions(
-            forEach model.Developers <| (fun (devId, devName) ->
+            forEach model.Developers
+            <| (fun (devId, devName) ->
                 EditProjectTemplate
                     .DevItem()
                     .DevName(devName)
@@ -338,23 +311,20 @@ let viewMainEditBox model dispatch =
                             | true -> dispatch (AddDev devId)
                             | false -> dispatch (RemoveDev devId)
                     )
-                    .Elt()
-            )
+                    .Elt())
         )
-        .SkillField(model.SkillField,fun sk -> dispatch (SetSkillField sk))
+        .SkillField(model.SkillField, (fun sk -> dispatch (SetSkillField sk)))
         .AddSkillClick(fun _ -> dispatch AddSkill)
         .SkillTags(
-            forEach model.SkillsRequired <| (fun skill ->
+            forEach model.SkillsRequired
+            <| (fun skill ->
                 EditProjectTemplate
                     .SkillTag()
                     .Skill(skill)
                     .DeleteSkill(fun _ -> dispatch (RemoveSkill skill))
-                    .Elt()
-            )
+                    .Elt())
         )
-        .DisabledSubmit(
-            String.IsNullOrEmpty model.Name
-        )
+        .DisabledSubmit(String.IsNullOrEmpty model.Name)
         .SubmitProject(fun _ -> dispatch UpdateProject)
         .Elt()
 
@@ -366,18 +336,15 @@ let viewDepartmentBox model dispatch =
             | Some proj -> proj.DepartmentId |> snd
             | None -> ""
         )
-        .Department(
-            optionIntToString model.SelectedDept,
-            fun deptIdStr -> dispatch (SetDepartment (int deptIdStr))
-        )
+        .Department(optionIntToString model.SelectedDept, (fun deptIdStr -> dispatch (SetDepartment(int deptIdStr))))
         .DeptOptions(
-            forEach model.Departments <| (fun (deptId, deptName) ->
+            forEach model.Departments
+            <| (fun (deptId, deptName) ->
                 EditProjectTemplate
                     .DeptItem()
                     .DeptId(deptId)
                     .Name(deptName)
-                    .Elt()
-            )
+                    .Elt())
         )
         .DisabledSubmit(Option.isNone model.SelectedDept)
         .SubmitDepartment(fun _ -> dispatch UpdateDepartment)
@@ -392,33 +359,36 @@ let view model dispatch =
             | None -> ""
         )
         .ProgressBar(
-            cond model.LoadingStatus <| function
-            | LoadingComplete -> empty
-            | load -> ProgressBar.createDeterminateBar load
+            cond model.LoadingStatus
+            <| function
+                | LoadingComplete -> empty
+                | load -> ProgressBar.createDeterminateBar load
         )
         .MainEditBox(
-            cond model.LoadingStatus <| function
-            | LoadingComplete ->
-                viewMainEditBox model dispatch
-            | _ -> empty
+            cond model.LoadingStatus
+            <| function
+                | LoadingComplete -> viewMainEditBox model dispatch
+                | _ -> empty
         )
         .ChangeDepartmentBox(
-            cond model.LoadingStatus <| function
-            | LoadingComplete ->
-                cond model.SignInRole <| function
-                | Some Admin ->
-                    viewDepartmentBox model dispatch
+            cond model.LoadingStatus
+            <| function
+                | LoadingComplete ->
+                    cond model.SignInRole
+                    <| function
+                        | Some Admin -> viewDepartmentBox model dispatch
+                        | _ -> empty
                 | _ -> empty
-            | _ -> empty
         )
         .Notification(
-            cond model.Error <| function
-            | Some errMsg ->
-                ErrorNotification.errorNotifDanger errMsg (fun _ -> dispatch ClearError)
-            | None ->
-                cond model.Success <| function
-                | Some successMsg ->
-                    ErrorNotification.errorNotifSuccess successMsg (fun _ -> dispatch ClearSuccess)
-                | None -> empty
+            cond model.Error
+            <| function
+                | Some errMsg -> ErrorNotification.errorNotifDanger errMsg (fun _ -> dispatch ClearError)
+                | None ->
+                    cond model.Success
+                    <| function
+                        | Some successMsg ->
+                            ErrorNotification.errorNotifSuccess successMsg (fun _ -> dispatch ClearSuccess)
+                        | None -> empty
         )
         .Elt()

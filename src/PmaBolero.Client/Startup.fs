@@ -10,12 +10,17 @@ module Program =
     let Main args =
         let builder = WebAssemblyHostBuilder.CreateDefault(args)
         builder.RootComponents.Add<Pages.Main.MyApp>("#main")
-        builder.Services
-            .AddRemoting(builder.HostEnvironment)
+
+        builder
             .Services
-#if RELEASE
+            .AddRemoting(
+                builder.HostEnvironment
+            )
+            .Services
+#if (!DEBUG)
             .RemoveAll<Microsoft.Extensions.Http.IHttpMessageHandlerBuilderFilter>()
 #endif
-            |> ignore
+        |> ignore
+
         builder.Build().RunAsync() |> ignore
         0

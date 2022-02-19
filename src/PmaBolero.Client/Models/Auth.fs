@@ -6,11 +6,10 @@ open Bolero.Remoting.Client
 open PmaBolero.Shared.Models
 
 let roleToStringMap =
-    [
-        (Admin, "admin")
-        (ProjectManager, "pm")
-        (Developer, "dev")
-    ] |> Map.ofList
+    [ (Admin, "admin")
+      (ProjectManager, "pm")
+      (Developer, "dev") ]
+    |> Map.ofList
 
 let stringToRoleMap =
     roleToStringMap
@@ -21,13 +20,11 @@ let stringToRoleMap =
 // fsharplint:disable RecordFieldNames
 
 type AuthService =
-    {
-        signIn: string * string -> Async<option<string * Role>>
-        getUsername: unit -> Async<string>
-        getRole: unit -> Async<Role>
-        getUser: unit -> Async<string * Role>
-        addUser: string * string -> Async<bool>
-        signOut: unit -> Async<unit>
-    }
+    { signIn: string * string -> Async<option<string * Role>>
+      getUsername: unit -> Async<string>
+      getRole: unit -> Async<Role>
+      getUser: unit -> Async<string * Role>
+      addUser: string * string -> Async<bool>
+      signOut: unit -> Async<unit> }
     interface IRemoteService with
         member this.BasePath = "/api/auth"
