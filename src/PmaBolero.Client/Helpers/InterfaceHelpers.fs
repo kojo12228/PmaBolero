@@ -14,7 +14,7 @@ type HelperTemplate = Template<"wwwroot/helpers.html">
 module ErrorNotification =
     let private errorNotif (msg: string) hideEvent level =
         let event = Action<MouseEventArgs>(hideEvent)
-    
+
         HelperTemplate
             .ErrorNotification()
             .Level(level)
@@ -22,27 +22,22 @@ module ErrorNotification =
             .Hide(event)
             .Elt()
 
-    let errorNotifWarning msg hideEvent =
-        errorNotif msg hideEvent "is-warning"
+    let errorNotifWarning msg hideEvent = errorNotif msg hideEvent "is-warning"
 
-    let errorNotifDanger msg hideEvent =
-        errorNotif msg hideEvent "is-danger"
+    let errorNotifDanger msg hideEvent = errorNotif msg hideEvent "is-danger"
 
-    let errorNotifSuccess msg hideEvent =
-        errorNotif msg hideEvent "is-success"
+    let errorNotifSuccess msg hideEvent = errorNotif msg hideEvent "is-success"
 
 module ProgressBar =
-    let createIndeterminateBar() =
-        HelperTemplate
-            .IndeterminateProgressBar()
-            .Elt()
+    let createIndeterminateBar () =
+        HelperTemplate.IndeterminateProgressBar().Elt()
 
     type LoadingStatus =
-    | LoadingEmpty
-    | LoadingQuarter
-    | LoadingHalf
-    | LoadingThreeQuarter
-    | LoadingComplete
+        | LoadingEmpty
+        | LoadingQuarter
+        | LoadingHalf
+        | LoadingThreeQuarter
+        | LoadingComplete
 
     let private loadingToVal load =
         match load with

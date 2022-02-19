@@ -16,20 +16,24 @@ type Startup() =
     // This method gets called by the runtime. Use this method to add services to the container.
     // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
     member this.ConfigureServices(services: IServiceCollection) =
-        services.AddMvc().AddRazorRuntimeCompilation() |> ignore
+        services.AddMvc().AddRazorRuntimeCompilation()
+        |> ignore
+
         services.AddServerSideBlazor() |> ignore
+
         services
             .AddAuthorization()
             .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                .AddCookie()
-                .Services
-            .AddRemoting<AuthService>()
+            .AddCookie()
+            .Services.AddRemoting<AuthService>()
             .AddRemoting<EmployeeService>()
             .AddRemoting<ProjectService>()
             .AddRemoting<DepartmentService>()
             .AddBoleroHost()
 #if DEBUG
-            .AddHotReload(templateDir = __SOURCE_DIRECTORY__ + "/../PmaBolero.Client")
+            .AddHotReload(
+                templateDir = __SOURCE_DIRECTORY__ + "/../PmaBolero.Client"
+            )
 #endif
         |> ignore
 
@@ -59,4 +63,5 @@ module Program =
             .UseStartup<Startup>()
             .Build()
             .Run()
+
         0

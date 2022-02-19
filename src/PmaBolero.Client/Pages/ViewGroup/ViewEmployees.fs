@@ -14,23 +14,17 @@ open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
 
 type Model =
-    {
-        SignInRole: Role option
-        TilesModel: ViewGroup.Model<Employee>
-    }
+    { SignInRole: Role option
+      TilesModel: ViewGroup.Model<Employee> }
 
 let initModel: Model =
-    {
-        SignInRole = None
-        TilesModel =
-            {
-                Title = "Employees"
-                IsLoading = false
-                Data = [||]
-                AuthorisationFailure = false
-                Error = None
-            }
-    }
+    { SignInRole = None
+      TilesModel =
+        { Title = "Employees"
+          IsLoading = false
+          Data = [||]
+          AuthorisationFailure = false
+          Error = None } }
 
 type Message =
     | InitMessage of Role option
@@ -40,12 +34,10 @@ type Message =
 
 let update remote (message: Message) (model: Model) =
     match message with
-    | InitMessage role ->
-        { model with SignInRole = role}, Cmd.ofMsg (TilesMessage ViewGroup.InitMessage)
+    | InitMessage role -> { model with SignInRole = role }, Cmd.ofMsg (TilesMessage ViewGroup.InitMessage)
     | DeleteEmployee emplId ->
         model, Cmd.OfAuthorized.either remote.deleteEmployee emplId DeleteReturn (TilesMessage << ViewGroup.Error)
-    | DeleteReturn _ ->
-        model, Cmd.ofMsg (TilesMessage ViewGroup.InitMessage)
+    | DeleteReturn _ -> model, Cmd.ofMsg (TilesMessage ViewGroup.InitMessage)
     | TilesMessage msg ->
         let getDataFunc = remote.getEmployees
 
@@ -57,14 +49,7 @@ type ViewEmployeesPage = Template<"wwwroot/viewemployees.html">
 let populateSkills (skills: string []) =
     ViewEmployeesPage
         .SkillList()
-        .Items(
-            forEach skills (fun skill ->
-                ViewEmployeesPage
-                    .SkillItem()
-                    .Skill(skill)
-                    .Elt()
-            )
-        )
+        .Items(forEach skills (fun skill -> ViewEmployeesPage.SkillItem().Skill(skill).Elt()))
         .Elt()
 
 let populateProjects (projects: (int * string) []) =
@@ -76,8 +61,7 @@ let populateProjects (projects: (int * string) []) =
                     .ProjectItem()
                     .Id(string projId)
                     .Name(name)
-                    .Elt()
-            )
+                    .Elt())
         )
         .Elt()
 
@@ -91,20 +75,17 @@ let generateTile signInRole dispatch (employee: Employee) =
         .DeptId(employee.DepartmentID |> fst |> string)
         .DepartmentName(employee.DepartmentID |> snd)
         .Skills(
-            cond (Array.isEmpty employee.Skills) <| function
-            | true ->
-                ViewEmployeesPage
-                    .NoSkills()
-                    .Elt()
-            | false -> populateSkills employee.Skills)
+            cond (Array.isEmpty employee.Skills)
+            <| function
+                | true -> ViewEmployeesPage.NoSkills().Elt()
+                | false -> populateSkills employee.Skills
+        )
         .Projects(
-            cond (Array.isEmpty employee.ProjectIds) <| function
-            | true ->
-                ViewEmployeesPage
-                    .NoProjects()
-                    .Elt()
-            | false ->
-                populateProjects employee.ProjectIds)
+            cond (Array.isEmpty employee.ProjectIds)
+            <| function
+                | true -> ViewEmployeesPage.NoProjects().Elt()
+                | false -> populateProjects employee.ProjectIds
+        )
         .EditDisable(
             match signInRole with
             | Some Admin -> false

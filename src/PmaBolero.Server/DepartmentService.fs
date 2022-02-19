@@ -14,25 +14,32 @@ type DepartmentService(ctx: IRemoteContext, env: IWebHostEnvironment) =
     inherit RemoteHandler<EmployeeData.DepartmentService>()
 
     override this.Handler =
-        {
-            getDepartments = ctx.Authorize <| fun () -> async {
-                return
-                    Backend.departments
-                    |> Map.toArray
-                    |> Array.map (snd >> Backend.toSharedDepartment)
-            }
+        { getDepartments =
+            ctx.Authorize
+            <| fun () ->
+                async {
+                    return
+                        Backend.departments
+                        |> Map.toArray
+                        |> Array.map (snd >> Backend.toSharedDepartment)
+                }
 
-            getDepartmentIds = ctx.Authorize <| fun () -> async {
-                return
-                    Backend.departments
-                    |> Map.toArray
-                    |> Array.map (snd >> (fun dept -> dept.Id, dept.Name))
-            }
+          getDepartmentIds =
+              ctx.Authorize
+              <| fun () ->
+                  async {
+                      return
+                          Backend.departments
+                          |> Map.toArray
+                          |> Array.map (snd >> (fun dept -> dept.Id, dept.Name))
+                  }
 
-            getDepartment = ctx.Authorize <| fun deptId -> async {
-                return
-                    Backend.departments
-                    |> Map.tryFind deptId
-                    |> Option.map Backend.toSharedDepartment
-            }
-        }
+          getDepartment =
+              ctx.Authorize
+              <| fun deptId ->
+                  async {
+                      return
+                          Backend.departments
+                          |> Map.tryFind deptId
+                          |> Option.map Backend.toSharedDepartment
+                  } }
