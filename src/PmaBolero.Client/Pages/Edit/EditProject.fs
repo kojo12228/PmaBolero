@@ -14,6 +14,7 @@ open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
 
 open PmaBolero.Client.Helpers
+open PmaBolero.Client.Helpers.Forms
 open PmaBolero.Client.Helpers.ProgressBar
 
 type Model =
@@ -270,125 +271,232 @@ let optionIntToString optInt =
 
 // fsharplint:disable CanBeReplacedWithComposition
 
-let viewMainEditBox model dispatch =
-    EditProjectTemplate
-        .MainEditProjectBox()
-        .Name(model.Name, (fun name -> dispatch (SetName name)))
-        .Description(model.Description, (fun desc -> dispatch (SetDescription desc)))
-        .Status(model.Status, (fun status -> dispatch (SetStatus status)))
-        .ProjectManagerField(
-            cond model.SignInRole
-            <| function
-                | Some Admin ->
-                    EditProjectTemplate
-                        .PmField()
-                        .ProjectManager(
-                            optionIntToString model.SelectedPm,
-                            fun pmId -> dispatch (SetProjectManager(tryInt pmId))
-                        )
-                        .PmOptions(
-                            forEach model.ProjectManagers
-                            <| (fun (pmId, pmName) ->
-                                EditProjectTemplate
-                                    .PmItem()
-                                    .PmId(pmId)
-                                    .Name(pmName)
-                                    .Elt())
-                        )
-                        .Elt()
-                | _ -> empty
-        )
-        .DevOptions(
-            forEach model.Developers
-            <| (fun (devId, devName) ->
-                EditProjectTemplate
-                    .DevItem()
-                    .DevName(devName)
-                    .DevCheckbox(
-                        Set.contains devId model.SelectedDevs,
-                        fun selected ->
-                            match selected with
-                            | true -> dispatch (AddDev devId)
-                            | false -> dispatch (RemoveDev devId)
-                    )
-                    .Elt())
-        )
-        .SkillField(model.SkillField, (fun sk -> dispatch (SetSkillField sk)))
-        .AddSkillClick(fun _ -> dispatch AddSkill)
-        .SkillTags(
-            forEach model.SkillsRequired
-            <| (fun skill ->
-                EditProjectTemplate
-                    .SkillTag()
-                    .Skill(skill)
-                    .DeleteSkill(fun _ -> dispatch (RemoveSkill skill))
-                    .Elt())
-        )
-        .DisabledSubmit(String.IsNullOrEmpty model.Name)
-        .SubmitProject(fun _ -> dispatch UpdateProject)
-        .Elt()
+let projectManagerField model dispatch =
+    div [ attr.``class`` "field" ] [
+        label [ attr.``class`` "label" ] [ text "Project Manager" ]
+        div [ attr.``class`` "control" ] [
+            div [ attr.``class`` "select" ] [
+                select [ on.change (fun e -> e.Value |> unbox |> tryInt |> SetProjectManager |> dispatch) ] [
+                    option [
+                        attr.``default`` true
+                        attr.label " "
+                    ] []
 
-let viewDepartmentBox model dispatch =
-    EditProjectTemplate
-        .EditDepartment()
-        .CurrentDeptName(
-            match model.OriginalProject with
-            | Some proj -> proj.DepartmentId |> snd
-            | None -> ""
-        )
-        .Department(optionIntToString model.SelectedDept, (fun deptIdStr -> dispatch (SetDepartment(int deptIdStr))))
-        .DeptOptions(
-            forEach model.Departments
-            <| (fun (deptId, deptName) ->
-                EditProjectTemplate
-                    .DeptItem()
-                    .DeptId(deptId)
-                    .Name(deptName)
-                    .Elt())
-        )
-        .DisabledSubmit(Option.isNone model.SelectedDept)
-        .SubmitDepartment(fun _ -> dispatch UpdateDepartment)
-        .Elt()
+                    forEach model.ProjectManagers (fun (pmId, pmName) ->
+                        option [ attr.value pmId ] [ text pmName ]
+                    )
+                ]
+            ]
+        ]
+    ]
+
+let mainEditBox model dispatch =
+    div [ attr.``class`` "box" ] [
+        form [ on.submit (fun _ -> dispatch UpdateProject) ] [
+            inputWithLabel "Project Title" "text" model.Name (SetName >> dispatch)
+
+            div [ attr.``class`` "field" ] [
+                label [ attr.``class`` "label" ] [
+                    text "Description"
+                ]
+                div [ attr.``class`` "control" ] [
+                    textarea [
+                        attr.``class`` "textarea"
+                        on.change (fun e -> e.Value |> unbox |> SetDescription |> dispatch)
+                    ] []
+                ]
+            ]
+
+            div [ attr.``class`` "field" ] [
+                label [ attr.``class`` "label" ] [
+                    text "Status"
+                ]
+                div [ attr.``class`` "control" ] [
+                    div [ attr.``class`` "select" ] [
+                        select [ on.change (fun e -> e.Value |> unbox |> SetStatus |> dispatch) ] [
+                            yield!
+                                [ "Pending"; "Active"; "Complete"]
+                                |> List.map (fun s ->
+                                    option [ attr.value s ] [ text s ]
+                                )
+                        ]
+                    ]
+                ]
+            ]
+
+            projectManagerField model dispatch
+
+            div [] [
+                label [ attr.``class`` "label" ] [
+                    text "Developers"
+                ]
+
+                forEach model.Developers (fun (devId, _) ->
+                    div [ attr.``class`` "field" ] [
+                        div [ attr.``class`` "control" ] [
+                            label [ attr.``class`` "checkbox" ] [
+                                input [
+                                    attr.``type`` "checkbox"
+                                    bind.checked (Set.contains devId model.SelectedDevs) (fun selected -> 
+                                        match selected with
+                                        | true -> dispatch (AddDev devId)
+                                        | false -> dispatch (RemoveDev devId)
+                                    )
+                                ]
+                            ]
+                        ]
+                    ]
+                )
+            ]
+
+            div [
+                attr.classes [
+                    "field"
+                    "has-addons"
+                ]
+            ] [
+                div [
+                    attr.classes [
+                        "control"
+                        "is-expande"
+                    ]
+                ] [
+                    input [
+                        attr.``class`` "input"
+                        attr.``type`` "text"
+                        bind.input.string model.SkillField (fun s -> SetSkillField s |> dispatch)
+                    ]
+                ]
+
+                div [ attr.``class`` "control" ] [
+                    button [
+                        attr.``class`` "button"
+                        attr.``type`` "button"
+                        on.click (fun _ -> AddSkill |> dispatch)
+                    ] [
+                        text "Add Skill"
+                    ]
+                ]
+            ]
+
+            div [ attr.``class`` "tags" ] [
+                forEach model.SkillsRequired
+                <| fun skill ->
+                    span [
+                        attr.classes [
+                            "tag"
+                            "is-medium"
+                            "is-rounded"
+                        ]
+                    ] [
+                        text skill
+                        button [
+                            attr.classes [
+                                "delete"
+                                "is-small"
+                            ]
+                            attr.``type`` "button"
+                            on.click (fun _ -> RemoveSkill skill |> dispatch)
+                        ] []
+                    ]
+            ]
+
+            div [ attr.``class`` "field" ] [
+                div [ attr.``class`` "control"] [
+                    input [
+                        attr.classes [
+                            "button"
+                            "is-primary"
+                            "is-fullwidth"
+                        ]
+                        attr.``type`` "submit"
+                        attr.value "Update"
+                        attr.disabled (String.IsNullOrEmpty model.Name)
+                    ]
+                ]
+            ]
+        ]
+    ]
+
+let departmentBox model dispatch =
+    let currentDepartmentName =
+        match model.OriginalProject with
+        | Some proj -> proj.DepartmentId |> snd
+        | None -> ""
+
+    div [ attr.``class`` "box" ] [
+        p [] [
+            strong [] [ text "Current Department" ]
+            text $": {currentDepartmentName}"
+        ]
+
+        form [ on.submit (fun _ -> UpdateDepartment |> dispatch) ] [
+            div [ attr.``class`` "field" ] [
+                label [ attr.``class`` "label" ] [
+                    text "Department"
+                ]
+
+                div [ attr.``class`` "control" ] [
+                    div [ attr.``class`` "select" ] [
+                        select [ on.change (fun e -> e.Value |> unbox |> SetDepartment |> dispatch) ] [
+                            forEach model.Departments
+                            <| (fun (deptId, deptName) ->
+                                option [ attr.value deptId ] [
+                                    text deptName
+                                ]
+                            )
+                        ]
+                    ]
+                ]
+            ]
+
+            div [ attr.``class`` "field" ] [
+                div [ attr.``class`` "control" ] [
+                    input [
+                        attr.classes [
+                            "button"
+                            "is-primary"
+                            "is-fullwidth"
+                        ]
+                        attr.``type`` "submit"
+                        attr.value "Update Department"
+                        attr.disabled (Option.isNone model.SelectedDept)
+                    ]
+                ]
+            ]
+        ]
+    ]
 
 let view model dispatch =
-    EditProjectTemplate
-        .EditProject()
-        .ProjectName(
+    concat [
+        p [ attr.``class`` "title" ] [ text "Edit Project" ]
+        p [ attr.``class`` "subtitle" ] [
             match model.OriginalProject with
             | Some proj -> proj.Name
             | None -> ""
-        )
-        .ProgressBar(
-            cond model.LoadingStatus
-            <| function
-                | LoadingComplete -> empty
-                | load -> ProgressBar.createDeterminateBar load
-        )
-        .MainEditBox(
-            cond model.LoadingStatus
-            <| function
-                | LoadingComplete -> viewMainEditBox model dispatch
-                | _ -> empty
-        )
-        .ChangeDepartmentBox(
-            cond model.LoadingStatus
-            <| function
-                | LoadingComplete ->
+            |> text
+        ]
+
+        cond model.LoadingStatus
+        <| function
+            | LoadingComplete ->
+                concat [
+                    mainEditBox model dispatch
+
                     cond model.SignInRole
                     <| function
-                        | Some Admin -> viewDepartmentBox model dispatch
+                        | Some Admin -> departmentBox model dispatch
                         | _ -> empty
-                | _ -> empty
-        )
-        .Notification(
-            cond model.Error
-            <| function
-                | Some errMsg -> ErrorNotification.errorNotifDanger errMsg (fun _ -> dispatch ClearError)
-                | None ->
-                    cond model.Success
-                    <| function
-                        | Some successMsg ->
-                            ErrorNotification.errorNotifSuccess successMsg (fun _ -> dispatch ClearSuccess)
-                        | None -> empty
-        )
-        .Elt()
+                ]
+            | load -> ProgressBar.createDeterminateBar load
+
+        cond model.Error
+        <| function
+            | Some errMsg -> ErrorNotification.errorNotifDanger errMsg (fun _ -> dispatch ClearError)
+            | None ->
+                cond model.Success
+                <| function
+                    | Some successMsg ->
+                        ErrorNotification.errorNotifSuccess successMsg (fun _ -> dispatch ClearSuccess)
+                    | None -> empty
+    ]

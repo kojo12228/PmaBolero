@@ -13,6 +13,7 @@ open PmaBolero.Shared.Models
 
 open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
+open PmaBolero.Client.Helpers.Forms
 open PmaBolero.Client.Helpers.ErrorNotification
 open PmaBolero.Client.Helpers.ProgressBar
 
@@ -205,106 +206,181 @@ let optionIntToString optInt =
     | Some i -> string i
     | None -> ""
 
-// fsharplint:disable CanBeReplacedWithComposition
+let mainBoxSkillsTag (skills: Set<string>) dispatch =
+    div [ attr.``class`` "tags" ] [
+        forEach skills
+        <| (fun skill ->
+            span [ attr.classes [ "tag"
+                                  "is-medium"
+                                  "is-rounded" ] ] [
+                text skill
+                button [ attr.classes [ "delete"; "is-small" ]
+                         attr.``type`` "button"
+                         on.click (fun _ -> dispatch (RemoveSkill skill)) ] []
+            ])
+    ]
 
-let viewMainEditBox model dispatch =
+let mainEditBox model dispatch =
+    div [ attr.``class`` "box " ] [
+        form [ on.submit (fun _ -> dispatch UpdateEmployee) ] [
+            inputWithLabel "Name" "text" model.Name (SetName >> dispatch)
 
-    EditEmployeeTemplate
-        .MainBox()
-        .Name(model.Name, (fun nm -> dispatch (SetName nm)))
-        .Email(model.Email, (fun em -> dispatch (SetEmail em)))
-        .SkillField(model.SkillField, (fun sk -> dispatch (SetSkillField sk)))
-        .AddSkillClick(fun _ -> dispatch AddSkill)
-        .SkillTags(
-            forEach model.Skills
-            <| (fun skill ->
-                EditEmployeeTemplate
-                    .SkillTag()
-                    .Skill(skill)
-                    .DeleteSkill(fun _ -> dispatch (RemoveSkill skill))
-                    .Elt())
-        )
-        .DisabledUpdate(
-            String.IsNullOrEmpty model.Name
-            || Regex.IsMatch(model.Email, @"(@)(.+)$") |> not
-        )
-        .SubmitMain(fun _ -> dispatch UpdateEmployee)
-        .Elt()
+            inputWithLabel "Email" "text" model.Email (SetEmail >> dispatch)
 
-let viewRoleBox model dispatch =
-    EditEmployeeTemplate
-        .RoleBox()
-        .CurrentDeptName(
-            match model.OriginalEmployee with
-            | Some empl -> string empl.Role
-            | None -> ""
-        )
-        .Role(model.SelectedRole, (fun r -> dispatch (SetRole r)))
-        .SubmitRole(fun _ -> dispatch UpdateRole)
-        .Elt()
+            div [ attr.classes [ "field"; "has-addons" ] ] [
+                div [ attr.classes [ "control"
+                                     "is-expanded" ] ] [
+                    input [ attr.``class`` "input"
+                            attr.``type`` "text"
+                            on.change (fun e -> e.Value |> unbox |> SetSkillField |> dispatch) ]
+                ]
 
-let viewDepartmentBox model dispatch =
-    EditEmployeeTemplate
-        .DepartmentBox()
-        .CurrentDeptName(
-            match model.OriginalEmployee with
-            | Some empl -> empl.DepartmentID |> snd
-            | None -> ""
-        )
-        .Department(optionIntToString model.SelectedDept, (fun deptIdStr -> dispatch (SetDepartment(int deptIdStr))))
-        .DeptOptions(
-            forEach model.Departments
-            <| (fun (deptId, deptName) ->
-                EditEmployeeTemplate
-                    .DeptItem()
-                    .DeptId(deptId)
-                    .Name(deptName)
-                    .Elt())
-        )
-        .DisabledSubmit(Option.isNone model.SelectedDept)
-        .SubmitDepartment(fun _ -> dispatch UpdateDepartment)
-        .Elt()
+                div [ attr.``class`` "control" ] [
+                    button [ attr.``class`` "button"
+                             attr.``type`` "button"
+                             on.click (fun _ -> dispatch AddSkill) ] [
+                        text "Add Skill"
+                    ]
+                ]
+            ]
+
+            mainBoxSkillsTag model.Skills dispatch
+
+            div [ attr.``class`` "field" ] [
+                div [ attr.``class`` "control" ] [
+                    input [ attr.classes [ "button"
+                                           "is-primary"
+                                           "is-fullwidth" ]
+                            attr.``type`` "submit"
+                            attr.value "Update"
+                            attr.disabled (
+                                String.IsNullOrEmpty model.Name
+                                || Regex.IsMatch(model.Email, @"(@)(.+)$") |> not
+                            ) ]
+                ]
+            ]
+        ]
+    ]
+
+let roleBox model dispatch =
+    let currentRole =
+        match model.OriginalEmployee with
+        | Some empl -> string empl.Role
+        | None -> ""
+
+    div [ attr.``class`` "box" ] [
+        p [] [
+            strong [] [ text "Current Role" ]
+            text $": {currentRole}"
+        ]
+
+        form [ on.submit (fun _ -> dispatch UpdateRole) ] [
+            div [ attr.``class`` "field" ] [
+                label [ attr.``class`` "label" ] [
+                    text "Role"
+                ]
+                div [ attr.``class`` "select" ] [
+                    select [ attr.``class`` "select"
+                             on.change (fun e -> e.Value |> unbox |> SetRole |> dispatch) ] [
+                        option [ attr.``default`` true
+                                 attr.value "Developer" ] [
+                            text "Developer"
+                        ]
+                        option [ attr.value "ProjectManager" ] [
+                            text "Project Manager"
+                        ]
+                        option [ attr.value "Admin" ] [
+                            text "Admin"
+                        ]
+                    ]
+                ]
+            ]
+
+            div [ attr.``class`` "field" ] [
+                div [ attr.``class`` "control" ] [
+                    input [ attr.classes [ "button"
+                                           "is-primary"
+                                           "is-fullwidth" ]
+                            attr.``type`` "submit"
+                            attr.value "Update" ]
+                ]
+            ]
+        ]
+    ]
+
+let departmentBox model dispatch =
+    let currentDepartmentName =
+        match model.OriginalEmployee with
+        | Some empl -> empl.DepartmentID |> snd
+        | None -> ""
+
+    div [ attr.``class`` "box" ] [
+        p [] [
+            strong [] [ text "Current Department" ]
+            text $": {currentDepartmentName}"
+        ]
+
+        form [ on.submit (fun _ -> dispatch UpdateDepartment) ] [
+            div [ attr.``class`` "field" ] [
+                label [ attr.``class`` "label" ] [
+                    text "Department"
+                ]
+                div [ attr.``class`` "control" ] [
+                    div [ attr.``class`` "select" ] [
+                        select [ on.change (fun e -> e.Value |> unbox |> SetDepartment |> dispatch) ] [
+                            forEach model.Departments (fun (id, name) -> option [ attr.value id ] [ text name ])
+                        ]
+                    ]
+                ]
+            ]
+
+            div [ attr.``class`` "field" ] [
+                div [ attr.``class`` "control" ] [
+                    input [ attr.classes [ "button"
+                                           "is-primary"
+                                           "is-fullwidth" ]
+                            attr.``type`` "submit"
+                            attr.value "Update"
+                            attr.disabled (Option.isNone model.SelectedDept) ]
+                ]
+            ]
+        ]
+    ]
 
 let view model dispatch =
-    EditEmployeeTemplate
-        .EditEmployee()
-        .EmployeeName(
-            match model.OriginalEmployee with
-            | Some empl -> empl.FullName
-            | None -> ""
-        )
-        .ProgressBar(
-            cond model.LoadingStatus
-            <| function
-                | LoadingComplete -> empty
-                | load -> createDeterminateBar load
-        )
-        .MainEditBox(
-            cond model.LoadingStatus
-            <| function
-                | LoadingComplete -> viewMainEditBox model dispatch
-                | _ -> empty
-        )
-        .EditRoleBox(
-            cond model.LoadingStatus
-            <| function
-                | LoadingComplete -> viewRoleBox model dispatch
-                | _ -> empty
-        )
-        .EditDepartmentBox(
-            cond model.LoadingStatus
-            <| function
-                | LoadingComplete -> viewDepartmentBox model dispatch
-                | _ -> empty
-        )
-        .Notification(
-            cond model.Error
-            <| function
-                | Some errMsg -> errorNotifDanger errMsg (fun _ -> dispatch ClearError)
-                | None ->
-                    cond model.Success
-                    <| function
-                        | Some successMsg -> errorNotifSuccess successMsg (fun _ -> dispatch ClearSuccess)
-                        | None -> empty
-        )
-        .Elt()
+    concat [ p [ attr.``class`` "title" ] [
+                 text "Edit Employee"
+             ]
+             p [ attr.``class`` "subtitle" ] [
+                 match model.OriginalEmployee with
+                 | Some empl -> empl.FullName
+                 | None -> ""
+                 |> text
+             ]
+
+             cond model.LoadingStatus
+             <| function
+                 | LoadingComplete ->
+                     concat [ mainEditBox model dispatch
+
+                              div [ attr.``class`` "columns" ] [
+                                  div [ attr.``class`` "column" ] [
+                                      roleBox model dispatch
+                                  ]
+
+                                  div [ attr.``class`` "column" ] [
+                                      departmentBox model dispatch
+                                  ]
+                              ] ]
+                 | load -> createDeterminateBar load
+
+             cond model.Error
+             <| function
+                 | Some errMsg -> errorNotifDanger errMsg (fun _ -> dispatch ClearError)
+                 | None ->
+                     cond model.Success
+                     <| function
+                         | Some successMsg -> errorNotifSuccess successMsg (fun _ -> dispatch ClearSuccess)
+                         | None -> empty
+
+              ]
