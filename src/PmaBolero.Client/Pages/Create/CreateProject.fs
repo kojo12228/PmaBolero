@@ -9,6 +9,7 @@ open Bolero.Remoting.Client
 open Bolero.Templating.Client
 
 open PmaBolero.Client.Models.EmployeeData
+open PmaBolero.Client.Helpers
 open PmaBolero.Client.Helpers.ErrorNotification
 open PmaBolero.Client.Helpers.ProgressBar
 open PmaBolero.Client.Helpers.Forms
@@ -210,7 +211,8 @@ let developersField model dispatch =
         <| function
             | true -> createIndeterminateBar ()
             | false ->
-                forEach model.Developers (fun (id, dev) ->
+                forEach model.Developers
+                <| fun (id, dev) ->
                     div [ attr.``class`` "field" ] [
                         div [ attr.``class`` "control" ] [
                             label [ attr.``class`` "checkbox" ] [
@@ -222,7 +224,7 @@ let developersField model dispatch =
                                 text dev
                             ]
                         ]
-                    ])
+                    ]
     ]
 
 let skillsFields model dispatch =
@@ -268,31 +270,33 @@ let submitButton model =
     ]
 
 let view model dispatch =
-    concat [ p [ attr.``class`` "title" ] [
-                 text "Create New Project"
-             ]
+    concat' [] [
+        p [ attr.``class`` "title" ] [
+            text "Create New Project"
+        ]
 
-             div [ attr.``class`` "box" ] [
-                 form [ on.submit (fun _ -> dispatch SubmitProject) ] [
-                     titleField model dispatch
+        div [ attr.``class`` "box" ] [
+            form [ on.submit (fun _ -> dispatch SubmitProject) ] [
+                titleField model dispatch
 
-                     descriptionField model dispatch
+                descriptionField model dispatch
 
-                     departmentField model dispatch
+                departmentField model dispatch
 
-                     projectManagerField model dispatch
+                projectManagerField model dispatch
 
-                     developersField model dispatch
+                developersField model dispatch
 
-                     skillsFields model dispatch
+                skillsFields model dispatch
 
-                     skillsTags model dispatch
+                skillsTags model dispatch
 
-                     submitButton model
+                submitButton model
 
-                     cond model.Error
-                     <| function
-                         | None -> empty
-                         | Some msg -> errorNotifDanger msg (fun _ -> dispatch ClearError)
-                 ]
-             ] ]
+                cond model.Error
+                <| function
+                    | None -> empty
+                    | Some msg -> errorNotifDanger msg (fun _ -> dispatch ClearError)
+            ]
+        ]
+    ]

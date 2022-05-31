@@ -2,6 +2,10 @@ namespace PmaBolero.Client.Helpers
 
 open Bolero.Html
 
+[<AutoOpen>]
+module FantomasHelpers =
+    let concat' (unusedList: 'a list) children = concat children
+
 module Forms =
     let inputWithLabel labelText (inputType: string) inputValue setValue =
         div [ attr.``class`` "field" ] [

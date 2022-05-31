@@ -9,6 +9,7 @@ open System.Text.RegularExpressions
 open PmaBolero.Shared.Models
 
 open PmaBolero.Client.Models.EmployeeData
+open PmaBolero.Client.Helpers
 open PmaBolero.Client.Helpers.ErrorNotification
 open PmaBolero.Client.Helpers.Forms
 
@@ -220,27 +221,29 @@ let submitButton model =
     ]
 
 let view model dispatch =
-    concat [ p [ attr.``class`` "title" ] []
+    concat' [] [
+        p [ attr.``class`` "title" ] []
 
-             div [ attr.``class`` "box" ] [
-                 form [ on.submit (fun _ -> dispatch SubmitEmployee) ] [
-                     nameFields model dispatch
+        div [ attr.``class`` "box" ] [
+            form [ on.submit (fun _ -> dispatch SubmitEmployee) ] [
+                nameFields model dispatch
 
-                     inputWithLabel "Email" "email" model.Email (dispatch << SetEmail)
+                inputWithLabel "Email" "email" model.Email (dispatch << SetEmail)
 
-                     departmentFields model dispatch
+                departmentFields model dispatch
 
-                     roleField dispatch
+                roleField dispatch
 
-                     skillsField dispatch
+                skillsField dispatch
 
-                     skillTags model dispatch
+                skillTags model dispatch
 
-                     submitButton model
-                 ]
-             ]
+                submitButton model
+            ]
+        ]
 
-             cond model.Error
-             <| function
-                 | None -> empty
-                 | Some msg -> errorNotifDanger msg (fun _ -> dispatch ClearError) ]
+        cond model.Error
+        <| function
+            | None -> empty
+            | Some msg -> errorNotifDanger msg (fun _ -> dispatch ClearError)
+    ]

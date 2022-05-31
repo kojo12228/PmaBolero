@@ -13,6 +13,7 @@ open PmaBolero.Shared.Models
 
 open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
+open PmaBolero.Client.Helpers
 open PmaBolero.Client.Helpers.Forms
 open PmaBolero.Client.Helpers.ErrorNotification
 open PmaBolero.Client.Helpers.ProgressBar
@@ -348,39 +349,41 @@ let departmentBox model dispatch =
     ]
 
 let view model dispatch =
-    concat [ p [ attr.``class`` "title" ] [
-                 text "Edit Employee"
-             ]
-             p [ attr.``class`` "subtitle" ] [
-                 match model.OriginalEmployee with
-                 | Some empl -> empl.FullName
-                 | None -> ""
-                 |> text
-             ]
+    concat' [] [
+        p [ attr.``class`` "title" ] [
+            text "Edit Employee"
+        ]
+        p [ attr.``class`` "subtitle" ] [
+            match model.OriginalEmployee with
+            | Some empl -> empl.FullName
+            | None -> ""
+            |> text
+        ]
 
-             cond model.LoadingStatus
-             <| function
-                 | LoadingComplete ->
-                     concat [ mainEditBox model dispatch
+        cond model.LoadingStatus
+        <| function
+            | LoadingComplete ->
+                concat' [] [
+                    mainEditBox model dispatch
 
-                              div [ attr.``class`` "columns" ] [
-                                  div [ attr.``class`` "column" ] [
-                                      roleBox model dispatch
-                                  ]
+                    div [ attr.``class`` "columns" ] [
+                        div [ attr.``class`` "column" ] [
+                            roleBox model dispatch
+                        ]
 
-                                  div [ attr.``class`` "column" ] [
-                                      departmentBox model dispatch
-                                  ]
-                              ] ]
-                 | load -> createDeterminateBar load
+                        div [ attr.``class`` "column" ] [
+                            departmentBox model dispatch
+                        ]
+                    ]
+                ]
+            | load -> createDeterminateBar load
 
-             cond model.Error
-             <| function
-                 | Some errMsg -> errorNotifDanger errMsg (fun _ -> dispatch ClearError)
-                 | None ->
-                     cond model.Success
-                     <| function
-                         | Some successMsg -> errorNotifSuccess successMsg (fun _ -> dispatch ClearSuccess)
-                         | None -> empty
-
-              ]
+        cond model.Error
+        <| function
+            | Some errMsg -> errorNotifDanger errMsg (fun _ -> dispatch ClearError)
+            | None ->
+                cond model.Success
+                <| function
+                    | Some successMsg -> errorNotifSuccess successMsg (fun _ -> dispatch ClearSuccess)
+                    | None -> empty
+    ]

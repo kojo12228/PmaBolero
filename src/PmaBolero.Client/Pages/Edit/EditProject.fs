@@ -273,18 +273,24 @@ let optionIntToString optInt =
 
 let projectManagerField model dispatch =
     div [ attr.``class`` "field" ] [
-        label [ attr.``class`` "label" ] [ text "Project Manager" ]
+        label [ attr.``class`` "label" ] [
+            text "Project Manager"
+        ]
         div [ attr.``class`` "control" ] [
             div [ attr.``class`` "select" ] [
-                select [ on.change (fun e -> e.Value |> unbox |> tryInt |> SetProjectManager |> dispatch) ] [
-                    option [
-                        attr.``default`` true
-                        attr.label " "
-                    ] []
+                select [ on.change (fun e ->
+                             e.Value
+                             |> unbox
+                             |> tryInt
+                             |> SetProjectManager
+                             |> dispatch) ] [
+                    option [ attr.``default`` true
+                             attr.label " " ] []
 
                     forEach model.ProjectManagers (fun (pmId, pmName) ->
-                        option [ attr.value pmId ] [ text pmName ]
-                    )
+                        option [ attr.value pmId ] [
+                            text pmName
+                        ])
                 ]
             ]
         ]
@@ -300,10 +306,8 @@ let mainEditBox model dispatch =
                     text "Description"
                 ]
                 div [ attr.``class`` "control" ] [
-                    textarea [
-                        attr.``class`` "textarea"
-                        on.change (fun e -> e.Value |> unbox |> SetDescription |> dispatch)
-                    ] []
+                    textarea [ attr.``class`` "textarea"
+                               on.change (fun e -> e.Value |> unbox |> SetDescription |> dispatch) ] []
                 ]
             ]
 
@@ -315,10 +319,8 @@ let mainEditBox model dispatch =
                     div [ attr.``class`` "select" ] [
                         select [ on.change (fun e -> e.Value |> unbox |> SetStatus |> dispatch) ] [
                             yield!
-                                [ "Pending"; "Active"; "Complete"]
-                                |> List.map (fun s ->
-                                    option [ attr.value s ] [ text s ]
-                                )
+                                [ "Pending"; "Active"; "Complete" ]
+                                |> List.map (fun s -> option [ attr.value s ] [ text s ])
                         ]
                     ]
                 ]
@@ -335,45 +337,27 @@ let mainEditBox model dispatch =
                     div [ attr.``class`` "field" ] [
                         div [ attr.``class`` "control" ] [
                             label [ attr.``class`` "checkbox" ] [
-                                input [
-                                    attr.``type`` "checkbox"
-                                    bind.checked (Set.contains devId model.SelectedDevs) (fun selected -> 
-                                        match selected with
-                                        | true -> dispatch (AddDev devId)
-                                        | false -> dispatch (RemoveDev devId)
-                                    )
-                                ]
+                                input [ attr.``type`` "checkbox"
+                                        bind.checked (Set.contains devId model.SelectedDevs) (fun selected ->
+                                            match selected with
+                                            | true -> dispatch (AddDev devId)
+                                            | false -> dispatch (RemoveDev devId)) ]
                             ]
                         ]
-                    ]
-                )
+                    ])
             ]
 
-            div [
-                attr.classes [
-                    "field"
-                    "has-addons"
-                ]
-            ] [
-                div [
-                    attr.classes [
-                        "control"
-                        "is-expande"
-                    ]
-                ] [
-                    input [
-                        attr.``class`` "input"
-                        attr.``type`` "text"
-                        bind.input.string model.SkillField (fun s -> SetSkillField s |> dispatch)
-                    ]
+            div [ attr.classes [ "field"; "has-addons" ] ] [
+                div [ attr.classes [ "control"; "is-expande" ] ] [
+                    input [ attr.``class`` "input"
+                            attr.``type`` "text"
+                            bind.input.string model.SkillField (fun s -> SetSkillField s |> dispatch) ]
                 ]
 
                 div [ attr.``class`` "control" ] [
-                    button [
-                        attr.``class`` "button"
-                        attr.``type`` "button"
-                        on.click (fun _ -> AddSkill |> dispatch)
-                    ] [
+                    button [ attr.``class`` "button"
+                             attr.``type`` "button"
+                             on.click (fun _ -> AddSkill |> dispatch) ] [
                         text "Add Skill"
                     ]
                 ]
@@ -382,37 +366,24 @@ let mainEditBox model dispatch =
             div [ attr.``class`` "tags" ] [
                 forEach model.SkillsRequired
                 <| fun skill ->
-                    span [
-                        attr.classes [
-                            "tag"
-                            "is-medium"
-                            "is-rounded"
-                        ]
-                    ] [
+                    span [ attr.classes [ "tag"
+                                          "is-medium"
+                                          "is-rounded" ] ] [
                         text skill
-                        button [
-                            attr.classes [
-                                "delete"
-                                "is-small"
-                            ]
-                            attr.``type`` "button"
-                            on.click (fun _ -> RemoveSkill skill |> dispatch)
-                        ] []
+                        button [ attr.classes [ "delete"; "is-small" ]
+                                 attr.``type`` "button"
+                                 on.click (fun _ -> RemoveSkill skill |> dispatch) ] []
                     ]
             ]
 
             div [ attr.``class`` "field" ] [
-                div [ attr.``class`` "control"] [
-                    input [
-                        attr.classes [
-                            "button"
-                            "is-primary"
-                            "is-fullwidth"
-                        ]
-                        attr.``type`` "submit"
-                        attr.value "Update"
-                        attr.disabled (String.IsNullOrEmpty model.Name)
-                    ]
+                div [ attr.``class`` "control" ] [
+                    input [ attr.classes [ "button"
+                                           "is-primary"
+                                           "is-fullwidth" ]
+                            attr.``type`` "submit"
+                            attr.value "Update"
+                            attr.disabled (String.IsNullOrEmpty model.Name) ]
                 ]
             ]
         ]
@@ -443,8 +414,7 @@ let departmentBox model dispatch =
                             <| (fun (deptId, deptName) ->
                                 option [ attr.value deptId ] [
                                     text deptName
-                                ]
-                            )
+                                ])
                         ]
                     ]
                 ]
@@ -452,24 +422,22 @@ let departmentBox model dispatch =
 
             div [ attr.``class`` "field" ] [
                 div [ attr.``class`` "control" ] [
-                    input [
-                        attr.classes [
-                            "button"
-                            "is-primary"
-                            "is-fullwidth"
-                        ]
-                        attr.``type`` "submit"
-                        attr.value "Update Department"
-                        attr.disabled (Option.isNone model.SelectedDept)
-                    ]
+                    input [ attr.classes [ "button"
+                                           "is-primary"
+                                           "is-fullwidth" ]
+                            attr.``type`` "submit"
+                            attr.value "Update Department"
+                            attr.disabled (Option.isNone model.SelectedDept) ]
                 ]
             ]
         ]
     ]
 
 let view model dispatch =
-    concat [
-        p [ attr.``class`` "title" ] [ text "Edit Project" ]
+    concat' [] [
+        p [ attr.``class`` "title" ] [
+            text "Edit Project"
+        ]
         p [ attr.``class`` "subtitle" ] [
             match model.OriginalProject with
             | Some proj -> proj.Name
@@ -480,7 +448,7 @@ let view model dispatch =
         cond model.LoadingStatus
         <| function
             | LoadingComplete ->
-                concat [
+                concat' [] [
                     mainEditBox model dispatch
 
                     cond model.SignInRole
@@ -496,7 +464,6 @@ let view model dispatch =
             | None ->
                 cond model.Success
                 <| function
-                    | Some successMsg ->
-                        ErrorNotification.errorNotifSuccess successMsg (fun _ -> dispatch ClearSuccess)
+                    | Some successMsg -> ErrorNotification.errorNotifSuccess successMsg (fun _ -> dispatch ClearSuccess)
                     | None -> empty
     ]
