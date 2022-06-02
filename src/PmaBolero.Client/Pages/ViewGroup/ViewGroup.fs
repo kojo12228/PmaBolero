@@ -10,6 +10,7 @@ open Bolero.Templating.Client
 
 open PmaBolero.Client.Helpers.ErrorNotification
 open PmaBolero.Client.Helpers.ProgressBar
+open PmaBolero.Client.Helpers
 
 type Model<'T> =
     { Title: string
@@ -48,26 +49,29 @@ let update getData message model =
 type MultiTileTemplate = Template<"wwwroot/multitilepage.html">
 
 let view (toTile: 'T -> Node) (model: Model<'T>) dispatch =
-    MultiTileTemplate
-        .Page()
-        .Title(model.Title)
-        .Progress(
-            cond model.IsLoading
-            <| function
-                | false -> empty
-                | true -> createIndeterminateBar ()
-        )
-        .Tiles(
-            forEach model.Data (fun d ->
-                MultiTileTemplate
-                    .Tile()
-                    .TileContent(toTile d)
-                    .Elt())
-        )
-        .ErrorNotification(
-            cond model.Error
-            <| function
-                | None -> empty
-                | Some msg -> errorNotifDanger msg (fun _ -> dispatch ClearError)
-        )
-        .Elt()
+    concat' [] [
+        h1 [ attr.``class`` "title" ] [
+            text model.Title
+        ]
+
+        cond model.IsLoading
+        <| function
+            | false -> empty
+            | true -> createIndeterminateBar ()
+
+        div [ attr.classes [ "columns"
+                             "is-multiline" ] ] [
+            forEach model.Data
+            <| fun d ->
+                div [ attr.classes [ "column"; "is-6" ] ] [
+                    div [ attr.``class`` "box" ] [
+                        toTile d
+                    ]
+                ]
+        ]
+
+        cond model.Error
+        <| function
+            | None -> empty
+            | Some msg -> errorNotifDanger msg (fun _ -> dispatch ClearError)
+    ]

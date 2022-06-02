@@ -13,6 +13,8 @@ open PmaBolero.Shared.Models
 open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
 
+open PmaBolero.Client.Helpers
+
 type Model = ViewGroup.Model<Department>
 
 let initModel: Model =
@@ -39,52 +41,81 @@ let update remote (message: Message) (model: Model) =
 
 type ViewDepartmentsPage = Template<"wwwroot/viewdepartments.html">
 
-let populateProjects (projects: (int * string) []) =
-    ViewDepartmentsPage
-        .PopulateProjects()
-        .ProjectNames(
-            forEach projects (fun (projId, projName) ->
-                ViewDepartmentsPage
-                    .DepartmentSublisting()
-                    .UrlPrefix("project")
-                    .Id(string projId)
-                    .Name(projName)
-                    .Elt())
-        )
-        .Elt()
+let sublisting urlPrefix urlId name =
+    li [] [
+        a [ attr.href $"/%s{urlPrefix}/%d{urlId}" ] [
+            text name
+        ]
+    ]
 
-let populateEmployees (employees: (int * string) []) =
-    ViewDepartmentsPage
-        .PopulateEmployees()
-        .EmployeeNames(
-            forEach employees (fun (emplId, emplName) ->
-                ViewDepartmentsPage
-                    .DepartmentSublisting()
-                    .UrlPrefix("employee")
-                    .Id(string emplId)
-                    .Name(emplName)
-                    .Elt())
-        )
-        .Elt()
+let viewProjects (projects: (int * string) []) =
+    cond (Array.isEmpty projects)
+    <| function
+        | false ->
+            concat' [] [
+                p [] [ text "Projects:" ]
+                div [ attr.``class`` "content" ] [
+                    ul [] [
+                        forEach projects
+                        <| fun (projId, projName) -> sublisting "project" projId projName
+                    ]
+                ]
+            ]
+        | true -> p [] [ text "No projects" ]
+
+let viewEmployees (employees: (int * string) []) =
+    cond (Array.isEmpty employees)
+    <| function
+        | false ->
+            concat' [] [
+                p [] [ text "Employees:" ]
+
+                div [ attr.``class`` "content" ] [
+                    ul [] [
+                        forEach employees
+                        <| fun (emplId, emplName) -> sublisting "employee" emplId emplName
+                    ]
+                ]
+            ]
+        | true -> p [] [ text "No employees" ]
 
 let generateTile (dept: Department) =
-    ViewDepartmentsPage
-        .DepartmentTile()
-        .Id(string dept.Id)
-        .DepartmentName(dept.Name)
-        .ProjectsList(
-            cond (Array.isEmpty dept.Projects)
-            <| function
-                | false -> populateProjects dept.Projects
-                | true -> ViewDepartmentsPage.NoProjects().Elt()
-        )
-        .EmployeesList(
-            cond (Array.isEmpty dept.Employees)
-            <| function
-                | false -> populateEmployees dept.Employees
-                | true -> ViewDepartmentsPage.NoEmployees().Elt()
-        )
-        .Elt()
+    concat' [] [
+        a [ attr.classes [ "subtitle"; "link" ]
+            attr.href $"/department/{dept.Id}" ] [
+            strong [] [ text dept.Name ]
+        ]
+
+        hr []
+
+        div [ attr.``class`` "columns" ] [
+            div [ attr.``class`` "column" ] [
+                viewProjects dept.Projects
+            ]
+
+            div [ attr.``class`` "column" ] [
+                viewEmployees dept.Employees
+            ]
+        ]
+
+        div [ attr.``class`` "columns" ] [
+            div [ attr.``class`` "column" ] [
+                a [ attr.href $"/department/{dept.Id}"
+                    attr.classes [ "button"
+                                   "is-primary"
+                                   "is-fullwidth" ] ] [
+                    text "View"
+                ]
+            ]
+
+            div [ attr.``class`` "column" ] [
+                button [ attr.classes [ "button"
+                                        "is-warning"
+                                        "is-fullwidth" ]
+                         attr.disabled true ] []
+            ]
+        ]
+    ]
 
 let view (model: Model) dispatch =
     let mappedDispatch = TilesMessage >> dispatch

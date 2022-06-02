@@ -12,6 +12,7 @@ open PmaBolero.Shared.Models
 
 open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
+open PmaBolero.Client.Helpers
 
 type Model =
     { SignInRole: Role option
@@ -46,58 +47,106 @@ let update remote (message: Message) (model: Model) =
 
 type ViewEmployeesPage = Template<"wwwroot/viewemployees.html">
 
-let populateSkills (skills: string []) =
-    ViewEmployeesPage
-        .SkillList()
-        .Items(forEach skills (fun skill -> ViewEmployeesPage.SkillItem().Skill(skill).Elt()))
-        .Elt()
+let viewSkills (skills: string []) =
+    cond (Array.isEmpty skills)
+    <| function
+        | false ->
+            concat' [] [
+                p [] [ text "Skills:" ]
+                div [ attr.``class`` "content" ] [
+                    forEach skills
+                    <| fun skill -> li [] [ text skill ]
+                ]
+            ]
+        | true -> p [] [ text "No skills included." ]
 
-let populateProjects (projects: (int * string) []) =
-    ViewEmployeesPage
-        .ProjectList()
-        .Items(
-            forEach projects (fun (projId, name) ->
-                ViewEmployeesPage
-                    .ProjectItem()
-                    .Id(string projId)
-                    .Name(name)
-                    .Elt())
-        )
-        .Elt()
+let viewProjects (projects: (int * string) []) =
+    cond (Array.isEmpty projects)
+    <| function
+        | false ->
+            concat' [] [
+                p [] [ text "Projects:" ]
+                div [ attr.``class`` "content" ] [
+                    forEach projects
+                    <| fun (projId, projName) ->
+                        li [] [
+                            a [ attr.href $"/project/{projId}" ] [
+                                text projName
+                            ]
+                        ]
+                ]
+            ]
+        | true ->
+            p [] [
+                text " Not assigned to any projects."
+            ]
 
 let generateTile signInRole dispatch (employee: Employee) =
-    ViewEmployeesPage
-        .EmployeeTile()
-        .Id(string employee.Id)
-        .Name(employee.FullName)
-        .Email(employee.Email)
-        .Role(string employee.Role)
-        .DeptId(employee.DepartmentID |> fst |> string)
-        .DepartmentName(employee.DepartmentID |> snd)
-        .Skills(
-            cond (Array.isEmpty employee.Skills)
-            <| function
-                | true -> ViewEmployeesPage.NoSkills().Elt()
-                | false -> populateSkills employee.Skills
-        )
-        .Projects(
-            cond (Array.isEmpty employee.ProjectIds)
-            <| function
-                | true -> ViewEmployeesPage.NoProjects().Elt()
-                | false -> populateProjects employee.ProjectIds
-        )
-        .EditDisable(
-            match signInRole with
-            | Some Admin -> false
-            | _ -> true
-        )
-        .DisableDelete(
-            match signInRole with
-            | Some Admin -> false
-            | _ -> true
-        )
-        .DeleteClick(fun _ -> dispatch (DeleteEmployee employee.Id))
-        .Elt()
+    concat' [] [
+        a [ attr.href $"/employee/{employee.Id}"
+            attr.``class`` "subtitle" ] [
+            strong [] [ text employee.FullName ]
+        ]
+
+        p [ attr.``class`` "small" ] [
+            strong [] [ text employee.Email ]
+        ]
+        p [ attr.``class`` "small" ] [
+            text $"{employee.Role} | In "
+            a [ attr.href $"/department/{employee.DepartmentID |> fst |> string}" ] [
+                employee.DepartmentID |> snd |> text
+            ]
+        ]
+
+        hr []
+
+        div [ attr.``class`` "columns" ] [
+            div [ attr.``class`` "column" ] [
+                viewSkills employee.Skills
+            ]
+
+            div [ attr.``class`` "column" ] [
+                viewProjects employee.ProjectIds
+            ]
+        ]
+
+        div [ attr.``class`` "columns" ] [
+            div [ attr.``class`` "column" ] [
+                a [ attr.href $"/employee/{employee.Id}"
+                    attr.classes [ "button"
+                                   "is-primary"
+                                   "is-fullwidth" ] ] [
+                    text "View"
+                ]
+            ]
+
+            div [ attr.``class`` "column" ] [
+                a [ attr.href $"/employee/{employee.Id}/edit"
+                    attr.classes [ "button"
+                                   "is-fullwidth" ]
+
+                    match signInRole with
+                    | Some Admin -> false
+                    | _ -> true
+                    |> attr.disabled ] [
+                    text "Edit"
+                ]
+            ]
+
+            div [ attr.``class`` "column" ] [
+                button [ attr.classes [ "button"
+                                        "is-warning"
+                                        "is-fullwidth" ]
+                         on.click (fun _ -> dispatch (DeleteEmployee employee.Id))
+                         match signInRole with
+                         | Some Admin -> false
+                         | _ -> true
+                         |> attr.disabled ] [
+                    text "Delete"
+                ]
+            ]
+        ]
+    ]
 
 let view (model: Model) dispatch =
     let mappedDispatch = TilesMessage >> dispatch
