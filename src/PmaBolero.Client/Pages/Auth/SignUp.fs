@@ -1,15 +1,15 @@
 module PmaBolero.Client.Pages.Auth.SignUp
 
-open System
 open Elmish
 open Bolero
 open Bolero.Html
 open Bolero.Remoting
 open Bolero.Remoting.Client
-open Bolero.Templating.Client
 
 open PmaBolero.Client.Models.Auth
 open PmaBolero.Client.Helpers.ErrorNotification
+open PmaBolero.Client.Helpers
+open PmaBolero.Client.Helpers.Forms
 
 type Model =
     { Username: string
@@ -52,22 +52,32 @@ let update remote message model =
 type SignUpPage = Template<"wwwroot/signup.html">
 
 let view model dispatch =
-    // fsharplint:disable CanBeReplacedWithComposition
+    concat' [] [
+        h1 [ attr.``class`` "title" ] [
+            text "Sign up"
+        ]
 
-    SignUpPage
-        .SignUp()
-        .Username(model.Username, (fun un -> dispatch (SetUsername un)))
-        .Password(model.Password, (fun pw -> dispatch (SetPassword pw)))
-        .ConfirmPassword(model.PasswordRepeat, (fun pw -> dispatch (SetPasswordRepeat pw)))
-        .SignUp(fun _ -> dispatch SendSignUp)
-        .SubmitDisabled(
-            model.Password.Length > 8
-            && model.Password <> model.PasswordRepeat
-        )
-        .ErrorNotification(
+        form [ on.submit (fun _ -> dispatch SendSignUp) ] [
+            inputWithLabel "Username" "input" model.Username (SetUsername >> dispatch)
+            inputWithLabel "Password (at least 8 characters)" "password" model.Password (SetPassword >> dispatch)
+            inputWithLabel "Re-enter password" "password" model.PasswordRepeat (SetPasswordRepeat >> dispatch)
+
+            div [ attr.``class`` "field" ] [
+                div [ attr.``class`` "control" ] [
+                    input [ attr.``class`` [ "button"
+                                             "is-primary" ]
+                            attr.``type`` "submit"
+                            attr.value "Sign up"
+
+                            (model.Password.Length > 8
+                             && model.Password <> model.PasswordRepeat)
+                            |> attr.disabled ]
+                ]
+            ]
+
             cond model.Error
             <| function
                 | None -> empty
                 | Some msg -> errorNotifWarning msg (fun m -> dispatch ClearError)
-        )
-        .Elt()
+        ]
+    ]

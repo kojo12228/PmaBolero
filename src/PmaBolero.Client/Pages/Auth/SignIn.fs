@@ -1,17 +1,16 @@
 module PmaBolero.Client.Pages.Auth.SignIn
 
-open System
 open Elmish
-open Bolero
 open Bolero.Html
 open Bolero.Remoting
 open Bolero.Remoting.Client
-open Bolero.Templating.Client
 
 open PmaBolero.Shared.Models
 
 open PmaBolero.Client.Models.Auth
+open PmaBolero.Client.Helpers
 open PmaBolero.Client.Helpers.ErrorNotification
+open PmaBolero.Client.Helpers.Forms
 
 type Model =
     { Username: string
@@ -54,20 +53,26 @@ let update remote message model =
     | ClearError -> { model with Error = None }, Cmd.none
     | _ -> model, Cmd.none
 
-type SignInPage = Template<"wwwroot/signin.html">
-
 let view model dispatch =
-    // fsharplint:disable CanBeReplacedWithComposition
+    concat' [] [
+        h1 [ attr.``class`` "title" ] [
+            text "Sign in"
+        ]
+        form [ on.submit (fun _ -> dispatch SendSignIn) ] [
+            inputWithLabel "Username" "text" model.Username (fun un -> dispatch (SetUsername un))
+            inputWithLabel "Password" "password" model.Password (fun pw -> dispatch (SetPassword pw))
 
-    SignInPage
-        .SignIn()
-        .Username(model.Username, (fun un -> dispatch (SetUsername un)))
-        .Password(model.Password, (fun pw -> dispatch (SetPassword pw)))
-        .SignIn(fun _ -> dispatch SendSignIn)
-        .ErrorNotification(
-            cond model.Error
-            <| function
-                | None -> empty
-                | Some msg -> errorNotifWarning msg (fun _ -> dispatch ClearError)
-        )
-        .Elt()
+            div [ attr.``class`` "field" ] [
+                div [ attr.``class`` "control" ] [
+                    input [ attr.classes [ "button"; "is-primary" ]
+                            attr.``type`` "submit"
+                            attr.value "Sign in" ]
+                ]
+            ]
+        ]
+
+        cond model.Error
+        <| function
+            | None -> empty
+            | Some msg -> errorNotifWarning msg (fun _ -> dispatch ClearError)
+    ]
