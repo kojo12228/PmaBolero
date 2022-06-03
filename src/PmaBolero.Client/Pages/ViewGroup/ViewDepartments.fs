@@ -104,7 +104,9 @@ let generateTile (dept: Department) =
                 button [ attr.classes [ "button"
                                         "is-warning"
                                         "is-fullwidth" ]
-                         attr.disabled true ] []
+                         attr.disabled true ] [
+                    text "Delete"
+                ]
             ]
         ]
     ]
