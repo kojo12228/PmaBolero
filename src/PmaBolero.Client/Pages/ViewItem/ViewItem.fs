@@ -10,6 +10,7 @@ open Bolero.Templating.Client
 
 open PmaBolero.Client.Helpers.ErrorNotification
 open PmaBolero.Client.Helpers.ProgressBar
+open PmaBolero.Client.Helpers
 
 type Model<'T> =
     { DataType: string
@@ -57,35 +58,41 @@ let update getData message model =
 type ViewSingleTemplate = Template<"wwwroot/singletilepage.html">
 
 let view (toTile: 'T -> Node) (pageTitle: 'T -> string) (model: Model<'T>) dispatch =
-    ViewSingleTemplate
-        .ViewSingle()
-        .UrlSection(model.UrlPrefix)
-        .PageDataType(model.DataType)
-        .Name(
+    concat' [] [
+        a [ attr.classes [ "button"
+                           "is-rounded"
+                           "is-dark" ]
+            attr.href $"model.UrlPrefix/all" ] [
+            span [ attr.``class`` "icon" ] [
+                text "&#5130;"
+            ]
+            span [] [
+                text $"Back to All {model.DataType}"
+            ]
+        ]
+
+        p [ attr.``class`` "title" ] [
             match model.Data with
             | Some d -> pageTitle d
             | None -> "Loading"
-        )
-        .Progress(
-            cond model.IsLoading
-            <| function
-                | false -> empty
-                | true -> createIndeterminateBar ()
-        )
-        .Tile(
-            cond model.Data
-            <| function
-                | None -> empty
-                | Some d ->
-                    ViewSingleTemplate
-                        .TileContentBox()
-                        .TileContent(toTile d)
-                        .Elt()
-        )
-        .ErrorNotification(
-            cond model.Error
-            <| function
-                | None -> empty
-                | Some msg -> errorNotifDanger msg (fun _ -> dispatch ClearError)
-        )
-        .Elt()
+            |> text
+        ]
+
+        cond model.IsLoading
+        <| function
+            | false -> empty
+            | true -> createIndeterminateBar ()
+
+        cond model.Data
+        <| function
+            | Some d ->
+                div [ attr.``class`` "box" ] [
+                    toTile d
+                ]
+            | None -> empty
+
+        cond model.Error
+        <| function
+            | None -> empty
+            | Some msg -> errorNotifDanger msg (fun _ -> dispatch ClearError)
+    ]

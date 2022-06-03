@@ -11,6 +11,7 @@ open Bolero.Templating.Client
 open PmaBolero.Shared.Models
 
 open PmaBolero.Client.Models.EmployeeData
+open PmaBolero.Client.Helpers
 
 type Model = ViewItem.Model<Department>
 
@@ -39,48 +40,57 @@ let update remote message model =
 
 type ViewDepartmentPage = Template<"wwwroot/viewdepartment.html">
 
-let populateProjects (projects: (int * string) []) =
-    ViewDepartmentPage
-        .ProjectList()
-        .ProjectItems(
-            forEach projects (fun (projId, projName) ->
-                ViewDepartmentPage
-                    .ProjectItem()
-                    .Id(string projId)
-                    .Name(projName)
-                    .Elt())
-        )
-        .Elt()
+let viewProjects (projects: (int * string) []) =
+    cond (Array.isEmpty projects)
+    <| function
+        | false ->
+            concat' [] [
+                p [] [ strong [] [ text "Projects" ] ]
+                div [ attr.``class`` "content" ] [
+                    ul [] [
+                        forEach projects
+                        <| fun (projId, projName) ->
+                            li [] [
+                                a [ attr.href $"/project/{projId}" ] [
+                                    text projName
+                                ]
+                            ]
+                    ]
+                ]
+            ]
+        | true ->
+            p [] [
+                strong [] [ text "No projects" ]
+            ]
 
-let populateEmployees (employees: (int * string) []) =
-    ViewDepartmentPage
-        .EmployeeList()
-        .EmployeeItems(
-            forEach employees (fun (emplId, emplName) ->
-                ViewDepartmentPage
-                    .EmployeeItem()
-                    .Id(string emplId)
-                    .Name(emplName)
-                    .Elt())
-        )
-        .Elt()
+let viewEmployees (employees: (int * string) []) =
+    cond (Array.isEmpty employees)
+    <| function
+        | false ->
+            concat' [] [
+                p [] [ strong [] [ text "Employees" ] ]
+                div [ attr.``class`` "content" ] [
+                    ul [] [
+                        forEach employees
+                        <| fun (emplId, emplName) ->
+                            li [] [
+                                a [ attr.href $"/employee/{emplId}" ] [
+                                    text emplName
+                                ]
+                            ]
+                    ]
+                ]
+            ]
+        | true ->
+            p [] [
+                strong [] [ text "No employees" ]
+            ]
 
 let generateTile (dept: Department) =
-    ViewDepartmentPage
-        .Tile()
-        .Projects(
-            cond (Array.isEmpty dept.Projects)
-            <| function
-                | false -> populateProjects dept.Projects
-                | true -> ViewDepartmentPage.NoProjects().Elt()
-        )
-        .Employees(
-            cond (Array.isEmpty dept.Employees)
-            <| function
-                | false -> populateEmployees dept.Employees
-                | true -> ViewDepartmentPage.NoEmployees().Elt()
-        )
-        .Elt()
+    concat' [] [
+        viewProjects dept.Projects
+        viewEmployees dept.Employees
+    ]
 
 let view (model: Model) dispatch =
     let deptTitle (dept: Department) = dept.Name

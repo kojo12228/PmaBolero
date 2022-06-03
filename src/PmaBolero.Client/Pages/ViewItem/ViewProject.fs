@@ -12,6 +12,7 @@ open PmaBolero.Shared.Models
 
 open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
+open PmaBolero.Client.Helpers
 
 type Model =
     { SignInRole: Role option
@@ -51,63 +52,109 @@ let update remote message model =
 
 type ViewProjectPage = Template<"wwwroot/viewproject.html">
 
-let populateSkills (skills: string []) =
-    ViewProjectPage
-        .SkillList()
-        .Items(forEach skills (fun skill -> ViewProjectPage.SkillItem().Skill(skill).Elt()))
-        .Elt()
+let viewSkills (skills: string []) =
+    cond (Array.isEmpty skills)
+    <| function
+        | false ->
+            concat' [] [
+                p [] [ text "Skills Required: " ]
+                div [ attr.``class`` "content" ] [
+                    ul [] [
+                        forEach skills
+                        <| fun skill -> li [] [ text skill ]
+                    ]
+                ]
+            ]
+        | true -> p [] [ text "No skills required" ]
 
-let populateDevs (devs: (int * string) []) =
-    ViewProjectPage
-        .DevList()
-        .DevItems(
-            forEach devs (fun (devId, devName) ->
-                ViewProjectPage
-                    .DevItem()
-                    .Id(string devId)
-                    .Name(devName)
-                    .Elt())
-        )
-        .Elt()
+let viewDevs (devs: (int * string) []) =
+    cond (Array.isEmpty devs)
+    <| function
+        | false ->
+            concat' [] [
+                p [] [
+                    strong [] [ text "Developers:" ]
+                ]
+                div [ attr.``class`` "content" ] [
+                    ul [] [
+                        forEach devs
+                        <| fun (devId, devName) ->
+                            li [] [
+                                a [ attr.href $"/project/{devId}" ] [
+                                    text devName
+                                ]
+                            ]
+                    ]
+                ]
+            ]
+        | true ->
+            p [] [
+                text "Project has no developers."
+            ]
+
+let viewPm (pmOpt: (int * string) option) =
+    cond pmOpt
+    <| function
+        | Some (pmId, pmName) ->
+            concat' [] [
+                p [] [ text "Project Manager:" ]
+                a [ attr.href $"/employee/{pmId}" ] [
+                    text pmName
+                ]
+            ]
+        | None -> p [] [ text "No PM assigned" ]
 
 let generateTile signInRole (project: Project) =
-    ViewProjectPage
-        .Tile()
-        .DeptId(project.DepartmentId |> fst |> string)
-        .DepartmentName(project.DepartmentId |> snd)
-        .Status(string project.Status)
-        .Skills(
-            cond (Array.isEmpty project.SkillRequirements)
-            <| function
-                | false -> populateSkills project.SkillRequirements
-                | true -> ViewProjectPage.NoSkills().Elt()
-        )
-        .Description(project.Description)
-        .ProjectManager(
-            cond project.ProjectManagerId
-            <| function
-                | None -> ViewProjectPage.NoPm().Elt()
-                | Some (pmId, pmName) ->
-                    ViewProjectPage
-                        .PmExists()
-                        .Id(string pmId)
-                        .PmName(pmName)
-                        .Elt()
-        )
-        .Devs(
-            cond (Array.isEmpty project.DeveloperIds)
-            <| function
-                | false -> populateDevs project.DeveloperIds
-                | true -> ViewProjectPage.NoDevs().Elt()
-        )
-        .Id(string project.Id)
-        .EditDisabled(
+    concat' [] [
+        div [ attr.classes [ "tags"
+                             "are-medium"
+                             "has-addons" ] ] [
+            span [ attr.``class`` "tag" ] [
+                text "Status"
+            ]
+            span [ attr.classes [ "tag"; "is-primary" ] ] [
+                project.Status |> string |> text
+            ]
+        ]
+
+        div [ attr.classes [ "tags"
+                             "are-medium"
+                             "has-addons" ] ] [
+            span [ attr.``class`` "tag" ] [
+                text "Department"
+            ]
+            a [ attr.classes [ "tag"
+                               "is-link"
+                               "is-primary" ]
+                attr.href $"/department/{project.DepartmentId |> fst |> string}" ] [
+                project.DepartmentId |> snd |> text
+            ]
+        ]
+
+        viewSkills project.SkillRequirements
+
+        hr []
+
+        p [] [ text project.Description ]
+
+        hr []
+
+        viewPm project.ProjectManagerId
+        viewDevs project.DeveloperIds
+
+        a [ attr.classes [ "button"
+                           "is-primary"
+                           "is-fullwidth" ]
+            attr.href $"/project/{project.Id}/edit"
+
             match signInRole with
             | Some Admin
             | Some ProjectManager -> false
             | _ -> true
-        )
-        .Elt()
+            |> attr.disabled ] [
+            text "Edit"
+        ]
+    ]
 
 let view (model: Model) dispatch =
     let projectTitle (proj: Project) = proj.Name
