@@ -59,7 +59,7 @@ let view (toTile: 'T -> Node) (pageTitle: 'T -> string) (model: Model<'T>) dispa
                            "is-dark" ]
             attr.href $"model.UrlPrefix/all" ] [
             span [ attr.``class`` "icon" ] [
-                text "&#5130;"
+                RawHtml "&#5130;"
             ]
             span [] [
                 text $"Back to All {model.DataType}"
