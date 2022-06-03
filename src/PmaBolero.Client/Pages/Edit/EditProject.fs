@@ -2,17 +2,12 @@ module PmaBolero.Client.Pages.Edit.Project
 
 open System
 open Elmish
-open Bolero
 open Bolero.Html
-open Bolero.Remoting
 open Bolero.Remoting.Client
-open Bolero.Templating.Client
 
 open PmaBolero.Shared.Models
 
-open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
-
 open PmaBolero.Client.Helpers
 open PmaBolero.Client.Helpers.Forms
 open PmaBolero.Client.Helpers.ProgressBar
@@ -255,8 +250,6 @@ let update remoteProject remoteEmployee remoteDepartment message model =
     | Error e -> { model with Error = Some e.Message }, Cmd.none
     | ClearError -> { model with Error = None }, Cmd.none
     | ClearSuccess -> { model with Success = None }, Cmd.none
-
-type EditProjectTemplate = Template<"wwwroot/editproject.html">
 
 // Move into separate module to remove duplication
 let tryInt iStr =

@@ -1,16 +1,11 @@
 module PmaBolero.Client.Pages.ViewItem.Project
 
-open System
 open Elmish
-open Bolero
 open Bolero.Html
-open Bolero.Remoting
 open Bolero.Remoting.Client
-open Bolero.Templating.Client
 
 open PmaBolero.Shared.Models
 
-open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
 open PmaBolero.Client.Helpers
 
@@ -49,8 +44,6 @@ let update remote message model =
 
         ViewItem.update getDataFunc msg model.TileModel
         |> fun (tileModel, cmd) -> { model with TileModel = tileModel }, Cmd.map TileMessage cmd
-
-type ViewProjectPage = Template<"wwwroot/viewproject.html">
 
 let viewSkills (skills: string []) =
     cond (Array.isEmpty skills)

@@ -1,12 +1,8 @@
 module PmaBolero.Client.Pages.ViewItem.Department
 
-open System
 open Elmish
-open Bolero
 open Bolero.Html
-open Bolero.Remoting
 open Bolero.Remoting.Client
-open Bolero.Templating.Client
 
 open PmaBolero.Shared.Models
 
@@ -37,8 +33,6 @@ let update remote message model =
 
     ViewItem.update getDataFunc tileMsg model
     |> fun (model, cmd) -> model, Cmd.map TileMessage cmd
-
-type ViewDepartmentPage = Template<"wwwroot/viewdepartment.html">
 
 let viewProjects (projects: (int * string) []) =
     cond (Array.isEmpty projects)

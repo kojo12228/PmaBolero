@@ -1,18 +1,12 @@
 module PmaBolero.Client.Pages.ViewGroup.Department
 
-open System
 open Elmish
-open Bolero
 open Bolero.Html
-open Bolero.Remoting
 open Bolero.Remoting.Client
-open Bolero.Templating.Client
 
 open PmaBolero.Shared.Models
 
-open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
-
 open PmaBolero.Client.Helpers
 
 type Model = ViewGroup.Model<Department>
@@ -38,8 +32,6 @@ let update remote (message: Message) (model: Model) =
 
     let updatedModel, cmd = ViewGroup.update getDataFunc tilesMsg model
     updatedModel, Cmd.map TilesMessage cmd
-
-type ViewDepartmentsPage = Template<"wwwroot/viewdepartments.html">
 
 let sublisting urlPrefix urlId name =
     li [] [

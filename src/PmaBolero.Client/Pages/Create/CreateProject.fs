@@ -2,11 +2,8 @@ module PmaBolero.Client.Pages.Create.Project
 
 open System
 open Elmish
-open Bolero
 open Bolero.Html
-open Bolero.Remoting
 open Bolero.Remoting.Client
-open Bolero.Templating.Client
 
 open PmaBolero.Client.Models.EmployeeData
 open PmaBolero.Client.Helpers

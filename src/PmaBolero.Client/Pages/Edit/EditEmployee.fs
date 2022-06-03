@@ -2,16 +2,12 @@ module PmaBolero.Client.Pages.Edit.Employee
 
 open System
 open Elmish
-open Bolero
 open Bolero.Html
-open Bolero.Remoting
 open Bolero.Remoting.Client
-open Bolero.Templating.Client
 open System.Text.RegularExpressions
 
 open PmaBolero.Shared.Models
 
-open PmaBolero.Client.Models
 open PmaBolero.Client.Models.EmployeeData
 open PmaBolero.Client.Helpers
 open PmaBolero.Client.Helpers.Forms
@@ -199,8 +195,6 @@ let update remoteEmployee remoteDepartment message model =
     | Error e -> { model with Error = Some e.Message }, Cmd.none
     | ClearError -> { model with Error = None }, Cmd.none
     | ClearSuccess -> { model with Success = None }, Cmd.none
-
-type EditEmployeeTemplate = Template<"wwwroot/editemployee.html">
 
 let optionIntToString optInt =
     match optInt with

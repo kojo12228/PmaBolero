@@ -1,12 +1,9 @@
 module PmaBolero.Client.Pages.ViewItem.ViewItem
 
-open System
 open Elmish
 open Bolero
 open Bolero.Html
-open Bolero.Remoting
 open Bolero.Remoting.Client
-open Bolero.Templating.Client
 
 open PmaBolero.Client.Helpers.ErrorNotification
 open PmaBolero.Client.Helpers.ProgressBar
@@ -54,8 +51,6 @@ let update getData message model =
 
     | Error e -> { model with Error = Some e.Message }, Cmd.none
     | ClearError -> { model with Error = None }, Cmd.none
-
-type ViewSingleTemplate = Template<"wwwroot/singletilepage.html">
 
 let view (toTile: 'T -> Node) (pageTitle: 'T -> string) (model: Model<'T>) dispatch =
     concat' [] [
