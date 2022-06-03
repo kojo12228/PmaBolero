@@ -49,8 +49,6 @@ let update remote message model =
     | ClearError -> { model with Error = None }, Cmd.none
     | _ -> model, Cmd.none
 
-type SignUpPage = Template<"wwwroot/signup.html">
-
 let view model dispatch =
     concat' [] [
         h1 [ attr.``class`` "title" ] [

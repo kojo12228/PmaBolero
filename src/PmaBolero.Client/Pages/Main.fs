@@ -16,6 +16,7 @@ open PmaBolero.Client.Pages.Auth
 open PmaBolero.Client.Models.Auth
 open PmaBolero.Client.Helpers.ErrorNotification
 open PmaBolero.Client.Models.EmployeeData
+open PmaBolero.Client.Helpers
 
 /// Routing endpoints definition.
 type Page =
@@ -322,92 +323,184 @@ let update remotes (nm: NavigationManager) js message model =
 /// models defined in `defaultModel`
 let router = Router.inferWithModel SetPage (fun model -> model.Page) defaultModel
 
-type Main = Template<"wwwroot/main.html">
-
 let homePage model dispatch = empty
 
 let navMenu model dispatch =
-    Main
-        .Navigation()
-        .NavMenuActive(
-            if model.NavMenuOpen then
-                "is-active"
-            else
-                ""
-        )
-        .ProjectNavbarItem(
-            cond model.IsSignedInAs
-            <| function
-                | None -> empty
-                | Some (_, Developer) -> Main.GenericProjectNavbarItem().Elt()
-                | _ -> Main.ElevatedProjectNavbarItem().Elt()
-        )
-        .EmployeeNavbarItem(
-            cond model.IsSignedInAs
-            <| function
-                | None -> empty
-                | Some (_, Admin) -> Main.ElevatedEmployeeNavbarItem().Elt()
-                | _ -> Main.GenericEmployeeNavbarItem().Elt()
-        )
-        .DepartmentNavbarItem(
-            cond model.IsSignedInAs
-            <| function
-                | None -> empty
-                | _ -> Main.GenericDepartmentNavbarItem().Elt()
-        )
-        .ToggleBurger(fun _ -> dispatch ToggleBurgerMenu)
-        .SignInSection(
-            cond model.IsSignedInAs
-            <| function
-                | Some _ ->
-                    Main
-                        .SignOutButton()
-                        .SignOutClick(fun _ -> dispatch SendSignOut)
-                        .Elt()
-                | None -> Main.SignInButtons().Elt()
-        )
-        .Elt()
+    let navbarId = "navbarId"
 
-let view model dispatch =
+    nav [ attr.classes [ "navbar"; "is-primary" ]
+          "role" => "navigation"
+          attr.aria "label" "menu navigation" ] [
+        div [ attr.``class`` "navbar-brand" ] [
+            a [ attr.``class`` "navbar-item" ] [
+                h1 [ attr.classes [ "title"
+                                    "has-text-white" ] ] [
+                    text "OJO PMA"
+                ]
+            ]
+
+            a [ [ Some "navbar-burger"
+                  Some "burger"
+                  if model.NavMenuOpen then
+                      Some "is-active"
+                  else
+                      None ]
+                |> List.choose id
+                |> attr.classes
+
+                "role" => "button"
+                on.click (fun _ -> dispatch ToggleBurgerMenu)
+                attr.aria "label" "menu"
+                attr.aria "expanded" "false"
+                "data-target" => navbarId ] [
+                forEach [ 0..2 ]
+                <| fun _ -> span [ attr.aria "hidden" "true" ] []
+            ]
+        ]
+
+        div [ attr.id navbarId
+              [ Some "navbar-menu"
+                if model.NavMenuOpen then
+                    Some "is-active"
+                else
+                    None ]
+              |> List.choose id
+              |> attr.classes ] [
+            div [ attr.``class`` "navbar-start" ] [
+                cond model.IsSignedInAs
+                <| function
+                    | None -> empty
+                    | Some (_, userType) ->
+                        concat' [] [
+                            match userType with
+                            | Role.Developer ->
+                                a [ attr.``class`` "navbar-item"
+                                    attr.href "/project/all" ] [
+                                    text "Projects"
+                                ]
+                            | _ ->
+                                div [ attr.classes [ "navbar-item"
+                                                     "has-dropdown"
+                                                     "is-hoverable" ] ] [
+                                    a [ attr.``class`` "navbar-link"
+                                        attr.href "/project/all" ] [
+                                        text "Projects"
+                                    ]
+
+                                    div [ attr.``class`` "navbar-dropdown" ] [
+                                        a [ attr.``class`` "navbar-item"
+                                            attr.href "/project/add" ] [
+                                            text "Add New Project"
+                                        ]
+                                    ]
+                                ]
+
+                            match userType with
+                            | Role.Admin ->
+                                div [ attr.classes [ "navbar-item"
+                                                     "has-dropdown"
+                                                     "is-hoverable" ] ] [
+                                    a [ attr.``class`` "navbar-link"
+                                        attr.href "/employee/all" ] [
+                                        text "Employees"
+                                    ]
+
+                                    div [ attr.``class`` "navbar-dropdown" ] [
+                                        a [ attr.``class`` "navbar-item"
+                                            attr.href "/employee/add" ] [
+                                            text "Add New Employee"
+                                        ]
+                                    ]
+                                ]
+                            | _ ->
+                                a [ attr.``class`` "navbar-item"
+                                    attr.href "/employee/add" ] [
+                                    text "Employees"
+                                ]
+
+                            a [ attr.``class`` "navbar-item"
+                                attr.href "/department/all" ] [
+                                text "Departments"
+                            ]
+                        ]
+            ]
+
+            div [ attr.``class`` "navbar-end" ] [
+                div [ attr.``class`` "navbar-item" ] [
+                    div [ attr.``class`` "buttons" ] [
+                        cond model.IsSignedInAs
+                        <| function
+                            | None ->
+                                concat' [] [
+                                    a [ attr.classes [ "button"; "is-dark" ]
+                                        attr.href "/signup" ] [
+                                        strong [] [ text "Sign up" ]
+                                    ]
+
+                                    a [ attr.classes [ "button"; "is-light" ]
+                                        attr.href "/login" ] [
+                                        text "Log in"
+                                    ]
+                                ]
+                            | Some _ ->
+                                a [ attr.classes [ "button"; "is-light" ]
+                                    on.click (fun _ -> dispatch SendSignOut) ] [
+                                    text "Log out"
+                                ]
+                    ]
+                ]
+            ]
+        ]
+    ]
+
+let viewBody model dispatch =
     let mapDispatch msgWrapper = msgWrapper >> dispatch
 
-    Main()
-        .NavMenu(navMenu model dispatch)
-        .Body(
-            cond model.Page
-            <| function
-                | Home -> homePage model dispatch
-                | SignIn pgModel -> SignIn.view pgModel.Model (mapDispatch SignInMessage)
-                | SignUp pgModel -> SignUp.view pgModel.Model (mapDispatch SignUpMessage)
+    cond model.Page
+    <| function
+        | Home -> homePage model dispatch
+        | SignIn pgModel -> SignIn.view pgModel.Model (mapDispatch SignInMessage)
+        | SignUp pgModel -> SignUp.view pgModel.Model (mapDispatch SignUpMessage)
 
-                | ViewDepartments pgModel ->
-                    ViewGroup.Department.view pgModel.Model (mapDispatch ViewDepartmentsMessage)
-                | ViewDepartment (_, pgModel) ->
-                    ViewItem.Department.view pgModel.Model (mapDispatch ViewDepartmentMessage)
+        | ViewDepartments pgModel -> ViewGroup.Department.view pgModel.Model (mapDispatch ViewDepartmentsMessage)
+        | ViewDepartment (_, pgModel) -> ViewItem.Department.view pgModel.Model (mapDispatch ViewDepartmentMessage)
 
-                | ViewEmployees pgModel -> ViewGroup.Employee.view pgModel.Model (mapDispatch ViewEmployeesMessage)
-                | ViewEmployee (_, pgModel) -> ViewItem.Employee.view pgModel.Model (mapDispatch ViewEmployeeMessage)
-                | CreateEmployee pgModel -> Create.Employee.view pgModel.Model (mapDispatch CreateEmployeeMessage)
-                | EditEmployee (_, pgModel) -> Edit.Employee.view pgModel.Model (mapDispatch EditEmployeeMessage)
+        | ViewEmployees pgModel -> ViewGroup.Employee.view pgModel.Model (mapDispatch ViewEmployeesMessage)
+        | ViewEmployee (_, pgModel) -> ViewItem.Employee.view pgModel.Model (mapDispatch ViewEmployeeMessage)
+        | CreateEmployee pgModel -> Create.Employee.view pgModel.Model (mapDispatch CreateEmployeeMessage)
+        | EditEmployee (_, pgModel) -> Edit.Employee.view pgModel.Model (mapDispatch EditEmployeeMessage)
 
-                | ViewProjects pgModel -> ViewGroup.Project.view pgModel.Model (mapDispatch ViewProjectsMessage)
-                | ViewProject (_, pgModel) -> ViewItem.Project.view pgModel.Model (mapDispatch ViewProjectMessage)
-                | CreateProject pgModel -> Create.Project.view pgModel.Model (mapDispatch CreateProjectMessage)
-                | EditProject (_, pgModel) -> Edit.Project.view pgModel.Model (mapDispatch EditProjectMessage)
-        )
-        .MainNotification(
-            cond model.Error
-            <| function
-                | None ->
-                    // TODO: Really should replace error message logic
-                    // with local storage logic
-                    cond model.Success
-                    <| function
-                        | None -> empty
-                        | Some msg -> errorNotifSuccess msg (fun _ -> dispatch ClearSuccess)
-                | Some msg -> errorNotifWarning msg (fun _ -> dispatch ClearError)
-        )
-        .Elt()
+        | ViewProjects pgModel -> ViewGroup.Project.view pgModel.Model (mapDispatch ViewProjectsMessage)
+        | ViewProject (_, pgModel) -> ViewItem.Project.view pgModel.Model (mapDispatch ViewProjectMessage)
+        | CreateProject pgModel -> Create.Project.view pgModel.Model (mapDispatch CreateProjectMessage)
+        | EditProject (_, pgModel) -> Edit.Project.view pgModel.Model (mapDispatch EditProjectMessage)
+
+let view model dispatch =
+
+    concat' [] [
+        navMenu model dispatch
+
+        div [ attr.``class`` "container" ] [
+            div [ attr.``class`` "columns" ] [
+                div [ attr.``class`` "column" ] [
+                    section [ attr.``class`` "section" ] [
+                        viewBody model dispatch
+
+                        cond model.Error
+                        <| function
+                            | None ->
+                                // TODO: Really should replace error message logic
+                                // with local storage logic
+                                cond model.Success
+                                <| function
+                                    | None -> empty
+                                    | Some msg -> errorNotifSuccess msg (fun _ -> dispatch ClearSuccess)
+                            | Some msg -> errorNotifWarning msg (fun _ -> dispatch ClearError)
+                    ]
+                ]
+            ]
+        ]
+    ]
 
 type MyApp() =
     inherit ProgramComponent<Model, Message>()
